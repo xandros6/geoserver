@@ -2,6 +2,7 @@ package org.geoserver.wps.security;
 
 import static org.geoserver.security.impl.DataAccessRule.ANY;
 
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -102,9 +103,11 @@ public class DefaultProcessAccessManager implements ProcessAccessManager{
             // actually set the rule, but don't complain for the default root contents
             if (node != root) {
                 LOGGER.warning("Rule " + rule
-                        + " is overriding another rule targetting the same resource");
+                        + " is overriding another rule ("+node+") targetting the same resource");
             }
             node.setAuthorizedRoles(AccessMode.READ, rule.getRoles());
+            node.setAuthorizedRoles(AccessMode.WRITE,  Collections.singleton("NO_ONE"));
+            node.setAuthorizedRoles(AccessMode.ADMIN,  Collections.singleton("NO_ONE"));
         }
         
         return root;
