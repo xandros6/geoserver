@@ -23,11 +23,6 @@
     
     <dependencies>
         <dependency>
-           <groupId>org.geoserver</groupId>
-           <artifactId>gs-main</artifactId>
-           <version>${gs.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.geoserver</groupId>
             <artifactId>gs-wfs</artifactId>
             <version>${gs.version}</version>
@@ -117,6 +112,13 @@
           <groupId>com.mockrunner</groupId>
           <artifactId>mockrunner</artifactId>
           <scope>test</scope>
+        </dependency>
+        <dependency>
+           <groupId>org.geoserver</groupId>
+           <artifactId>gs-main</artifactId>
+           <version>${gs.version}</version>
+           <classifier>tests</classifier>
+           <scope>test</scope>
         </dependency>
     </dependencies>
 
