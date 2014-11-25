@@ -12,7 +12,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.PropertyModel;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.wps.ProcessGroupInfo;
@@ -42,7 +45,7 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
             public Object getPropertyValue(ProcessGroupInfo item) {
                 Class factoryClass = item.getFactoryClass();
                 Set<String> prefixes = new HashSet<String>();
-                ProcessFactory pf = GeoServerProcessors.getProcessFactory(factoryClass, true);
+                ProcessFactory pf = GeoServerProcessors.getProcessFactory(factoryClass, false);
                 if(pf != null) {
                     Set<Name> names = pf.getNames();
                     for (Name name : names) {
@@ -76,7 +79,7 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
             public Object getPropertyValue(ProcessGroupInfo item) {
                 Class factoryClass = item.getFactoryClass();
                 String title = null;
-                ProcessFactory pf = GeoServerProcessors.getProcessFactory(factoryClass, true);
+                ProcessFactory pf = GeoServerProcessors.getProcessFactory(factoryClass, false);
                 if(pf != null) {
                     title = pf.getTitle().toString(locale);
                 }
@@ -119,8 +122,17 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
                 };
             }
 
+        });        
+        props.add(new AbstractProperty<ProcessGroupInfo>("roles") {
+            @Override
+            public Object getPropertyValue(ProcessGroupInfo item) {
+                return item.getRoles();
+            } 
+            @Override
+            public IModel getModel(IModel itemModel) {
+                return new PropertyModel(itemModel, "roles");
+            }
         });
-        
         props.add(new PropertyPlaceholder("edit"));
         
         return props;

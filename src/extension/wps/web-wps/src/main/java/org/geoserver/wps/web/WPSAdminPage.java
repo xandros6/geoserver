@@ -72,9 +72,11 @@ public class WPSAdminPage extends BaseServiceAdminPage<WPSInfo> {
         resourceExpirationTimeout.add(new MinimumValidator<Integer>(1));
         form.add(resourceExpirationTimeout);
         
+        /*
         WPSInfo wpsInfo = (WPSInfo) info.getObject();
         processFactories = cloneFactoryInfos(wpsInfo.getProcessGroups());
         ProcessFactoryInfoProvider provider = new ProcessFactoryInfoProvider(processFactories, getLocale());
+      
         GeoServerTablePanel<ProcessGroupInfo> processFilterEditor = new GeoServerTablePanel<ProcessGroupInfo>("processFilterTable", provider) {
 
             @Override
@@ -115,9 +117,10 @@ public class WPSAdminPage extends BaseServiceAdminPage<WPSInfo> {
         processFilterEditor.setFilterable(false);
         processFilterEditor.setPageable(false);
         processFilterEditor.setOutputMarkupId( true );
-        form.add(processFilterEditor);
+        form.add(processFilterEditor);*/
     }
     
+    /*
     private List<ProcessGroupInfo> cloneFactoryInfos(List<ProcessGroupInfo> processFactories) {
         List<ProcessGroupInfo> result = new ArrayList<ProcessGroupInfo>();
         for (ProcessGroupInfo pfi : processFactories) {
@@ -125,7 +128,7 @@ public class WPSAdminPage extends BaseServiceAdminPage<WPSInfo> {
         }
         
         return result;
-    }
+    }*/
 
     @Override
     protected void handleSubmit(WPSInfo info) {

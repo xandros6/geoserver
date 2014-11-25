@@ -31,7 +31,7 @@ public class ProcessSelectionPage extends GeoServerSecuredPage {
     private GeoServerTablePanel<FilteredProcess> processSelector;
     private ProcessGroupInfo pfi;
 
-    public ProcessSelectionPage(final WPSAdminPage origin, final ProcessGroupInfo pfi) {
+    public ProcessSelectionPage(final WPSAccessRulePage wpsAccessRulePage, final ProcessGroupInfo pfi) {
         this.pfi = pfi;
         
         // prepare the process factory title
@@ -85,14 +85,14 @@ public class ProcessSelectionPage extends GeoServerSecuredPage {
                 
                 pfi.getFilteredProcesses().clear();
                 pfi.getFilteredProcesses().addAll(getFilteredProcesses());
-                setResponsePage(origin);
+                setResponsePage(wpsAccessRulePage);
             }  
         };
         form.add(apply);
         Link cancel = new Link("cancel") {
             @Override
             public void onClick() {
-                setResponsePage(origin);
+                setResponsePage(wpsAccessRulePage);
             }
         };
         form.add(cancel);

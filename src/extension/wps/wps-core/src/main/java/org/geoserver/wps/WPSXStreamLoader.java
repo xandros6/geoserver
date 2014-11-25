@@ -7,29 +7,21 @@
 package org.geoserver.wps;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 
 import org.geoserver.catalog.MetadataMap;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.util.XStreamPersister;
 import org.geoserver.config.util.XStreamServiceLoader;
-import org.geoserver.config.util.XStreamPersister.SRSConverter;
 import org.geoserver.platform.GeoServerResourceLoader;
-import org.geoserver.wfs.WFSInfoImpl;
 import org.geotools.feature.NameImpl;
-import org.geotools.process.ProcessFactory;
-import org.geotools.process.Processors;
-import org.geotools.referencing.CRS;
-import org.geotools.referencing.wkt.Formattable;
 import org.geotools.util.Version;
 import org.opengis.feature.type.Name;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.basic.AbstractSingleValueConverter;
+import com.thoughtworks.xstream.converters.collections.CollectionConverter;
+import com.thoughtworks.xstream.mapper.ClassAliasingMapper;
 
 /**
  * Service loader for the Web Processing Service
@@ -63,6 +55,9 @@ public class WPSXStreamLoader extends XStreamServiceLoader<WPSInfo> {
         xs.alias("processGroup", ProcessGroupInfoImpl.class);
         xs.alias("name", NameImpl.class);
         xs.registerConverter(new NameConverter());
+        ClassAliasingMapper mapper = new ClassAliasingMapper(xs.getMapper());
+        mapper.addClassAlias("role", String.class);
+        xs.registerLocalConverter(ProcessGroupInfoImpl.class, "roles", new CollectionConverter(mapper));
     }
     
     @Override

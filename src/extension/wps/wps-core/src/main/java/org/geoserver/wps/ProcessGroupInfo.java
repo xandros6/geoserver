@@ -66,4 +66,7 @@ public interface ProcessGroupInfo extends Info, Cloneable {
      */
     ProcessGroupInfo clone();
 
+    List<String> getRoles();
+    
+    void setRoles(List<String> roles);
 }
