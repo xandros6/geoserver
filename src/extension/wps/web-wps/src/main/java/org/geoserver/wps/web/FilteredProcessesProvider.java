@@ -17,6 +17,7 @@ import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.process.GeoServerProcessors;
 import org.geotools.process.ProcessFactory;
 import org.opengis.feature.type.Name;
+import org.opengis.util.InternationalString;
 
 /**
  * Provides entries for the process filtering table in the {@link ProcessSelectionPage}
@@ -25,7 +26,7 @@ import org.opengis.feature.type.Name;
  */
 @SuppressWarnings("serial")
 public class FilteredProcessesProvider extends
-        GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
+GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
 
     /**
      * Represents a selectable process in the GUI
@@ -77,10 +78,12 @@ public class FilteredProcessesProvider extends
         Set<Name> names = pf.getNames();
         selectableProcesses = new ArrayList<FilteredProcess>();
         for (Name name : names) {
-            String description = GeoServerProcessors
-                    .getProcessFactory(pfi.getFactoryClass(), false).getDescription(name)
-                    .toString(locale);
-            FilteredProcess sp = new FilteredProcess(name, description);
+            InternationalString description = GeoServerProcessors.getProcessFactory(pfi.getFactoryClass(), false).getDescription(name);
+            String des = "";
+            if(description != null){
+                des = description.toString(locale);
+            }
+            FilteredProcess sp = new FilteredProcess(name, des);
             selectableProcesses.add(sp);
         }
         Collections.sort(selectableProcesses);
@@ -100,5 +103,5 @@ public class FilteredProcessesProvider extends
         return selectableProcesses;
     }
 
-    
+
 }
