@@ -18,6 +18,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.web.wicket.ParamResourceModel;
+import org.geoserver.wps.ProcessAccessInfo;
 import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.process.GeoServerProcessors;
 import org.geotools.process.ProcessFactory;
@@ -111,7 +112,11 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
                         if(pf != null) {
                             Set<Name> names = new HashSet<Name>(pf.getNames());
                             int total = names.size();
-                            names.removeAll(item.getFilteredProcesses());
+                            for(ProcessAccessInfo toRemove : item.getFilteredProcesses()){
+                                if(!toRemove.isEnabled()){
+                                    names.remove(toRemove.getName());
+                                }
+                            }
                             int active = names.size();
                             return new ParamResourceModel("WPSAdminPage.filter.active", null, active, total).getString();
                             

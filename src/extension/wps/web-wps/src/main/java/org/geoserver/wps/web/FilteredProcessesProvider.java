@@ -12,7 +12,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 import org.geoserver.web.wicket.GeoServerDataProvider;
+import org.geoserver.web.wicket.GeoServerDataProvider.AbstractProperty;
+import org.geoserver.web.wicket.GeoServerDataProvider.BeanProperty;
+import org.geoserver.wps.ProcessAccessInfo;
 import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.process.GeoServerProcessors;
 import org.geotools.process.ProcessFactory;
@@ -35,9 +40,13 @@ GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
      */
     static class FilteredProcess implements Serializable, Comparable<FilteredProcess>{
 
+        private Boolean enabled;
+        
         private Name name;
 
         private String description;
+        
+        private List<String> roles;
 
         public FilteredProcess(Name name, String description) {
             this.name = name;
@@ -51,6 +60,22 @@ GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
         public String getDescription() {
             return description;
         }
+        
+        public List<String> getRoles() {
+            return roles;
+        }
+
+        public void setRoles(List<String> roles) {
+            this.roles = roles;
+        }
+
+        public Boolean getEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(Boolean enabled) {
+            this.enabled = enabled;
+        }
 
         @Override
         public int compareTo(FilteredProcess other) {
@@ -61,8 +86,7 @@ GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
             } else {
                 return name.getURI().compareTo(other.getName().getURI());
             }
-        }
-
+        }        
     }
 
     private ProcessGroupInfo pfi;
@@ -77,6 +101,7 @@ GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
         ProcessFactory pf = GeoServerProcessors.getProcessFactory(pfi.getFactoryClass(), false);
         Set<Name> names = pf.getNames();
         selectableProcesses = new ArrayList<FilteredProcess>();
+        List<ProcessAccessInfo> filteredProcesses = pfi.getFilteredProcesses();
         for (Name name : names) {
             InternationalString description = GeoServerProcessors.getProcessFactory(pfi.getFactoryClass(), false).getDescription(name);
             String des = "";
@@ -84,17 +109,37 @@ GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
                 des = description.toString(locale);
             }
             FilteredProcess sp = new FilteredProcess(name, des);
+            sp.setEnabled(true);
+            
+            for (ProcessAccessInfo fp: filteredProcesses) {
+                if(sp.getName().equals(fp.getName())){
+                    sp.setEnabled(fp.isEnabled());
+                    sp.setRoles(fp.getRoles());
+                }
+            }
+            
             selectableProcesses.add(sp);
         }
+
         Collections.sort(selectableProcesses);
     }
 
     @Override
     protected List<Property<FilteredProcess>> getProperties() {
         List<Property<FilteredProcess>> props = new ArrayList<GeoServerDataProvider.Property<FilteredProcess>>();
+        props.add(new BeanProperty<FilteredProcess>("enabled", "enabled"));
         props.add(new BeanProperty<FilteredProcess>("name", "name"));
         props.add(new BeanProperty<FilteredProcess>("description", "description"));
-
+        props.add(new AbstractProperty<FilteredProcess>("roles") {
+            @Override
+            public Object getPropertyValue(FilteredProcess item) {
+                return item.getRoles();
+            } 
+            @Override
+            public IModel getModel(IModel itemModel) {
+                return new PropertyModel(itemModel, "roles");
+            }
+        });
         return props;
     }
 

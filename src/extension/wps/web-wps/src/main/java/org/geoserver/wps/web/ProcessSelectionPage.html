@@ -13,6 +13,15 @@
         key="cancel">Cancel</wicket:message></a>
      </div>
   </form>
+  
+  <wicket:fragment wicket:id="rolesFragment">
+    <textarea wicket:id="roles" autocomplete="off" style="width:390px;height:50px;padding:5px;"></textarea>
+  </wicket:fragment>
+  
+  <wicket:fragment wicket:id="enabledFragment">
+    <input type="checkbox" wicket:id="enabled"/>
+  </wicket:fragment>
+  
 </wicket:extend>
 </body>
 </html>

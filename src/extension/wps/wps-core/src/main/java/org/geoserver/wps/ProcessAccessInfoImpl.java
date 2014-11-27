@@ -1,25 +1,47 @@
 package org.geoserver.wps;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import org.opengis.feature.type.Name;
 
 public class ProcessAccessInfoImpl implements ProcessAccessInfo {
 
-    @Override
-    public String getId() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
+    private static final long serialVersionUID = -8791361642137777632L;
+    
+    private Boolean enabled;
+    private List<String> roles = new ArrayList<String>();
+    private Name name;
+    private String id;
+    
     @Override
     public boolean isEnabled() {
-        // TODO Auto-generated method stub
-        return false;
+        return enabled;
     }
 
     @Override
     public List<String> getRoles() {
-        // TODO Auto-generated method stub
-        return null;
+        return roles;
+    }
+
+    @Override
+    public Name getName() {
+        return name;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public void setName(Name name) {
+       this.name = name;        
+    }
+
+    @Override
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;        
     }
 
 }

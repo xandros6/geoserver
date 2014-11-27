@@ -7,13 +7,10 @@ package org.geoserver.wps.web;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Level;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.Response;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AbstractAutoCompleteRenderer;
@@ -30,7 +27,6 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.util.convert.IConverter;
 import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.web.AbstractSecurityPage;
@@ -48,7 +44,6 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
     private List<ProcessGroupInfo> processFactories;
     private WPSInfo wpsInfo;
 
-    private String selectedRoles = "";
     private List<String> availableRoles = new ArrayList<String>();
 
     public WPSAccessRulePage() {
@@ -66,6 +61,12 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
             LOGGER.log(Level.FINER, e1.getMessage(), e1);
         }
 
+        final AutoCompleteSettings settings = new AutoCompleteSettings();
+        settings.setShowCompleteListOnFocusGain(false);
+        settings.setShowListOnEmptyInput(true);
+        settings.setShowListOnFocusGain(true);
+        settings.setMaxHeightInPx(100);
+        
         GeoServerTablePanel<ProcessGroupInfo> processFilterEditor = new GeoServerTablePanel<ProcessGroupInfo>("processFilterTable", provider) {
 
             @Override
@@ -88,60 +89,12 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
                     Fragment fragment = new Fragment(id, "rolesFragment", WPSAccessRulePage.this);
                     TextArea<String> roles = new  TextArea<String>("roles", property.getModel(itemModel)){
                         public org.apache.wicket.util.convert.IConverter getConverter(java.lang.Class<?> type) {
-                            return new RolesCoverter();
+                            return new RolesConverter(availableRoles);
                         };
                     };
-
-
-                    IAutoCompleteRenderer<String> partnerRenderer = new AbstractAutoCompleteRenderer<String>() {
-                        @Override
-                        protected void renderChoice(String object, Response response,
-                                String criteria) {
-                            response.write(object);
-
-                        }
-                        @Override
-                        protected String getTextValue(String object) {
-                            return selectedRoles + object;
-                        }     
-
-                        @Override
-                        protected CharSequence getOnSelectJavascriptExpression(String item) {
-                            // TODO Auto-generated method stub
-                            return super.getOnSelectJavascriptExpression(item);
-                        }
-
-                    };
-                    AutoCompleteSettings settings = new AutoCompleteSettings();
-                    settings.setShowCompleteListOnFocusGain(false);
-                    settings.setShowListOnEmptyInput(true);
-                    settings.setShowListOnFocusGain(true);
-                    settings.setMaxHeightInPx(100);
-                    AutoCompleteBehavior<String> b = new AutoCompleteBehavior<String>(partnerRenderer,settings){
-                        @Override
-                        protected Iterator<String> getChoices(String input) {
-                            int lastCommaIndex = input.lastIndexOf(';');
-                            String realInput = "";
-                            if (lastCommaIndex == -1) {
-                                selectedRoles = "";
-                                realInput = input;
-                            } else {
-                                selectedRoles = input.substring(0, lastCommaIndex) + ";";
-                                realInput = input.substring(lastCommaIndex + 1);
-                            }
-
-                            List<String> completions = new ArrayList<String>();
-                            for (int i = 0; i < availableRoles.size(); i++) {
-                                String role = availableRoles.get(i);
-                                if (realInput.isEmpty() || role.startsWith(realInput.toUpperCase()) || role.startsWith(realInput.toLowerCase())) {
-                                    if(!selectedRoles.contains(role + ";")){
-                                        completions.add(role + ";");
-                                    }
-                                }
-                            }
-                            return completions.iterator();
-                        }                 
-                    };
+                    StringBuilder selectedRoles = new StringBuilder ();
+                    IAutoCompleteRenderer<String> roleRenderer = new RolesRenderer(selectedRoles);
+                    AutoCompleteBehavior<String> b = new RolesAutoCompleteBehavior(roleRenderer,settings,selectedRoles,availableRoles);
                     roles.setOutputMarkupId(true);
                     roles.add(b);
                     fragment.add(roles);
@@ -205,39 +158,5 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
 
         return result;
     }
-    
-    private class RolesCoverter implements IConverter{
-
-        @Override
-        public Object convertToObject(String value, Locale locale) {
-            List<String> checkedRoles = new ArrayList<String>();
-            if(value != null && !value.isEmpty()){
-                String[] selectedRoles = value.split(";");
-                //Check roles string
-                for(String role : selectedRoles){
-                    if(availableRoles.contains(role)){
-                        checkedRoles.add(role);
-                    }
-                }
-            }
-            return checkedRoles;
-        }
-
-        @Override
-        public String convertToString(Object value, Locale locale) {
-            String roleStr = "";
-            if(value!=null && value instanceof List){
-                List roles = (List)value;
-                roleStr = StringUtils.join(roles.toArray(), ";");
-                if(!roleStr.isEmpty()){
-                    roleStr = roleStr + ";";
-                }
-            }
-            return roleStr;
-        }
-        
-    }
-
-
 
 }

@@ -24,7 +24,7 @@ public class ProcessGroupInfoImpl implements ProcessGroupInfo {
 
     List<String> roles;
 
-    List<Name> filteredProcesses = new ArrayList<Name>();
+    List<ProcessAccessInfo> filteredProcesses = new ArrayList<ProcessAccessInfo>();
 
     MetadataMap metadataMap = new MetadataMap();
 
@@ -49,11 +49,11 @@ public class ProcessGroupInfoImpl implements ProcessGroupInfo {
         this.enabled = enabled;
     }
 
-    public List<Name> getFilteredProcesses() {
+    public List<ProcessAccessInfo> getFilteredProcesses() {
         return filteredProcesses;
     }
 
-    public void setFilteredProcesses(List<Name> filteredProcesses) {
+    public void setFilteredProcesses(List<ProcessAccessInfo> filteredProcesses) {
         this.filteredProcesses = filteredProcesses;
     }
 
@@ -69,7 +69,7 @@ public class ProcessGroupInfoImpl implements ProcessGroupInfo {
         clone.setFactoryClass(factoryClass);
         clone.setRoles(roles);
         if(filteredProcesses != null) {
-            clone.setFilteredProcesses(new ArrayList<Name>(filteredProcesses));
+            clone.setFilteredProcesses(new ArrayList<ProcessAccessInfo>(filteredProcesses));
         } 
         if(metadataMap != null) {
             clone.metadataMap = new MetadataMap(new HashMap<String, Serializable>(metadataMap));
