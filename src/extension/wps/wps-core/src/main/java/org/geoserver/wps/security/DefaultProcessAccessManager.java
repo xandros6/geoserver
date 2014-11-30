@@ -49,14 +49,14 @@ public class DefaultProcessAccessManager implements ProcessAccessManager{
     public ProcessAccessLimits getAccessLimits(Authentication user, String namespace) {
         checkPropertyFile();        
         SecureTreeNode node = root.getDeepestNode(new String[] { namespace });        
-        return new ProcessAccessLimits(dao.getMode(), node.canAccess(user, AccessMode.READ));
+        return new ProcessAccessLimits(dao.getMode(), node.canAccess(user, AccessMode.READ), namespace);
     }
 
     @Override
     public ProcessAccessLimits getAccessLimits(Authentication user, Name process) {
         checkPropertyFile();
         SecureTreeNode node = root.getDeepestNode(new String[] { process.getNamespaceURI(), process.getLocalPart() });
-        return new ProcessAccessLimits(dao.getMode(), node.canAccess(user, AccessMode.READ));
+        return new ProcessAccessLimits(dao.getMode(), node.canAccess(user, AccessMode.READ), process.toString());
     }
     
     private void checkPropertyFile() {

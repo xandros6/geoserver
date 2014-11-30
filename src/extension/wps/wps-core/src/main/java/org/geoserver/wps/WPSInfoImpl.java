@@ -180,6 +180,7 @@ public class WPSInfoImpl extends ServiceInfoImpl implements WPSInfo {
         return catalogMode;
     }
 
+    @Override
     public void setCatalogMode(CatalogMode catalogMode) {
         this.catalogMode = catalogMode;
     }

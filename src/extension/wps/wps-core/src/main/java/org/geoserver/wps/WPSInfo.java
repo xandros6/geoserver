@@ -87,5 +87,7 @@ public interface WPSInfo extends ServiceInfo {
 
     
     public CatalogMode getCatalogMode();
+    
+    public void setCatalogMode(CatalogMode catalogMode);
 
 }
