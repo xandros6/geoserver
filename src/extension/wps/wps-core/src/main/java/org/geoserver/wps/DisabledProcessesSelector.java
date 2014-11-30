@@ -66,7 +66,9 @@ public class DisabledProcessesSelector extends ProcessSelector implements GeoSer
                     }
                 } else if (group.getFilteredProcesses() != null) {
                     for(ProcessAccessInfo fp : group.getFilteredProcesses()){
-                        disabledProcesses.add(fp.getName());
+                        if(!fp.isEnabled()){
+                            disabledProcesses.add(fp.getName());
+                        }
                     }
                 }
             }

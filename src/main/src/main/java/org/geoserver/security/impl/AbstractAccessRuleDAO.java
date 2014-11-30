@@ -53,7 +53,7 @@ public abstract class AbstractAccessRuleDAO<R extends Comparable<?>> {
     /**
      * Stores the time of the last rule list loading
      */
-    long lastModified;
+    protected long lastModified;
     
     /**
      * The security dir

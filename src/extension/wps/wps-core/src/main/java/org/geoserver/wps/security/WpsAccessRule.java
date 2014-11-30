@@ -25,7 +25,7 @@ public class WpsAccessRule implements Comparable<WpsAccessRule>, Serializable {
      * Any layer, or any workspace, or any role
      */
     public static final String ANY = "*";
-    public static WpsAccessRule EXECUTE_ALL = new WpsAccessRule(ANY, ANY);
+    public static WpsAccessRule EXECUTE_ALL = new WpsAccessRule(ANY, ANY, ANY);
 
     private String groupName;
 

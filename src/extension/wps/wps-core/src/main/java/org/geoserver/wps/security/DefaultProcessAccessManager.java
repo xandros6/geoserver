@@ -3,6 +3,7 @@ package org.geoserver.wps.security;
 import static org.geoserver.security.impl.DataAccessRule.ANY;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,8 +47,7 @@ public class DefaultProcessAccessManager implements ProcessAccessManager{
     
     @Override
     public ProcessAccessLimits getAccessLimits(Authentication user, String namespace) {
-        checkPropertyFile();
-        
+        checkPropertyFile();        
         SecureTreeNode node = root.getDeepestNode(new String[] { namespace });        
         return new ProcessAccessLimits(dao.getMode(), node.canAccess(user, AccessMode.READ));
     }
@@ -69,8 +69,8 @@ public class DefaultProcessAccessManager implements ProcessAccessManager{
     
     private SecureTreeNode buildAuthorizationTree(WpsAccessRuleDAO dao) {
         SecureTreeNode root = new SecureTreeNode();
-        
-        for(WpsAccessRule rule : dao.getRules()) {
+        List<WpsAccessRule> rules = dao.getRules();
+        for(WpsAccessRule rule : rules) {
             String group = rule.getGroupName();
             String name = rule.getWpsName();
             
@@ -103,13 +103,15 @@ public class DefaultProcessAccessManager implements ProcessAccessManager{
             // actually set the rule, but don't complain for the default root contents
             if (node != root) {
                 LOGGER.warning("Rule " + rule
-                        + " is overriding another rule ("+node+") targetting the same resource");
+                        + " is overriding another rule targetting the same resource");
             }
             node.setAuthorizedRoles(AccessMode.READ, rule.getRoles());
             node.setAuthorizedRoles(AccessMode.WRITE,  Collections.singleton("NO_ONE"));
             node.setAuthorizedRoles(AccessMode.ADMIN,  Collections.singleton("NO_ONE"));
         }
-        
+        root.setAuthorizedRoles(AccessMode.READ, Collections.singleton("*"));
+        root.setAuthorizedRoles(AccessMode.WRITE,  Collections.singleton("NO_ONE"));
+        root.setAuthorizedRoles(AccessMode.ADMIN,  Collections.singleton("NO_ONE"));
         return root;
     }
 

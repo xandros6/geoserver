@@ -2,6 +2,25 @@
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:wicket="http://wicket.apache.org/">
+<wicket:head>
+    <style type="text/css">
+       #catalogMode {
+         display:block;
+         padding-top: 0.5em;
+       }
+       #catalogMode input {
+          display: block;
+          float: left;
+          clear:left;
+          padding-top:0.5em;
+          margin-bottom: 0.5em;
+       }
+       #catalogMode label {
+          clear:right;
+          margin-bottom: 0.5em;
+       }
+     </style>
+</wicket:head>
 <head>
 <title><wicket:message key="title">WPS security</wicket:message></title>
 </head>
@@ -13,6 +32,17 @@
    			<li>
 				<div wicket:id="processFilterTable"></div>
 			</li>
+            <li style="padding-top: 20px;">
+            <fieldset>
+              <legend>
+                <span><wicket:message key="catalogMode">Catalog Mode</wicket:message></span>
+                <a href="#" wicket:id="catalogModeHelp" class="help-link"></a>
+              </legend>
+              <span id="catalogMode" wicket:id="catalogMode">
+                <input type="radio">mode 1</input>
+              </span>
+            </fieldset>
+            </li>
 		    <li class="button-group selfclear">
 		      <button wicket:id="submit" type="submit"><wicket:message key="submit"/></button>
 		      <button wicket:id="cancel" type="submit"><wicket:message key="cancel"/></button> 

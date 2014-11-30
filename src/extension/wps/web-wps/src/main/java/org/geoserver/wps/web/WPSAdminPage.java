@@ -32,8 +32,6 @@ import org.geoserver.wps.WPSInfo;
  */
 public class WPSAdminPage extends BaseServiceAdminPage<WPSInfo> {
 
-    private List<ProcessGroupInfo> processFactories;
-
     public WPSAdminPage() {
         super();
     }
@@ -132,10 +130,6 @@ public class WPSAdminPage extends BaseServiceAdminPage<WPSInfo> {
 
     @Override
     protected void handleSubmit(WPSInfo info) {
-        // overwrite the process factories that we did clone to achieve isolation
-        List<ProcessGroupInfo> factories = info.getProcessGroups();
-        factories.clear();
-        factories.addAll(processFactories);
         super.handleSubmit(info);
     }
 

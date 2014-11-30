@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.geoserver.catalog.MetadataMap;
 import org.geoserver.config.ServiceInfo;
+import org.geoserver.security.CatalogMode;
 
 /**
  * Configuration related
@@ -83,5 +84,8 @@ public interface WPSInfo extends ServiceInfo {
      * @return
      */
     public List<ProcessGroupInfo> getProcessGroups();
+
+    
+    public CatalogMode getCatalogMode();
 
 }

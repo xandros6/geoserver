@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.geoserver.catalog.MetadataMap;
 import org.geoserver.config.impl.ServiceInfoImpl;
+import org.geoserver.security.CatalogMode;
 
 /**
  * WPS information implementation
@@ -62,6 +63,8 @@ public class WPSInfoImpl extends ServiceInfoImpl implements WPSInfo {
      * List of process groups/factories.
      */
     List<ProcessGroupInfo> processGroups = new ArrayList<ProcessGroupInfo>();
+    
+    CatalogMode catalogMode;
     
     public WPSInfoImpl() {
         title = "Prototype GeoServer WPS";
@@ -168,4 +171,17 @@ public class WPSInfoImpl extends ServiceInfoImpl implements WPSInfo {
     public void setProcessGroups(List<ProcessGroupInfo> processGroups) {
         this.processGroups = processGroups;
     }
+    
+    @Override
+    public CatalogMode getCatalogMode() {
+        if(catalogMode==null){
+            catalogMode = CatalogMode.HIDE;
+        }
+        return catalogMode;
+    }
+
+    public void setCatalogMode(CatalogMode catalogMode) {
+        this.catalogMode = catalogMode;
+    }
+    
 }

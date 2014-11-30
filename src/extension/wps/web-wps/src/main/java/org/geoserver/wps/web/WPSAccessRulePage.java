@@ -7,13 +7,13 @@ package org.geoserver.wps.web;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.Response;
-import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AbstractAutoCompleteRenderer;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteSettings;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.IAutoCompleteRenderer;
@@ -21,19 +21,25 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.IChoiceRenderer;
+import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.geoserver.security.CatalogMode;
 import org.geoserver.security.GeoServerRoleService;
 import org.geoserver.security.impl.GeoServerRole;
 import org.geoserver.security.web.AbstractSecurityPage;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerTablePanel;
+import org.geoserver.web.wicket.ParamResourceModel;
 import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.WPSInfo;
+import org.geoserver.wps.security.WpsAccessRuleDAO;
 
 /**
  * A page listing data access rules, allowing for removal, addition and linking to an edit page
@@ -41,8 +47,11 @@ import org.geoserver.wps.WPSInfo;
 @SuppressWarnings("serial")
 public class WPSAccessRulePage extends AbstractSecurityPage {
 
+    static final List<CatalogMode> CATALOG_MODES = Arrays.asList(CatalogMode.HIDE, CatalogMode.MIXED, CatalogMode.CHALLENGE);
+    
     private List<ProcessGroupInfo> processFactories;
     private WPSInfo wpsInfo;
+    private RadioChoice catalogModeChoice;
 
     private List<String> availableRoles = new ArrayList<String>();
 
@@ -121,7 +130,19 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
         processFilterEditor.setFilterable(false);
         processFilterEditor.setPageable(false);
         processFilterEditor.setOutputMarkupId( true );
-        form.add(processFilterEditor);        
+        form.add(processFilterEditor);  
+        
+        form.add(new AjaxLink("catalogModeHelp") {
+            @Override
+            public void onClick(AjaxRequestTarget target) {
+                dialog.showInfo(target, 
+                    new StringResourceModel("catalogModeHelp.title",getPage(), null),
+                    new StringResourceModel("catalogModeHelp.message",getPage(), null));
+            }
+        });
+        catalogModeChoice = new RadioChoice("catalogMode", new PropertyModel<CatalogMode>(wpsInfo, "catalogMode"), CATALOG_MODES, new CatalogModeRenderer());
+        catalogModeChoice.setSuffix(" ");
+        form.add(catalogModeChoice);
 
         SubmitLink submit = new SubmitLink("submit",new StringResourceModel( "save", (Component)null, null) ) {
             @Override
@@ -132,6 +153,8 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
                     factories.clear();
                     factories.addAll(processFactories);
                     getGeoServer().save(wpsInfo);
+                    WpsAccessRuleDAO.get().reload();
+                    doReturn();
                 }catch(Exception e) {
                     error(e);
                 }
@@ -157,6 +180,18 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
         }
 
         return result;
+    }
+    
+    class CatalogModeRenderer implements IChoiceRenderer {
+
+        public Object getDisplayValue(Object object) {
+            return (String) new ParamResourceModel(((CatalogMode) object).name(), getPage())
+                    .getObject();
+        }
+
+        public String getIdValue(Object object, int index) {
+            return ((CatalogMode) object).name();
+        }
     }
 
 }

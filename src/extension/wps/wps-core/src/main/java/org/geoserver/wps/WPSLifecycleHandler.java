@@ -9,6 +9,7 @@ import static org.geoserver.wps.WPSInitializer.lookupNewProcessGroups;
 
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.impl.GeoServerLifecycleHandler;
+import org.geoserver.wps.security.WpsAccessRuleDAO;
 
 /**
  * Life cycle listener for WPS. 
@@ -43,6 +44,7 @@ public class WPSLifecycleHandler implements GeoServerLifecycleHandler {
     @Override
     public void onReload() {
         lookupNewProcessGroups(getWPS(), geoServer);
+        WpsAccessRuleDAO.get().reload();
     }
 
     WPSInfo getWPS() {

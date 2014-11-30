@@ -53,7 +53,7 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
                         prefixes.add(name.getNamespaceURI());
                     }
                 }
-                
+
                 // if we cannot find a title use the class name
                 if(prefixes.isEmpty()) {
                     return "";
@@ -68,7 +68,7 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
                             sb.append(", ");
                         }
                     }
-                    
+
                     return sb.toString();
                 }
             }
@@ -84,12 +84,12 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
                 if(pf != null) {
                     title = pf.getTitle().toString(locale);
                 }
-                
+
                 // if we cannot find a title use the class name
                 if(title == null) {
                     title = factoryClass.getName();
                 }
-                
+
                 return title;
             }
 
@@ -106,7 +106,7 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
                             // all processes are enabled
                             return new ParamResourceModel("WPSAdminPage.filter.all", null).getString();
                         }
-                        
+
                         Class factoryClass = item.getFactoryClass();
                         ProcessFactory pf = GeoServerProcessors.getProcessFactory(factoryClass, false);
                         if(pf != null) {
@@ -118,10 +118,14 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
                                 }
                             }
                             int active = names.size();
-                            return new ParamResourceModel("WPSAdminPage.filter.active", null, active, total).getString();
-                            
+                            if(active != total){
+                                return new ParamResourceModel("WPSAdminPage.filter.active", null, active, total).getString();
+                            }else{
+                                return new ParamResourceModel("WPSAdminPage.filter.all", null).getString();
+                            }
+
                         }
-                        
+
                         return "?";
                     }
                 };
@@ -139,7 +143,7 @@ public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGro
             }
         });
         props.add(new PropertyPlaceholder("edit"));
-        
+
         return props;
     }
 
