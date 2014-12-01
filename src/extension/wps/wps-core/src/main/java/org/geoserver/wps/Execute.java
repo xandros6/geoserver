@@ -65,7 +65,9 @@ public class Execute {
         Name processName = new NameImpl(processIdentifiers[0],processIdentifiers[1]);        
         Set<ProcessFactory> pfs = GeoServerProcessors.getProcessFactories();
         for (ProcessFactory pf : pfs) {
-            pf.create(processName);
+            if(pf.create(processName)!=null){
+                break;
+            };
         }
         
         ResponseDocumentType responseDocument = null;
