@@ -29,8 +29,8 @@ import org.geoserver.security.web.AbstractSecurityPage;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerTablePanel;
 import org.geoserver.web.wicket.ParamResourceModel;
-import org.geoserver.wps.ProcessAccessInfo;
-import org.geoserver.wps.ProcessAccessInfoImpl;
+import org.geoserver.wps.ProcessInfo;
+import org.geoserver.wps.ProcessInfoImpl;
 import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.process.GeoServerProcessors;
 import org.geoserver.wps.web.FilteredProcessesProvider.FilteredProcess;
@@ -117,7 +117,7 @@ public class ProcessSelectionPage extends AbstractSecurityPage {
                 pfi.getFilteredProcesses().clear();
                 for (FilteredProcess process : provider.getItems()){
                     if(!process.getRoles().isEmpty() || !process.getEnabled()){
-                        ProcessAccessInfo pai = new ProcessAccessInfoImpl();
+                        ProcessInfo pai = new ProcessInfoImpl();
                         pai.setName(process.getName());
                         pai.setEnabled(process.getEnabled());   
                         pai.getRoles().addAll(process.getRoles());

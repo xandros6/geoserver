@@ -8,7 +8,6 @@ package org.geoserver.wps;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,13 +19,7 @@ import net.opengis.wps10.ResponseDocumentType;
 import org.geoserver.wps.executor.ExecuteResponseBuilder;
 import org.geoserver.wps.executor.ExecuteRequest;
 import org.geoserver.wps.executor.WPSExecutionManager;
-import org.geoserver.wps.process.GeoServerProcessors;
-import org.geoserver.wps.process.ProcessFilter;
-import org.geoserver.wps.security.ProcessAccessManager;
-import org.geotools.feature.NameImpl;
-import org.geotools.process.ProcessFactory;
 import org.geotools.util.logging.Logging;
-import org.opengis.feature.type.Name;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -60,16 +53,6 @@ public class Execute {
      * @throws IllegalArgumentException
      */
     public ExecuteResponseType run(ExecuteType execute) {
-        //check process permission
-        String[] processIdentifiers = execute.getIdentifier().getValue().split(":");
-        Name processName = new NameImpl(processIdentifiers[0],processIdentifiers[1]);        
-        Set<ProcessFactory> pfs = GeoServerProcessors.getProcessFactories();
-        for (ProcessFactory pf : pfs) {
-            if(pf.create(processName)!=null){
-                break;
-            };
-        }
-        
         ResponseDocumentType responseDocument = null;
         OutputDefinitionType rawDataOutput = null;
         if (execute.getResponseForm() != null) {

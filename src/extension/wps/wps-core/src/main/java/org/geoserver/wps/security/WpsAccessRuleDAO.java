@@ -22,7 +22,7 @@ import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.CatalogMode;
 import org.geoserver.security.PropertyFileWatcher;
 import org.geoserver.security.impl.AbstractAccessRuleDAO;
-import org.geoserver.wps.ProcessAccessInfo;
+import org.geoserver.wps.ProcessInfo;
 import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.WPSInfo;
 import org.geoserver.wps.process.GeoServerProcessors;
@@ -112,7 +112,7 @@ public class WpsAccessRuleDAO extends AbstractAccessRuleDAO<WpsAccessRule> {
                     result.add(new WpsAccessRule(prefix,ANY,new HashSet<String>(group.getRoles())));
                 }
             }
-            for(ProcessAccessInfo process : group.getFilteredProcesses()){
+            for(ProcessInfo process : group.getFilteredProcesses()){
                 if(process.getRoles()!=null && !process.getRoles().isEmpty()){
                     result.add(new WpsAccessRule(process.getName().getNamespaceURI(),process.getName().getLocalPart(),new HashSet<String>(process.getRoles())));
                 }

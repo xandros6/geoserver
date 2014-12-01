@@ -55,12 +55,12 @@ public class WPSXStreamLoader extends XStreamServiceLoader<WPSInfo> {
         xs.alias("processGroup", ProcessGroupInfoImpl.class);
         xs.alias("name", NameImpl.class);
         xs.alias("name", Name.class, NameImpl.class);
-        xs.alias("accessInfo", ProcessAccessInfoImpl.class);
+        xs.alias("accessInfo", ProcessInfoImpl.class);
         xs.registerConverter(new NameConverter());
         ClassAliasingMapper mapper = new ClassAliasingMapper(xs.getMapper());
         mapper.addClassAlias("role", String.class);
         xs.registerLocalConverter(ProcessGroupInfoImpl.class, "roles", new CollectionConverter(mapper));
-        xs.registerLocalConverter(ProcessAccessInfoImpl.class, "roles", new CollectionConverter(mapper));
+        xs.registerLocalConverter(ProcessInfoImpl.class, "roles", new CollectionConverter(mapper));
     }
     
     @Override

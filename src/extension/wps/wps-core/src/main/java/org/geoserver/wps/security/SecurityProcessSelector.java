@@ -11,9 +11,14 @@ public class SecurityProcessSelector extends SecurityProcessFilter{
     }
     
     @Override
-    protected boolean allowProcess(Name processName) {
+    protected boolean allowProcess(Name processName, Boolean checkCatalogMode){
         Authentication user = SecurityContextHolder.getContext().getAuthentication();
-        return manager.getAccessLimits(user, processName).isAllowed();
+        return manager.getAccessLimits(user, processName).isAllowed(checkCatalogMode);
+    }
+
+    @Override
+    protected boolean allowProcess(Name processName) {
+        return allowProcess(processName, true);
     }
 
 }

@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.opengis.feature.type.Name;
 
-public class ProcessAccessInfoImpl implements ProcessAccessInfo {
+public class ProcessInfoImpl implements ProcessInfo {
 
     private static final long serialVersionUID = -8791361642137777632L;
     

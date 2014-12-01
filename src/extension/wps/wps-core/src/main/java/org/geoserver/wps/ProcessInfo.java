@@ -5,7 +5,7 @@ import java.util.List;
 import org.geoserver.catalog.Info;
 import org.opengis.feature.type.Name;
 
-public interface ProcessAccessInfo extends Info, Cloneable {
+public interface ProcessInfo extends Info, Cloneable {
 
     Name getName();
     

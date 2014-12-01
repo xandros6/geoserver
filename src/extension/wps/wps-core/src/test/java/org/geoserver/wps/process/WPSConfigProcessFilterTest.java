@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.geoserver.config.GeoServer;
-import org.geoserver.wps.ProcessAccessInfo;
-import org.geoserver.wps.ProcessAccessInfoImpl;
+import org.geoserver.wps.ProcessInfo;
+import org.geoserver.wps.ProcessInfoImpl;
 import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.ProcessGroupInfoImpl;
 import org.geoserver.wps.WPSInfo;
@@ -44,7 +44,7 @@ public class WPSConfigProcessFilterTest extends AbstractProcessFilterTest {
         List<Name> jtsNames = new ArrayList<Name>(jts.getNames());
         jtsNames.remove(bufferName);
         for(Name jtsName:jtsNames){
-            ProcessAccessInfo pai = new ProcessAccessInfoImpl();
+            ProcessInfo pai = new ProcessInfoImpl();
             pai.setName(jtsName);
             pai.setEnabled(false);
             jtsGroup.getFilteredProcesses().add(pai);

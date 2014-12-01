@@ -24,6 +24,8 @@ public abstract class SecurityProcessFilter implements ProcessFilter{
         return new SecurityProcessFactory(pf, this);
     }
 
-    protected abstract boolean allowProcess(Name processName);
+    protected abstract boolean allowProcess(Name processName, Boolean checkCatalogMode);
+
+    protected abstract boolean allowProcess(Name name);
 
 }

@@ -27,7 +27,7 @@ public class SecurityProcessFactory extends DelegatingProcessFactory {
         Set<Name> names = new LinkedHashSet<Name>(super.getNames());
         for (Iterator<Name> it = names.iterator(); it.hasNext();) {
             Name name = (Name) it.next();
-            if (!selector.allowProcess(name)) {
+            if (!selector.allowProcess(name,false)) {
                 it.remove();
             }
         }

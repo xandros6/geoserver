@@ -50,7 +50,7 @@ public interface ProcessGroupInfo extends Info, Cloneable {
      * 
      * @return
      */
-    public List<ProcessAccessInfo> getFilteredProcesses();
+    public List<ProcessInfo> getFilteredProcesses();
 
     /**
      * The metadata map, can contain any sort of information that non core plugins might use to

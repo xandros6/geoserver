@@ -17,7 +17,7 @@ import org.apache.wicket.model.PropertyModel;
 import org.geoserver.web.wicket.GeoServerDataProvider;
 import org.geoserver.web.wicket.GeoServerDataProvider.AbstractProperty;
 import org.geoserver.web.wicket.GeoServerDataProvider.BeanProperty;
-import org.geoserver.wps.ProcessAccessInfo;
+import org.geoserver.wps.ProcessInfo;
 import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.process.GeoServerProcessors;
 import org.geotools.process.ProcessFactory;
@@ -101,7 +101,7 @@ GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
         ProcessFactory pf = GeoServerProcessors.getProcessFactory(pfi.getFactoryClass(), false);
         Set<Name> names = pf.getNames();
         selectableProcesses = new ArrayList<FilteredProcess>();
-        List<ProcessAccessInfo> filteredProcesses = pfi.getFilteredProcesses();
+        List<ProcessInfo> filteredProcesses = pfi.getFilteredProcesses();
         for (Name name : names) {
             InternationalString description = GeoServerProcessors.getProcessFactory(pfi.getFactoryClass(), false).getDescription(name);
             String des = "";
@@ -111,7 +111,7 @@ GeoServerDataProvider<FilteredProcessesProvider.FilteredProcess> {
             FilteredProcess sp = new FilteredProcess(name, des);
             sp.setEnabled(true);
             
-            for (ProcessAccessInfo fp: filteredProcesses) {
+            for (ProcessInfo fp: filteredProcesses) {
                 if(sp.getName().equals(fp.getName())){
                     sp.setEnabled(fp.isEnabled());
                     sp.setRoles(fp.getRoles());

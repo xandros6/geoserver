@@ -132,15 +132,15 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
         processFilterEditor.setOutputMarkupId( true );
         form.add(processFilterEditor);  
         
-        form.add(new AjaxLink("catalogModeHelp") {
+        form.add(new AjaxLink("processAccessModeHelp") {
             @Override
             public void onClick(AjaxRequestTarget target) {
                 dialog.showInfo(target, 
-                    new StringResourceModel("catalogModeHelp.title",getPage(), null),
-                    new StringResourceModel("catalogModeHelp.message",getPage(), null));
+                    new StringResourceModel("processAccessModeHelp.title",getPage(), null),
+                    new StringResourceModel("processAccessModeHelp.message",getPage(), null));
             }
         });
-        catalogModeChoice = new RadioChoice("catalogMode", new PropertyModel<CatalogMode>(wpsInfo, "catalogMode"), CATALOG_MODES, new CatalogModeRenderer());
+        catalogModeChoice = new RadioChoice("processAccessMode", new PropertyModel<CatalogMode>(wpsInfo, "catalogMode"), CATALOG_MODES, new CatalogModeRenderer());
         catalogModeChoice.setSuffix(" ");
         form.add(catalogModeChoice);
 

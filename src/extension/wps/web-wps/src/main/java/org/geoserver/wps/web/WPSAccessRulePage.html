@@ -4,18 +4,18 @@
 	xmlns:wicket="http://wicket.apache.org/">
 <wicket:head>
     <style type="text/css">
-       #catalogMode {
+       #processAccessMode {
          display:block;
          padding-top: 0.5em;
        }
-       #catalogMode input {
+       #processAccessMode input {
           display: block;
           float: left;
           clear:left;
           padding-top:0.5em;
           margin-bottom: 0.5em;
        }
-       #catalogMode label {
+       #processAccessMode label {
           clear:right;
           margin-bottom: 0.5em;
        }
@@ -35,10 +35,10 @@
             <li style="padding-top: 20px;">
             <fieldset>
               <legend>
-                <span><wicket:message key="catalogMode">Catalog Mode</wicket:message></span>
-                <a href="#" wicket:id="catalogModeHelp" class="help-link"></a>
+                <span><wicket:message key="processAccessMode">Process access mode</wicket:message></span>
+                <a href="#" wicket:id="processAccessModeHelp" class="help-link"></a>
               </legend>
-              <span id="catalogMode" wicket:id="catalogMode">
+              <span id="processAccessMode" wicket:id="processAccessMode">
                 <input type="radio">mode 1</input>
               </span>
             </fieldset>
