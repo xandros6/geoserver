@@ -49,25 +49,23 @@ public class ProcessAccessLimits extends AccessLimits {
     private void checkCatalogMode() {
         if (!this.allowed) {
             Request request = Dispatcher.REQUEST.get();
-            // if in hide mode, do nothing
+            //If in HIDE mode stay hidden
             if (getMode() == CatalogMode.HIDE) {
 
             } else if (getMode() == CatalogMode.MIXED) {
-                // if request is a get capabilities and mixed, we hide again   
-                this.allowed = false;
+                //In MIXED mode the process stay hidden
                 if(request != null && "GetCapabilities".equalsIgnoreCase(request.getRequest())){
-                                       // otherwise challenge the user for credentials
+                    //And throw unauthorized access in other case
                 }else{
-                    //Internal call
-                    //if(request == null){
-                        //this.allowed = false;
-                    //}else{
-                        throw unauthorizedAccess(resource);
-                    //}
+                    throw unauthorizedAccess(resource);
                 }
             } else {
+                //In CHALLENGE mode the process is always visible
                 this.allowed = true;
-                if(request != null && ("Execute".equalsIgnoreCase(request.getRequest()) || "DescribeProcess".equalsIgnoreCase(request.getRequest())) ){
+                //But throw unauthorized access in Execute and Describe request
+                if(request != null && 
+                        !"GetCapabilities".equalsIgnoreCase(request.getRequest()) && 
+                        ("Execute".equalsIgnoreCase(request.getRequest()) || "DescribeProcess".equalsIgnoreCase(request.getRequest())) ){
                     throw unauthorizedAccess(resource);
                 }
             }
