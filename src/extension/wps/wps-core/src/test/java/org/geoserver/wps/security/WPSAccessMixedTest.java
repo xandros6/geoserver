@@ -35,9 +35,8 @@ public class WPSAccessMixedTest extends AbstractWPSAccessTest {
     @Test
     public void testNotAuthenticatedDescribeProcessPermission() throws Exception {
         setRequestAuth(null, null);
-        Document d = getAsDOM("wps?service=wps&request=describeprocess&identifier=JTS:buffer");
-        assertXpathEvaluatesTo("0", "count(//ProcessDescription[ows:Identifier = 'JTS:buffer'])", d);
-        assertXpathEvaluatesTo("1", "count(//ows:Exception[contains(ows:ExceptionText,'No such process: JTS:buffer')])", d);
+        MockHttpServletResponse response = getAsServletResponse("wps?service=wps&request=describeprocess&identifier=JTS:buffer");
+        assertEquals(response.getErrorCode(),401);
     }
 
     @Test
@@ -52,9 +51,8 @@ public class WPSAccessMixedTest extends AbstractWPSAccessTest {
     @Test
     public void testNotAuthenticatedExecutePermission() throws Exception {
         setRequestAuth(null, null);
-        Document d = postAsDOM( "wps", executeRequestXml );
-        checkValidationErrors(d);
-        assertXpathEvaluatesTo("1", "count(//ows:Exception[contains(ows:ExceptionText,'Unknown process JTS:buffer')])", d);
+        MockHttpServletResponse response = postAsServletResponse("wps", executeRequestXml);
+        assertEquals(response.getErrorCode(),401);
     }
 
     @Test

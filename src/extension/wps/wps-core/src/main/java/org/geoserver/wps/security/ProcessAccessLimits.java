@@ -26,6 +26,7 @@ public class ProcessAccessLimits extends AccessLimits {
     }
 
     public boolean isAllowed(Boolean riseAuthException) {
+        /*
         try{
             checkCatalogMode();
         }catch(InsufficientAuthenticationException ex){
@@ -43,6 +44,8 @@ public class ProcessAccessLimits extends AccessLimits {
                 throw ex;
             }
         }
+        */
+        checkCatalogMode();
         return this.allowed;
     }
 
