@@ -113,7 +113,7 @@ public class ProcessSelectionPage extends AbstractSecurityPage {
         SubmitLink apply = new SubmitLink("apply") {
             @Override
             public void onSubmit() {
-                super.onSubmit();
+               // super.onSubmit();
                 pfi.getFilteredProcesses().clear();
                 for (FilteredProcess process : provider.getItems()){
                     if(!process.getRoles().isEmpty() || !process.getEnabled()){

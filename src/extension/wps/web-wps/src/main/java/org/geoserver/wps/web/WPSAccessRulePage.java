@@ -25,6 +25,7 @@ import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextArea;
+import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -111,10 +112,9 @@ public class WPSAccessRulePage extends AbstractSecurityPage {
                 } else if(property.getName().equals("edit")) {
                     Fragment fragment = new Fragment(id, "linkFragment", WPSAccessRulePage.this);
                     // we use a submit link to avoid losing the other edits in the form
-                    SubmitLink link = new SubmitLink("link") {
-
+                    Link link = new Link("link") {
                         @Override
-                        public void onSubmit() {
+                        public void onClick() {
                             ProcessGroupInfo pfi = (ProcessGroupInfo) itemModel.getObject();
                             setResponsePage(new ProcessSelectionPage(WPSAccessRulePage.this, pfi));
                         }
