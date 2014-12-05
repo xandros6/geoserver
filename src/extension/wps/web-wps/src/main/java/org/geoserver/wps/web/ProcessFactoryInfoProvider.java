@@ -25,6 +25,10 @@ import org.geotools.process.ProcessFactory;
 import org.geotools.process.Processors;
 import org.opengis.feature.type.Name;
 
+/**
+ * Provides entries for the process filtering table in the {@link WPSAccessRulePage}
+ * 
+ */
 @SuppressWarnings("serial")
 public class ProcessFactoryInfoProvider extends GeoServerDataProvider<ProcessGroupInfo> {
 

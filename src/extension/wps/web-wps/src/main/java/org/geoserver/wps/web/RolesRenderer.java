@@ -1,11 +1,19 @@
+/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+ * (c) 2001 - 2013 OpenPlans
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+
 package org.geoserver.wps.web;
 
 import org.apache.wicket.Response;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AbstractAutoCompleteRenderer;
 
+/**
+ * Renders roles as string
+ */
 public class RolesRenderer extends AbstractAutoCompleteRenderer<String> {
     
-    /** serialVersionUID */
     private static final long serialVersionUID = 3407675669346346083L;
     private StringBuilder selectedRoles;
 

@@ -1,6 +1,11 @@
+/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+ * (c) 2001 - 2013 OpenPlans
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+
 package org.geoserver.wps.security;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.ows.Dispatcher;
@@ -25,30 +30,31 @@ public class ProcessAccessLimits extends AccessLimits {
         this.allowed = allowed;
     }
 
-    public boolean isAllowed(Boolean riseAuthException) {
-        /*
-        try{
-            checkCatalogMode();
-        }catch(InsufficientAuthenticationException ex){
-            if(riseAuthException){
-                if(LOGGER.isLoggable(Level.FINE)){
-                    LOGGER.fine(ex.getMessage());
-                }
-                throw ex;
-            }
-        }catch(AccessDeniedException ex){
-            if(riseAuthException){
-                if(LOGGER.isLoggable(Level.FINE)){
-                    LOGGER.fine(ex.getMessage());
-                }
-                throw ex;
-            }
-        }
-        */
+    public boolean isAllowed() {
         checkCatalogMode();
         return this.allowed;
     }
 
+    /*
+     * Changes WPS permissions computed form rules configuration based on CATALOG MODE settings.
+     * Following this rules:
+     * 
+     *  HIDE: 
+     *        GetCapabilities -> hides processes for not authorized roles, shows otherwise
+     *        DescribeProcess -> hides informations for not authorized roles, shows otherwise
+     *        Execute -> hides processes for not authorized roles, executes otherwise
+     *  
+     *  CHALLENGE:
+     *        GetCapabilities -> shows processes for all
+     *        DescribeProcess -> rise unauthorized access exception for not authorized roles, shows informations otherwise
+     *        Execute -> rise unauthorized access exception for not authorized roles, executes otherwise
+     *        
+     *  MIXED:
+     *        GetCapabilities -> hides processes for not authorized roles, shows otherwise
+     *        DescribeProcess -> rise unauthorized access exception for not authorized roles, shows informations otherwise
+     *        Execute -> rise unauthorized access exception for not authorized roles, executes otherwise
+     *  
+     */
     private void checkCatalogMode() {
         if (!this.allowed) {
             Request request = Dispatcher.REQUEST.get();

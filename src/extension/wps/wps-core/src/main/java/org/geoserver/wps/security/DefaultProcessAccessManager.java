@@ -1,9 +1,16 @@
+/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+ * (c) 2001 - 2013 OpenPlans
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+
 package org.geoserver.wps.security;
 
 import static org.geoserver.security.impl.DataAccessRule.ANY;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +32,11 @@ import org.geotools.util.logging.Logging;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
 import org.springframework.security.core.Authentication;
+
+/**
+ * Default implementation of WPS access manager based on wps.xml configuration file.
+ * Builds {@link #SecureTreeNode} to manage roles hierarchy as in {@link #DefaultDataAccessManager}
+ */
 
 public class DefaultProcessAccessManager implements ProcessAccessManager{
 

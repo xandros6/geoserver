@@ -1,3 +1,9 @@
+/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+ * (c) 2001 - 2013 OpenPlans
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+
 package org.geoserver.wps.security;
 
 import java.util.Collections;
@@ -21,7 +27,6 @@ import org.junit.Before;
 
 public abstract class AbstractWPSAccessTest  extends WPSTestSupport {
 
-    
     @Override
     protected void onSetUp(SystemTestData testData) throws Exception {
         super.onSetUp(testData);

@@ -1,3 +1,9 @@
+/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+ * (c) 2001 - 2013 OpenPlans
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+
 package org.geoserver.wps.security;
 
 import java.util.Iterator;
@@ -27,7 +33,7 @@ public class SecurityProcessFactory extends DelegatingProcessFactory {
         Set<Name> names = new LinkedHashSet<Name>(super.getNames());
         for (Iterator<Name> it = names.iterator(); it.hasNext();) {
             Name name = (Name) it.next();
-            if (!selector.allowProcess(name,false)) {
+            if (!selector.allowProcess(name)) {
                 it.remove();
             }
         }

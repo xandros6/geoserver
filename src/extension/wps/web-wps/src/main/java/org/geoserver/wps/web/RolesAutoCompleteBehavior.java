@@ -1,3 +1,9 @@
+/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+ * (c) 2001 - 2013 OpenPlans
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+
 package org.geoserver.wps.web;
 
 import java.util.ArrayList;
@@ -11,6 +17,9 @@ import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteBe
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteSettings;
 import org.apache.wicket.extensions.ajax.markup.html.autocomplete.IAutoCompleteRenderer;
 
+/**
+ * Implements auto complete behavior to manage the roles choice as a list of string separated by ";"
+ */
 public class RolesAutoCompleteBehavior extends AutoCompleteBehavior<String>{
 
     private static final long serialVersionUID = -6743826046815447371L;

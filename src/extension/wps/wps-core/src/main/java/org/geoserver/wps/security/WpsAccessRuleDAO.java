@@ -17,13 +17,11 @@ import java.util.logging.Logger;
 
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerDataDirectory;
-import org.geoserver.config.GeoServerInfo;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.CatalogMode;
-import org.geoserver.security.PropertyFileWatcher;
 import org.geoserver.security.impl.AbstractAccessRuleDAO;
-import org.geoserver.wps.ProcessInfo;
 import org.geoserver.wps.ProcessGroupInfo;
+import org.geoserver.wps.ProcessInfo;
 import org.geoserver.wps.WPSInfo;
 import org.geoserver.wps.process.GeoServerProcessors;
 import org.geotools.process.ProcessFactory;
@@ -31,10 +29,12 @@ import org.geotools.util.logging.Logging;
 import org.opengis.feature.type.Name;
 
 /**
- * Allows one to manage the rules used by the per layer security subsystem
- * TODO: consider splitting the persistence of properties into two strategies,
- * and in memory one, and a file system one (this class is so marginal that
- * I did not do so right away, in memory access is mostly handy for testing)
+ * Allows to manage the rules used by the WPS security subsystem
+ * Uses the interface provided for properties configuration files but using the wps.xml files,
+ * then it override loadRules method.
+ * The wps.xml direct filesystem changes are not loaded in realtime but after 
+ * explicitly catalog file reload request (via GUI for example)
+ * 
  */
 public class WpsAccessRuleDAO extends AbstractAccessRuleDAO<WpsAccessRule> {
     private final static Logger LOGGER = Logging.getLogger(WpsAccessRuleDAO.class);
@@ -82,13 +82,17 @@ public class WpsAccessRuleDAO extends AbstractAccessRuleDAO<WpsAccessRule> {
             lastModified = System.currentTimeMillis();
         }
     }
-    
+
     @Override
     public boolean isModified() {
-        // TODO Auto-generated method stub
         return super.isModified();
     }
-
+    
+    /*
+     * Loads rules from in memory WPSInfo (not from properties files) 
+     * and builds the WPS access rules tress
+     */
+    
     @Override
     protected void loadRules(Properties props) {    
         this.wps = this.gs.getService(WPSInfo.class);

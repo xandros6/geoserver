@@ -37,6 +37,14 @@ import org.geoserver.wps.web.FilteredProcessesProvider.FilteredProcess;
 import org.geotools.process.ProcessFactory;
 import org.opengis.feature.type.Name;
 
+/**
+ * A page listing all WPS process for specific group, 
+ * allowing enable/disable single process and add/remove roles to grant access to it
+ * This page is opened and return to WPS security group management page.
+ * 
+ * @see WPSAccessRulePage
+ */
+
 public class ProcessSelectionPage extends AbstractSecurityPage {
 
     private String title;

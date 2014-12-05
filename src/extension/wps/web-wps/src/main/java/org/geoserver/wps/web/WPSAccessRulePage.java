@@ -43,8 +43,13 @@ import org.geoserver.wps.WPSInfo;
 import org.geoserver.wps.security.WpsAccessRuleDAO;
 
 /**
- * A page listing data access rules, allowing for removal, addition and linking to an edit page
+ * A page listing all WPS groups, 
+ * allowing enable/disable single groups and add/remove roles to grant access to all its processes
+ * This page links to WPS service security configuration page to works on single processes.
+ * 
+ * @see ProcessSelectionPage
  */
+
 @SuppressWarnings("serial")
 public class WPSAccessRulePage extends AbstractSecurityPage {
 

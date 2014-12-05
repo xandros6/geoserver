@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--  <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">-->
+<!-- 
+ Copyright (c) 2001 - 2013 OpenPlans - www.openplans.org. All rights reserved.
+ This code is licensed under the GPL 2.0 license, available at the root
+ application directory.
+ -->
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
 
-<beans xmlns="http://www.springframework.org/schema/beans"
-  xmlns:sec="http://www.springframework.org/schema/security"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans
-          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-          http://www.springframework.org/schema/security
-          http://www.springframework.org/schema/security/spring-security-3.0.4.xsd">
-
-<bean id="securityProcessSelector" class="org.geoserver.wps.security.SecurityProcessSelector">
-</bean>
+    <bean id="securityProcessSelector" class="org.geoserver.wps.security.SecurityProcessSelector">
+    </bean>
   
-<bean id="wpsAccessRuleDAO" class="org.geoserver.wps.security.WpsAccessRuleDAO">
-  	<constructor-arg ref="dataDirectory"/>
-  	<constructor-arg ref="geoServer" />
-</bean>   
+    <bean id="wpsAccessRuleDAO" class="org.geoserver.wps.security.WpsAccessRuleDAO">
+  	    <constructor-arg ref="dataDirectory"/>
+  	    <constructor-arg ref="geoServer" />
+    </bean>   
      
      
 </beans>

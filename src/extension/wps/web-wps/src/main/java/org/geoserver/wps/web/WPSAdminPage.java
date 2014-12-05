@@ -5,23 +5,12 @@
  */
 package org.geoserver.wps.web;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.wicket.Component;
 import org.apache.wicket.PageParameters;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.SubmitLink;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.validation.validator.MinimumValidator;
 import org.geoserver.web.services.BaseServiceAdminPage;
-import org.geoserver.web.wicket.GeoServerDataProvider.Property;
-import org.geoserver.web.wicket.GeoServerTablePanel;
-import org.geoserver.wps.ProcessGroupInfo;
 import org.geoserver.wps.WPSInfo;
 
 /**

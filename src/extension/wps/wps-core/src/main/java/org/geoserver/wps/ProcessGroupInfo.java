@@ -61,11 +61,14 @@ public interface ProcessGroupInfo extends Info, Cloneable {
     MetadataMap getMetadata();
     
     /**
-     * Creares a copy of this class
+     * Create a copy of this class
      * @return
      */
     ProcessGroupInfo clone();
 
+    /*
+     * Return roles granted to works with the WPS on this groups
+     */
     List<String> getRoles();
     
     void setRoles(List<String> roles);
