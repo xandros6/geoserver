@@ -51,6 +51,10 @@ public class WPSXStreamLoader extends XStreamServiceLoader<WPSInfo> {
     @Override
     protected void initXStreamPersister(XStreamPersister xp, GeoServer gs) {
         XStream xs = xp.getXStream();
+        /*
+         * Use custom converter to manage previous wps.xml configuration format
+         */
+        xs.registerConverter(new WPSXStreamBackConverter(xs.getMapper(), xs.getReflectionProvider()));
         xs.alias("wps", WPSInfo.class, WPSInfoImpl.class);
         xs.alias("processGroup", ProcessGroupInfoImpl.class);
         xs.alias("name", NameImpl.class);
