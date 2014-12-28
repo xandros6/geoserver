@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2014-2015 Open Source Geospatial Foundation. All rights reserved.
+	This code is licensed under the GPL 2.0 license, available at the root application
+	directory. -->
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+	<bean id="resumableUploadMapping" class="org.geoserver.rest.RESTMapping">
+		<property name="routes">
+			<map>
+				<entry>
+					<key>
+						<value>/resumableupload</value>
+					</key>
+					<value>resumableUploadFinder</value>
+				</entry>
+				<entry>
+					<key>
+						<value>/resumableupload/{uploadId}</value>
+					</key>
+					<value>resumableUploadFinder</value>
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+	<bean id="resumableUploadFinder" class="org.geoserver.restupload.ResumableUploadCatalogFinder" parent="abstractCatalogFinder"/>
+
+</beans>
