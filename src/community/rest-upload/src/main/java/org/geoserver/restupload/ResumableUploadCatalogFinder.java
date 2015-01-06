@@ -14,6 +14,8 @@ import org.restlet.resource.Resource;
 
 public class ResumableUploadCatalogFinder extends AbstractCatalogFinder{
 
+    private ResumableUploadResourceManager resumableUploadResourceManager;
+
     protected ResumableUploadCatalogFinder(Catalog catalog) {
         super(catalog);
     }
@@ -21,9 +23,14 @@ public class ResumableUploadCatalogFinder extends AbstractCatalogFinder{
     @Override
     public Resource findTarget(Request request, Response response) {
         if (request.getMethod() == Method.GET ) {
-            return new ResumableUploadCatalogResource(getContext(),request,response,catalog);
+            return new ResumableUploadCatalogResource(getContext(),request,response,catalog, resumableUploadResourceManager);
         }
-        return new ResumableUploadCatalogResource( null, request, response, catalog );
+        return new ResumableUploadCatalogResource( null, request, response, catalog, resumableUploadResourceManager );
+    }
+
+    public void setResumableUploadResourceManager(ResumableUploadResourceManager resumableUploadResourceManager) {
+        this.resumableUploadResourceManager = resumableUploadResourceManager;
     }
 
 }
+

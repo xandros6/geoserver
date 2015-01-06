@@ -24,6 +24,56 @@
 		</property>
 	</bean>
 
-	<bean id="resumableUploadFinder" class="org.geoserver.restupload.ResumableUploadCatalogFinder" parent="abstractCatalogFinder"/>
+	<bean id="resumableUploadResourceManager" class="org.geoserver.restupload.ResumableUploadResourceManager">
+		<constructor-arg index="0" value="tmp/upload" />
+	</bean>
+
+	<bean id="resumableUploadFinder" class="org.geoserver.restupload.ResumableUploadCatalogFinder" parent="abstractCatalogFinder">
+		<property name="resumableUploadResourceManager" ref="resumableUploadResourceManager" />
+	</bean>
+	<!--
+       ==================================================================
+       Deal with temporary files
+       ==================================================================
+    -->
+
+    <!-- Map dispatcher in order to publish the REST upload directory
+    <bean id="restUploadTempDirDispatcherMapping" class="org.geoserver.ows.OWSHandlerMapping">
+  	  <constructor-arg ref="catalog"/>
+      <property name="alwaysUseFullPath" value="true" />
+      <property name="mappings">
+        <props>
+          <prop key="/tmp/upload">filePublisher</prop>
+        </props>
+      </property>
+    </bean>-->
+
+    <!-- Temp storage cleanup -->
+    <bean id="resumableUploadStorageCleaner" class="org.geoserver.restupload.ResumableUploadResourceCleaner">
+      <constructor-arg index="0" ref="resumableUploadResourceManager" />
+      <constructor-arg index="1" value="300000"  />
+    </bean>
+
+    <!-- Definition of how often the scheduled task runs -->
+    <bean id="resumableUploadStorageCleanerTask" class="org.springframework.scheduling.timer.ScheduledTimerTask">
+      <!-- wait 10 seconds before starting repeated execution -->
+      <property name="delay" value="10000" />
+      <!-- run every 60 seconds -->
+      <property name="period" value="60000" />
+      <property name="timerTask" ref="resumableUploadStorageCleaner" />
+    </bean>
+
+    <!--
+      And finally the class that instantiates the scheduled tasks and
+      makes them run
+    -->
+    <bean id="resumableUploadTimerFactory" class="org.springframework.scheduling.timer.TimerFactoryBean" lazy-init="false">
+      <property name="scheduledTimerTasks">
+        <list>
+          <ref bean="resumableUploadStorageCleanerTask" />
+        </list>
+      </property>
+      <property name="daemon" value="true" />
+    </bean>
 
 </beans>
