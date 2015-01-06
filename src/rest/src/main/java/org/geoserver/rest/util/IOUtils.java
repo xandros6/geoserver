@@ -403,12 +403,14 @@ public class IOUtils extends org.apache.commons.io.IOUtils {
 		copyFile(sourceFile, destinationFile, DEFAULT_SIZE);
 	}
 
-	/**
-         * Copies the content of the source channel onto the destination channel.
+        /**
+         * Copies the content of the source channel onto the destination file.
          *
          * @param bufferSize size of the temp buffer to use for this copy.
          * @param source the source {@link ReadableByteChannel}.
-         * @param destination the destination {@link WritableByteChannel};.
+         * @param destinationFile the {@link File} to copy to.
+         * @param initialWritePosition position of destination file to start appends source bytes.
+         * @return total bytes written
          * @throws IOException in case something bad happens.
          */
         public static Long copyToFileChannel(int bufferSize, ReadableByteChannel source,FileChannel destination, Long initialWritePosition ) throws IOException {
