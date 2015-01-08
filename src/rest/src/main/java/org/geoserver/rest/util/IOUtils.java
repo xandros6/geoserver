@@ -403,52 +403,52 @@ public class IOUtils extends org.apache.commons.io.IOUtils {
 		copyFile(sourceFile, destinationFile, DEFAULT_SIZE);
 	}
 
-        /**
-         * Copies the content of the source channel onto the destination file.
-         *
-         * @param bufferSize size of the temp buffer to use for this copy.
-         * @param source the source {@link ReadableByteChannel}.
-         * @param destinationFile the {@link File} to copy to.
-         * @param initialWritePosition position of destination file to start appends source bytes.
-         * @return total bytes written
-         * @throws IOException in case something bad happens.
-         */
-        public static Long copyToFileChannel(int bufferSize, ReadableByteChannel source,FileChannel destination, Long initialWritePosition ) throws IOException {
-            Long writedByte = 0L;
-            inputNotNull(source,destination);
-            if(!source.isOpen()||!destination.isOpen())
-                throw new IllegalStateException("Source and destination channels must be open.");
+	/**
+	 * Copies the content of the source channel onto the destination file.
+	 *
+	 * @param bufferSize size of the temp buffer to use for this copy.
+	 * @param source the source {@link ReadableByteChannel}.
+	 * @param destinationFile the {@link File} to copy to.
+	 * @param initialWritePosition position of destination file to start appends source bytes.
+	 * @return total bytes written
+	 * @throws IOException in case something bad happens.
+	 */
+	public static Long copyToFileChannel(int bufferSize, ReadableByteChannel source,
+	        FileChannel destination, Long initialWritePosition) throws IOException {
+	    Long writedByte = 0L;
+	    inputNotNull(source, destination);
+	    if (!source.isOpen() || !destination.isOpen())
+	        throw new IllegalStateException("Source and destination channels must be open.");
 
-            final java.nio.ByteBuffer buffer= java.nio.ByteBuffer.allocateDirect(bufferSize);
-            FileLock lock = null;
-            try {
-                lock = destination.lock();
+	    final java.nio.ByteBuffer buffer = java.nio.ByteBuffer.allocateDirect(bufferSize);
+	    FileLock lock = null;
+	    try {
+	        lock = destination.lock();
 
-                //Move destination to position
-                destination.position(initialWritePosition);
+	        // Move destination to position
+	        destination.position(initialWritePosition);
 
-                while(source.read(buffer)!=-1)
-                {
-                    //prepare the buffer for draining
-                    buffer.flip();
-                    //write to destination
-                    while(buffer.hasRemaining())
-                        writedByte = writedByte + destination.write(buffer);
-                    //clear
-                    buffer.clear();
-                }
-            } finally {
-                if (lock != null) {
-                    try {
-                        lock.release();
-                    }catch (Throwable t) {
-                        if(LOGGER.isLoggable(Level.INFO))
-                            LOGGER.log(Level.INFO,t.getLocalizedMessage(),t);
-                    }
-                }
-            }
-            return writedByte;
-        }
+	        while (source.read(buffer) != -1) {
+	            // prepare the buffer for draining
+	            buffer.flip();
+	            // write to destination
+	            while (buffer.hasRemaining())
+	                writedByte = writedByte + destination.write(buffer);
+	            // clear
+	            buffer.clear();
+	        }
+	    } finally {
+	        if (lock != null) {
+	            try {
+	                lock.release();
+	            } catch (Throwable t) {
+	                if (LOGGER.isLoggable(Level.INFO))
+	                    LOGGER.log(Level.INFO, t.getLocalizedMessage(), t);
+	            }
+	        }
+	    }
+	    return writedByte;
+	}
 
 	
 	/**
