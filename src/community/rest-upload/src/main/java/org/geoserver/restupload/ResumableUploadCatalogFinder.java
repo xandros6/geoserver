@@ -12,7 +12,7 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.resource.Resource;
 
-public class ResumableUploadCatalogFinder extends AbstractCatalogFinder{
+public class ResumableUploadCatalogFinder extends AbstractCatalogFinder {
 
     private ResumableUploadResourceManager resumableUploadResourceManager;
 
@@ -22,15 +22,17 @@ public class ResumableUploadCatalogFinder extends AbstractCatalogFinder{
 
     @Override
     public Resource findTarget(Request request, Response response) {
-        if (request.getMethod() == Method.GET ) {
-            return new ResumableUploadCatalogResource(getContext(),request,response,catalog, resumableUploadResourceManager);
+        if (request.getMethod() == Method.GET) {
+            return new ResumableUploadCatalogResource(getContext(), request, response, catalog,
+                    resumableUploadResourceManager);
         }
-        return new ResumableUploadCatalogResource( null, request, response, catalog, resumableUploadResourceManager );
+        return new ResumableUploadCatalogResource(null, request, response, catalog,
+                resumableUploadResourceManager);
     }
 
-    public void setResumableUploadResourceManager(ResumableUploadResourceManager resumableUploadResourceManager) {
+    public void setResumableUploadResourceManager(
+            ResumableUploadResourceManager resumableUploadResourceManager) {
         this.resumableUploadResourceManager = resumableUploadResourceManager;
     }
 
 }
-

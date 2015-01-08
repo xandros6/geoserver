@@ -37,6 +37,7 @@ public class ResumableUploadResourceManager {
 
     private static final class ResumableUploadResource {
         private Long totalFileSize = 0L;
+
         private File file;
 
         public ResumableUploadResource(String id) {
@@ -60,7 +61,7 @@ public class ResumableUploadResourceManager {
         }
 
         public void delete() {
-            if(this.file.exists()){
+            if (this.file.exists()) {
                 this.file.delete();
             }
         }
@@ -91,7 +92,7 @@ public class ResumableUploadResourceManager {
         return uploadId;
     }
 
-    public Boolean existsUploads(){
+    public Boolean existsUploads() {
         return (resourceCache.size() != 0);
     }
 
@@ -101,17 +102,18 @@ public class ResumableUploadResourceManager {
 
     public Long handleUpload(String uploadId, Representation entity, Long startPosition) {
         Long writedBytes = 0L;
-        try{
+        try {
             final ReadableByteChannel source = entity.getChannel();
             RandomAccessFile raf = null;
             FileChannel outputChannel = null;
             try {
                 raf = new RandomAccessFile(resourceCache.get(uploadId).getFile(), "rw");
                 outputChannel = raf.getChannel();
-                writedBytes = IOUtils.copyToFileChannel(256 * 1024, source, outputChannel, startPosition);
+                writedBytes = IOUtils.copyToFileChannel(256 * 1024, source, outputChannel,
+                        startPosition);
             } finally {
                 try {
-                    if(raf != null) {
+                    if (raf != null) {
                         raf.close();
                     }
                 } finally {
@@ -119,22 +121,22 @@ public class ResumableUploadResourceManager {
                     IOUtils.closeQuietly(outputChannel);
                 }
             }
-        }catch(IOException e){
-            LOGGER.log(Level.SEVERE,e.getMessage(),e);
-        }finally{
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        } finally {
 
         }
 
         return resourceCache.get(uploadId).getFile().length();
     }
 
-    public Boolean validateUpload(String uploadId, Long totalByteToUpload,
-            Long startPosition, Long endPosition, Long totalFileSize) {
+    public Boolean validateUpload(String uploadId, Long totalByteToUpload, Long startPosition,
+            Long endPosition, Long totalFileSize) {
         Boolean validated = false;
         ResumableUploadResource uploadResource = resourceCache.get(uploadId);
-        if(uploadResource.getFile().exists()) {
-            if(uploadResource.getFile().length() == startPosition &&
-                    uploadResource.getTotalFileSize().longValue() == totalFileSize.longValue()){
+        if (uploadResource.getFile().exists()) {
+            if (uploadResource.getFile().length() == startPosition
+                    && uploadResource.getTotalFileSize().longValue() == totalFileSize.longValue()) {
                 validated = true;
             }
         }
@@ -157,13 +159,13 @@ public class ResumableUploadResourceManager {
     }
 
     public void uploadDone(String uploadId) {
-        //TODO MAPPING FILE
+        // TODO MAPPING FILE
     }
 
     public void cleanExpiredResources(long expirationThreshold) {
-        for(String uploadId : resourceCache.keySet()){
+        for (String uploadId : resourceCache.keySet()) {
             ResumableUploadResource resource = resourceCache.get(uploadId);
-            if(resource.getLastModified() < expirationThreshold){
+            if (resource.getLastModified() < expirationThreshold) {
                 resource.delete();
                 resourceCache.remove(uploadId);
             }
