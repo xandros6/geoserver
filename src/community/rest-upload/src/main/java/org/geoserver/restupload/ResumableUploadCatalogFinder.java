@@ -7,7 +7,6 @@ package org.geoserver.restupload;
 
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.rest.AbstractCatalogFinder;
-import org.restlet.data.Method;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.resource.Resource;
@@ -22,11 +21,7 @@ public class ResumableUploadCatalogFinder extends AbstractCatalogFinder {
 
     @Override
     public Resource findTarget(Request request, Response response) {
-        if (request.getMethod() == Method.GET) {
-            return new ResumableUploadCatalogResource(getContext(), request, response, catalog,
-                    resumableUploadResourceManager);
-        }
-        return new ResumableUploadCatalogResource(null, request, response, catalog,
+        return new ResumableUploadCatalogResource(getContext(), request, response, catalog,
                 resumableUploadResourceManager);
     }
 

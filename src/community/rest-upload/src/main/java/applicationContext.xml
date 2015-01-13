@@ -5,6 +5,12 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+      <property name="location">
+        <value>resumableUpload.properties</value>
+      </property>
+    </bean>
+
     <bean id="resumableUploadMapping" class="org.geoserver.rest.RESTMapping">
         <property name="routes">
             <map>
@@ -26,7 +32,7 @@
 
     <bean id="resumableUploadResourceManager"
         class="org.geoserver.restupload.ResumableUploadResourceManager">
-        <constructor-arg index="0" value="tmp/upload" />
+        <constructor-arg index="0" value="${resumable.tempPath}" />
     </bean>
 
     <bean id="resumableUploadFinder"
@@ -34,14 +40,11 @@
         parent="abstractCatalogFinder">
         <property name="resumableUploadResourceManager" ref="resumableUploadResourceManager" />
     </bean>
-    <!-- ==================================================================
-        Deal with temporary files ================================================================== -->
 
-    <!-- Map dispatcher in order to publish the REST upload directory <bean
-        id="restUploadTempDirDispatcherMapping" class="org.geoserver.ows.OWSHandlerMapping">
-        <constructor-arg ref="catalog"/> <property name="alwaysUseFullPath" value="true"
-        /> <property name="mappings"> <props> <prop key="/tmp/upload">filePublisher</prop>
-        </props> </property> </bean> -->
+    <bean id="resumableUploadPathMapper" class="org.geoserver.restupload.ResumableUploadPathMapper">
+      <constructor-arg ref="catalog"/>
+      <property name="sourcePath" value="${resumable.tempPath}"/>
+    </bean>
 
     <!-- Temp storage cleanup -->
     <bean id="resumableUploadStorageCleaner"

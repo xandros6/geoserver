@@ -5,12 +5,14 @@
 
 package org.geoserver.restupload;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.StringUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.rest.util.RESTUtils;
+import org.geotools.util.NumberRange;
 import org.geotools.util.logging.Logging;
 import org.restlet.Context;
 import org.restlet.data.Form;
@@ -49,12 +51,12 @@ public class ResumableUploadCatalogResource extends Resource {
 
     @Override
     public boolean allowPut() {
-        return resumableUploadResourceManager.existsUploads();
+        return resumableUploadResourceManager.hasAnyResource();
     }
 
     @Override
     public boolean allowGet() {
-        return resumableUploadResourceManager.existsUploads();
+        return true;
     }
 
     @Override
@@ -62,11 +64,24 @@ public class ResumableUploadCatalogResource extends Resource {
      * First POST request returns upload URL with uploadId to call with successive PUT request
      */
     public void handlePost() {
-        String uploadId = resumableUploadResourceManager.createUploadResource();
-        Representation output = new StringRepresentation(uploadId, MediaType.TEXT_PLAIN);
-        Response response = getResponse();
-        response.setEntity(output);
-        response.setStatus(Status.SUCCESS_CREATED);
+        try {
+            String filePath = getRequest().getEntity().getText();
+            if (filePath == null || filePath.isEmpty()) {
+                getResponse().setStatus(
+                        new Status(Status.CLIENT_ERROR_BAD_REQUEST,
+                                "POST data must contains upload file path"));
+                return;
+            }
+            String uploadId = resumableUploadResourceManager.createUploadResource(filePath);
+            Representation output = new StringRepresentation(uploadId, MediaType.TEXT_PLAIN);
+            Response response = getResponse();
+            response.setEntity(output);
+            response.setStatus(Status.SUCCESS_CREATED);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            getResponse().setStatus(new Status(Status.SERVER_ERROR_INTERNAL, e.getMessage()));
+            return;
+        }
     }
 
     /*
@@ -83,9 +98,9 @@ public class ResumableUploadCatalogResource extends Resource {
                     new Status(Status.CLIENT_ERROR_BAD_REQUEST, "Missing upload ID"));
             return;
         }
-        if (!resumableUploadResourceManager.existsUpload(uploadId)) {
+        if (!resumableUploadResourceManager.resourceExists(uploadId)) {
             getResponse()
-            .setStatus(new Status(Status.CLIENT_ERROR_BAD_REQUEST, "Unknow upload ID"));
+                    .setStatus(new Status(Status.CLIENT_ERROR_BAD_REQUEST, "Unknow upload ID"));
             return;
         }
         Long totalByteToUpload = getContentLength();
@@ -98,36 +113,34 @@ public class ResumableUploadCatalogResource extends Resource {
                             "Not zero Content-Length header must be specified"));
             return;
         }
-        String contentRange = getContentRange();
-        if (!contentRange.isEmpty()) {
+        HeaderRange headerRange = getHeaderRange();
+        if (headerRange != null) {
             try {
-                String range = contentRange.substring(6);
-                String[] rangeParts = range.split("/");
-                startPosition = Long.parseLong(rangeParts[0].split("-")[0]);
-                endPosition = Long.parseLong(rangeParts[0].split("-")[1]);
-                totalFileSize = Long.parseLong(rangeParts[1]);
-                if (startPosition > endPosition
-                        || ((endPosition - startPosition) != totalByteToUpload)) {
-                    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                if (headerRange.getMinimum() > headerRange.getMaximum()
+                        || (headerRange.getRange().longValue() != totalByteToUpload)) {
+                    getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST,
+                            "Range parameter values are not valid");
                     return;
                 }
+                startPosition = headerRange.getMinimum().longValue();
+                endPosition = headerRange.getMaximum().longValue();
+                totalFileSize = headerRange.getTotalFileSize();
                 /*
                  * Validate resume request If resume is requested existing file must contains the number of bytes matching startPosition
                  */
                 Boolean validated = resumableUploadResourceManager.validateUpload(uploadId,
                         totalByteToUpload, startPosition, endPosition, totalFileSize);
                 if (!validated) {
-                    getResponse().setStatus(Status.CLIENT_ERROR_REQUESTED_RANGE_NOT_SATISFIABLE);
+                    getResponse().setStatus(Status.CLIENT_ERROR_REQUESTED_RANGE_NOT_SATISFIABLE,
+                            "Range parameter values not meets partial uploaded files size");
                     return;
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                getResponse().setStatus(Status.SERVER_ERROR_INTERNAL, e.getMessage());
                 return;
             }
         } else {
-            // First upload request, save file size
-            resumableUploadResourceManager.setFileSize(uploadId, totalFileSize);
             // Delete previous file if exists
             resumableUploadResourceManager.clearUpload(uploadId);
         }
@@ -137,18 +150,25 @@ public class ResumableUploadCatalogResource extends Resource {
          */
         Long writedBytes = resumableUploadResourceManager.handleUpload(uploadId, getRequest()
                 .getEntity(), startPosition);
-        if (writedBytes < resumableUploadResourceManager.getFileSize(uploadId)) {
+        if (writedBytes < totalFileSize) {
             getResponse().setStatus(new Status(RESUME_INCOMPLETE.getCode()));
             Series<Parameter> headers = new Form();
             headers.add("Content-Length", "0");
             headers.add("Range", "0-" + (writedBytes - 1));
             getResponse().getAttributes().put("org.restlet.http.headers", headers);
         } else {
-            Representation output = new StringRepresentation("resturl", MediaType.TEXT_PLAIN);
+            String mappedPath;
+            try {
+                mappedPath = resumableUploadResourceManager.uploadDone(uploadId);
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                getResponse().setStatus(Status.SERVER_ERROR_INTERNAL, e.getMessage());
+                return;
+            }
+            Representation output = new StringRepresentation(mappedPath, MediaType.TEXT_PLAIN);
             Response response = getResponse();
             response.setEntity(output);
             response.setStatus(Status.SUCCESS_OK);
-            resumableUploadResourceManager.uploadDone(uploadId);
         }
 
     }
@@ -164,24 +184,27 @@ public class ResumableUploadCatalogResource extends Resource {
                     new Status(Status.CLIENT_ERROR_BAD_REQUEST, "Missing upload ID"));
             return;
         }
-        if (!resumableUploadResourceManager.existsUpload(uploadId)) {
-            getResponse()
-            .setStatus(new Status(Status.CLIENT_ERROR_BAD_REQUEST, "Unknow upload ID"));
+
+        try {
+            if (!resumableUploadResourceManager.isUploadDone(uploadId)) {
+                Long writedBytes = resumableUploadResourceManager.getWritedBytes(uploadId);
+                getResponse().setStatus(new Status(RESUME_INCOMPLETE.getCode()));
+                Series<Parameter> headers = new Form();
+                headers.add("Content-Length", "0");
+                headers.add("Range", "0-" + (writedBytes - 1));
+                getResponse().getAttributes().put("org.restlet.http.headers", headers);
+            } else {
+                Representation output = new StringRepresentation("resturl", MediaType.TEXT_PLAIN);
+                Response response = getResponse();
+                response.setEntity(output);
+                response.setStatus(Status.SUCCESS_OK);
+            }
+        } catch (IllegalStateException e) {
+            getResponse().setStatus(new Status(Status.CLIENT_ERROR_NOT_FOUND, e.getMessage()));
             return;
-        }
-        Long writedBytes = resumableUploadResourceManager.getWritedBytes(uploadId);
-        if (writedBytes < resumableUploadResourceManager.getFileSize(uploadId)) {
-            getResponse().setStatus(new Status(RESUME_INCOMPLETE.getCode()));
-            Series<Parameter> headers = new Form();
-            headers.add("Content-Length", "0");
-            headers.add("Range", "0-" + (writedBytes - 1));
-            getResponse().getAttributes().put("org.restlet.http.headers", headers);
-        } else {
-            Representation output = new StringRepresentation("resturl", MediaType.TEXT_PLAIN);
-            Response response = getResponse();
-            response.setEntity(output);
-            response.setStatus(Status.SUCCESS_OK);
-            resumableUploadResourceManager.uploadDone(uploadId);
+        } catch (IOException e) {
+            getResponse().setStatus(new Status(Status.SERVER_ERROR_INTERNAL, e.getMessage()));
+            return;
         }
     }
 
@@ -201,17 +224,52 @@ public class ResumableUploadCatalogResource extends Resource {
         return contentLength;
     }
 
-    private String getContentRange() {
-        String contentRange = "";
+    private HeaderRange getHeaderRange() {
+        HeaderRange headerRange = null;
         Object oHeaders = getRequest().getAttributes().get("org.restlet.http.headers");
         if (oHeaders != null) {
             Series<Parameter> headers = (Series<Parameter>) oHeaders;
             Parameter contentRangeParam = headers.getFirst("Content-Range", true);
             if (contentRangeParam != null) {
-                contentRange = contentRangeParam.getValue();
+                String contentRangeStr = contentRangeParam.getValue();
+                String range = contentRangeStr.substring(6);
+                String[] rangeParts = range.split("/");
+                Long startPosition = Long.parseLong(rangeParts[0].split("-")[0]);
+                Long endPosition = Long.parseLong(rangeParts[0].split("-")[1]);
+                Long totalFileSize = Long.parseLong(rangeParts[1]);
+                headerRange = new HeaderRange(startPosition, endPosition, totalFileSize);
             }
         }
-        return contentRange;
+        return headerRange;
+    }
+
+    private class HeaderRange {
+        public final NumberRange<Long> contentRange;
+
+        public final Long totalFileSize;
+
+        public HeaderRange(Long startPosition, Long endPosition, Long totalFileSize) {
+            super();
+            this.contentRange = new NumberRange<Long>(Long.class, startPosition, endPosition);
+            this.totalFileSize = totalFileSize;
+        }
+
+        public Double getMinimum() {
+            return contentRange.getMinimum();
+        }
+
+        public Double getMaximum() {
+            return contentRange.getMaximum();
+        }
+
+        public Long getTotalFileSize() {
+            return totalFileSize;
+        }
+
+        public Double getRange() {
+            return (contentRange.getMaximum() - contentRange.getMinimum());
+        }
+
     }
 
 }

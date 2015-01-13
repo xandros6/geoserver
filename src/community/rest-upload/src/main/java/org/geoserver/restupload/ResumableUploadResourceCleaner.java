@@ -28,7 +28,7 @@ public class ResumableUploadResourceCleaner extends TimerTask {
     @Override
     public void run() {
         try {
-            if (!resourceManager.existsUploads() || expirationDelay == 0) {
+            if (!resourceManager.hasAnyResource() || expirationDelay == 0) {
                 return;
             }
 

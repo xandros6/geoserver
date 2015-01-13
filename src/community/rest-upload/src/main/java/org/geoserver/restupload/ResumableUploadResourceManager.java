@@ -10,23 +10,29 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.rest.util.IOUtils;
+import org.geoserver.rest.util.RESTUtils;
 import org.geotools.util.logging.Logging;
 import org.restlet.resource.Representation;
 
 public class ResumableUploadResourceManager {
 
     private static final Logger LOGGER = Logging.getLogger(ResumableUploadResourceManager.class);
-
-    private static ConcurrentHashMap<String, ResumableUploadResource> resourceCache = new ConcurrentHashMap<String, ResumableUploadResource>();
 
     private static Resource tmpUploadFolder;
 
@@ -36,33 +42,33 @@ public class ResumableUploadResourceManager {
     }
 
     private static final class ResumableUploadResource {
-        private Long totalFileSize = 0L;
+        private String id;
 
         private File file;
 
-        public ResumableUploadResource(String id) {
-            this.file = new File(tmpUploadFolder.dir(), id);
-        }
-
-        public void setTotalFileSize(Long totalFileSize) {
-            this.totalFileSize = totalFileSize;
-        }
-
-        public Long getTotalFileSize() {
-            return totalFileSize;
+        public ResumableUploadResource(String id, File file) {
+            this.id = id;
+            this.file = file;
         }
 
         public File getFile() {
             return file;
         }
 
-        public long getLastModified() {
-            return this.file.lastModified();
-        }
-
         public void delete() {
             if (this.file.exists()) {
                 this.file.delete();
+            }
+        }
+
+        public void clear() {
+            if (this.file.exists()) {
+                this.file.delete();
+            }
+            try {
+                this.file.createNewFile();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
 
@@ -81,33 +87,64 @@ public class ResumableUploadResourceManager {
         return id;
     }
 
-    public String createUploadResource() {
+    public String createUploadResource(String filePath) throws IllegalStateException, IOException {
         String uploadId = getUploadId();
-        ResumableUploadResource uploadResource = resourceCache.get(uploadId);
+        ResumableUploadResource uploadResource = getResource(uploadId);
         if (uploadResource != null) {
             throw new IllegalStateException("The uploadId was already set!");
         } else {
-            resourceCache.put(uploadId, new ResumableUploadResource(uploadId));
+            createUploadResource(filePath, uploadId);
         }
         return uploadId;
     }
 
-    public Boolean existsUploads() {
-        return (resourceCache.size() != 0);
+    // Return a FILE by append uploadId to filePath with "_" separator
+    private void createUploadResource(String filePath, String uploadId) throws IOException {
+        String tempPath = FilenameUtils.removeExtension(filePath) + "_" + uploadId + "."
+                + FilenameUtils.getExtension(filePath);
+        tempPath = tempPath.replaceAll("^/", "");
+        tempPath = FilenameUtils.concat(tmpUploadFolder.dir().getCanonicalPath(), tempPath);
+        try {
+            new File(tempPath).getParentFile().mkdirs();
+            new File(tempPath).createNewFile();
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to create upload resource");
+        }
     }
 
-    public boolean existsUpload(String uploadId) {
-        return (resourceCache.get(uploadId) != null);
+    // Find resource with specific uploadId
+    private ResumableUploadResource getResource(String uploadId) throws IllegalStateException {
+        Collection<File> files = FileUtils.listFiles(tmpUploadFolder.dir(), new WildcardFileFilter(
+                "*_" + uploadId + ".*"), TrueFileFilter.INSTANCE);
+        if (files.size() == 1) {
+            return new ResumableUploadResource(uploadId, files.iterator().next());
+        }
+        if (files.size() > 1) {
+            throw new IllegalStateException("Found multiple files with same uploadId");
+        }
+        return null;
+
+    }
+
+    public Boolean hasAnyResource() {
+        Collection<File> files = FileUtils.listFiles(tmpUploadFolder.dir(), new WildcardFileFilter(
+                "*.*"), TrueFileFilter.INSTANCE);
+        return (files.size() != 0);
+    }
+
+    public boolean resourceExists(String uploadId) {
+        return getResource(uploadId) != null;
     }
 
     public Long handleUpload(String uploadId, Representation entity, Long startPosition) {
+        ResumableUploadResource resource = getResource(uploadId);
         Long writedBytes = 0L;
         try {
             final ReadableByteChannel source = entity.getChannel();
             RandomAccessFile raf = null;
             FileChannel outputChannel = null;
             try {
-                raf = new RandomAccessFile(resourceCache.get(uploadId).getFile(), "rw");
+                raf = new RandomAccessFile(resource.getFile(), "rw");
                 outputChannel = raf.getChannel();
                 writedBytes = IOUtils.copyToFileChannel(256 * 1024, source, outputChannel,
                         startPosition);
@@ -127,53 +164,82 @@ public class ResumableUploadResourceManager {
 
         }
 
-        return resourceCache.get(uploadId).getFile().length();
+        return resource.getFile().length();
     }
 
     public Boolean validateUpload(String uploadId, Long totalByteToUpload, Long startPosition,
             Long endPosition, Long totalFileSize) {
         Boolean validated = false;
-        ResumableUploadResource uploadResource = resourceCache.get(uploadId);
-        if (uploadResource.getFile().exists()) {
-            if (uploadResource.getFile().length() == startPosition
-                    && uploadResource.getTotalFileSize().longValue() == totalFileSize.longValue()) {
+        ResumableUploadResource uploadResource = getResource(uploadId);
+        if (uploadResource != null && uploadResource.getFile().exists()) {
+            if (uploadResource.getFile().length() == startPosition) {
                 validated = true;
             }
         }
         return validated;
     }
 
-    public void setFileSize(String uploadId, Long totalFileSize) {
-        ResumableUploadResource uploadResource = resourceCache.get(uploadId);
-        uploadResource.setTotalFileSize(totalFileSize);
-    }
-
-    public Long getFileSize(String uploadId) {
-        ResumableUploadResource uploadResource = resourceCache.get(uploadId);
-        return uploadResource.getTotalFileSize();
-    }
-
     public void clearUpload(String uploadId) {
-        ResumableUploadResource resource = resourceCache.get(uploadId);
-        resource.delete();
-    }
-
-    public void uploadDone(String uploadId) {
-        // TODO MAPPING FILE
+        ResumableUploadResource resource = getResource(uploadId);
+        if (resource != null) {
+            resource.clear();
+        }
     }
 
     public void cleanExpiredResources(long expirationThreshold) {
-        for (String uploadId : resourceCache.keySet()) {
-            ResumableUploadResource resource = resourceCache.get(uploadId);
-            if (resource.getLastModified() < expirationThreshold) {
-                resource.delete();
-                resourceCache.remove(uploadId);
+        Collection<File> files = FileUtils.listFiles(tmpUploadFolder.dir(), new WildcardFileFilter(
+                "*.*"), TrueFileFilter.INSTANCE);
+        for (Iterator<File> i = files.iterator(); i.hasNext();) {
+            File file = i.next();
+            if (file.lastModified() < expirationThreshold) {
+                file.delete();
             }
         }
     }
 
     public Long getWritedBytes(String uploadId) {
-        return resourceCache.get(uploadId).getFile().length();
+        return getResource(uploadId).getFile().length();
+    }
+
+    public String uploadDone(String uploadId) throws IOException {
+        ResumableUploadResource resource = getResource(uploadId);
+        Map<String, String> storeParams = new HashMap<String, String>();
+        StringBuilder destinationPath = new StringBuilder(getDestinationPath(uploadId));
+        String tempFile = resource.getFile().getCanonicalPath();
+        RESTUtils.remapping(null, FilenameUtils.getBaseName(destinationPath.toString()),
+                destinationPath, tempFile, storeParams);
+        resource.delete();
+        // Add temporary sidecar file to mark upload completion, it will be cleared after expirationThreshold
+        getSideCarFile(uploadId).createNewFile();
+        return destinationPath.toString();
+    }
+
+    private File getSideCarFile(String uploadId) throws IOException {
+        String sidecarPath = FilenameUtils.concat(tmpUploadFolder.dir().getCanonicalPath(),
+                uploadId + ".sidecar");
+        return new File(sidecarPath);
+    }
+
+    public Boolean isUploadDone(String uploadId) throws IOException, IllegalStateException {
+        ResumableUploadResource resource = getResource(uploadId);
+        if (resource != null) {
+            return false;
+        } else {
+            if (getSideCarFile(uploadId).exists()) {
+                return true;
+            } else {
+                throw new IllegalStateException("Resource uploaded not found");
+            }
+        }
+    }
+
+    private String getDestinationPath(String uploadId) throws IOException {
+        ResumableUploadResource resource = getResource(uploadId);
+        String fileName = resource.getFile().getCanonicalPath()
+                .replaceAll(tmpUploadFolder.dir().getCanonicalPath(), "");
+        fileName = fileName.replaceAll("_" + uploadId, "");
+        fileName = fileName.replaceAll("^/", "");
+        return fileName;
     }
 
 }
