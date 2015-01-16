@@ -54,6 +54,9 @@ public class ResumableUploadPathMapper extends RESTUploadPathMapperImpl {
         this.sourcePath = sourcePath;
     }
 
+    /*
+     * Filter resource: only the file in sourcePath will be processed by this mapper
+     */
     private Boolean canExecute(String itemPath) {
         Boolean canExecute = false;
         GeoServerResourceLoader loader = GeoServerExtensions.bean(GeoServerResourceLoader.class);
