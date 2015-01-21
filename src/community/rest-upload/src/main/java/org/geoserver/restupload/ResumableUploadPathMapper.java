@@ -29,21 +29,20 @@ public class ResumableUploadPathMapper extends RESTUploadPathMapperImpl {
     @Override
     public void mapItemPath(String workspace, String store, Map<String, String> storeParams,
             StringBuilder itemPath, String sourcePath) throws IOException {
+        super.mapItemPath(workspace, store, storeParams, itemPath, sourcePath);
         if (!canExecute(sourcePath.toString())) {
             return;
         }
-        super.mapItemPath(workspace, store, storeParams, itemPath, sourcePath);
         String root = RESTUtils.getRootDirectory(workspace, store, catalog);
         if (root == null || root.isEmpty()) {
-            throw new IOException("REST upload root directory not mapped");
+            //GEOSERVER_DATA_DIR/data/
+            GeoServerResourceLoader loader = GeoServerExtensions.bean(GeoServerResourceLoader.class);
+            Resource data = loader.get("data");
+            root = data.dir().getAbsolutePath();
         }
-        // Copy file to destination
         String destination = FilenameUtils.concat(root, itemPath.toString());
-        // Create folders
-        File destinationFile = new File(destination);
-        destinationFile.getParentFolder().mkdirs();
-        // Fill file
-        IOUtils.copyFile(new File(sourcePath.toString()), destinationFile);
+        itemPath.setLength(0);
+        itemPath.append(destination);
     }
 
     public String getSourcePath() {

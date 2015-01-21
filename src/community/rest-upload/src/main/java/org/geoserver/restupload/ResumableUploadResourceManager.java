@@ -138,7 +138,7 @@ public class ResumableUploadResourceManager {
         }
     }
 
-    public Long getWritedBytes(String uploadId) {
+    public Long getWrittenBytes(String uploadId) {
         return getResource(uploadId).getFile().length();
     }
 
@@ -149,10 +149,16 @@ public class ResumableUploadResourceManager {
     public String uploadDone(String uploadId) throws IOException {
         ResumableUploadResource resource = getResource(uploadId);
         Map<String, String> storeParams = new HashMap<String, String>();
-        StringBuilder destinationPath = new StringBuilder(getDestinationPath(uploadId));
+        String destinationPath = getDestinationPath(uploadId);
+        StringBuilder remappingPath = new StringBuilder(destinationPath);
         String tempFile = resource.getFile().getCanonicalPath();
-        RESTUtils.remapping(null, FilenameUtils.getBaseName(destinationPath.toString()),
-                destinationPath, tempFile, storeParams);
+        RESTUtils.remapping(null, FilenameUtils.getBaseName(destinationPath),
+                remappingPath, tempFile, storeParams);
+        //Move file to remapped path
+        File destinationFile = new File(remappingPath.toString());
+        destinationFile.getParentFile().mkdirs();
+        // Fill file
+        IOUtils.copyFile(resource.getFile(), destinationFile);
         resource.delete();
         // Add temporary sidecar file to mark upload completion, it will be cleared after expirationThreshold
         getSideCarFile(uploadId).createNewFile();

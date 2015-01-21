@@ -119,6 +119,22 @@ public class ResumableUploadTest extends CatalogRESTTestSupport {
     }
 
     @Test
+    public void testUploadFullWithoutRestDir() throws Exception {
+        //Set ROOT_KEY to null
+        GeoServerInfo global = getGeoServer().getGlobal();
+        SettingsInfoImpl info = (SettingsInfoImpl) ModificationProxy.unwrap(global.getSettings());
+        MetadataMap map = info.getMetadata();
+        map.remove(RESTUtils.ROOT_KEY);
+        global.setSettings(info);
+        getGeoServer().save(global);
+        //Set root
+        GeoServerResourceLoader loader = GeoServerExtensions.bean(GeoServerResourceLoader.class);
+        Resource data = loader.get("data");
+        root = data.dir().getAbsolutePath();
+        testUploadFull();
+    }
+
+    @Test
     public void testPartialUpload() throws Exception {
         String uploadId = sendPostRequest();
         MockHttpServletRequest request = createRequest("/rest/resumableupload/" + uploadId);
@@ -337,7 +353,6 @@ public class ResumableUploadTest extends CatalogRESTTestSupport {
         byte[] b = new byte[200];
         new Random().nextBytes(b);
         return b;
-        // return toBytes(getClass().getResourceAsStream("bigFile.shp"));
     }
 
     private byte[] toBytes(InputStream in) throws IOException {
@@ -367,7 +382,9 @@ public class ResumableUploadTest extends CatalogRESTTestSupport {
         request.setHeader("Content-type", "text/plain");
         MockHttpServletResponse response = dispatch(request);
         assertEquals(Status.SUCCESS_CREATED.getCode(), response.getStatusCode());
-        return response.getOutputStreamContent();
+        String uploadId = FilenameUtils.getBaseName(response.getOutputStreamContent());
+        //assertEquals(uploadId, FilenameUtils.getBaseName(response.getHeader("Location")));
+        return uploadId;
     }
 
 }

@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang.StringUtils;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.rest.util.RESTUtils;
@@ -18,6 +20,7 @@ import org.restlet.Context;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.Parameter;
+import org.restlet.data.Reference;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
@@ -96,9 +99,17 @@ public class ResumableUploadCatalogResource extends Resource {
                                 "POST data must contains upload file path"));
                 return;
             }
+            Reference ref = getRequest().getResourceRef();
+            String baseURL = ref.getIdentifier();
+
             String uploadId = resumableUploadResourceManager.createUploadResource(filePath);
-            Representation output = new StringRepresentation(uploadId, MediaType.TEXT_PLAIN);
+
+            Representation output = new StringRepresentation(baseURL+uploadId, MediaType.TEXT_PLAIN);
             Response response = getResponse();
+
+            Series<Parameter> headers = new Form();
+            headers.add("Location", baseURL+uploadId);
+            getResponse().getAttributes().put("org.restlet.http.headers", headers);
             response.setEntity(output);
             response.setStatus(Status.SUCCESS_CREATED);
         } catch (Exception e) {
@@ -227,7 +238,7 @@ public class ResumableUploadCatalogResource extends Resource {
 
         try {
             if (!resumableUploadResourceManager.isUploadDone(uploadId)) {
-                Long writedBytes = resumableUploadResourceManager.getWritedBytes(uploadId);
+                Long writedBytes = resumableUploadResourceManager.getWrittenBytes(uploadId);
                 getResponse().setStatus(new Status(RESUME_INCOMPLETE.getCode()));
                 Series<Parameter> headers = new Form();
                 headers.add("Content-Length", "0");

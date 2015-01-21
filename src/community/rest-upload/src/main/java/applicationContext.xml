@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (C) 2015 Open Source Geospatial Foundation. All rights
-    reserved. This code is licensed under the GPL 2.0 license, available at the
-    root application directory. -->
+<!-- Copyright (C) 2015 Open Source Geospatial Foundation. All rights reserved.
+    This code is licensed under the GPL 2.0 license, available at the root application
+    directory. -->
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-      <property name="location">
-        <value>resumableUpload.properties</value>
-      </property>
+    <bean class="org.geoserver.config.GeoServerPropertyConfigurer">
+        <constructor-arg ref="dataDirectory" />
+        <property name="location"
+            value="file:myDirectory/resumableUpload.properties" />
+        <property name="properties">
+            <props>
+                <prop key="resumable.tempPath">tmp/upload</prop>
+                <prop key="resumable.expirationDelay">300000</prop>
+            </props>
+        </property>
     </bean>
 
     <bean id="resumableUploadMapping" class="org.geoserver.rest.RESTMapping">
@@ -42,8 +48,8 @@
     </bean>
 
     <bean id="resumableUploadPathMapper" class="org.geoserver.restupload.ResumableUploadPathMapper">
-      <constructor-arg ref="catalog"/>
-      <property name="sourcePath" value="${resumable.tempPath}"/>
+        <constructor-arg ref="catalog" />
+        <property name="sourcePath" value="${resumable.tempPath}" />
     </bean>
 
     <!-- Temp storage cleanup -->
@@ -51,7 +57,8 @@
         class="org.geoserver.restupload.ResumableUploadResourceCleaner">
         <constructor-arg index="0"
             ref="resumableUploadResourceManager" />
-        <constructor-arg index="1" value="300000" />
+        <constructor-arg index="1"
+            value="${resumable.expirationDelay}" />
     </bean>
 
     <!-- Definition of how often the scheduled task runs -->
