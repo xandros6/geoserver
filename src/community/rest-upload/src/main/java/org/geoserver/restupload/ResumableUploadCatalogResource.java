@@ -104,7 +104,7 @@ public class ResumableUploadCatalogResource extends Resource {
 
             String uploadId = resumableUploadResourceManager.createUploadResource(filePath);
 
-            Representation output = new StringRepresentation(baseURL+uploadId, MediaType.TEXT_PLAIN);
+            Representation output = new StringRepresentation("-----TO USE IN PUT-----\n"+baseURL+"/"+uploadId+"\n-----------------------\n", MediaType.TEXT_PLAIN);
             Response response = getResponse();
 
             Series<Parameter> headers = new Form();
@@ -245,9 +245,7 @@ public class ResumableUploadCatalogResource extends Resource {
                 headers.add("Range", "0-" + (writedBytes - 1));
                 getResponse().getAttributes().put("org.restlet.http.headers", headers);
             } else {
-                Representation output = new StringRepresentation("resturl", MediaType.TEXT_PLAIN);
                 Response response = getResponse();
-                response.setEntity(output);
                 response.setStatus(Status.SUCCESS_OK);
             }
         } catch (IllegalStateException e) {

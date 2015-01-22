@@ -132,6 +132,7 @@ public class ResumableUploadTest extends CatalogRESTTestSupport {
         Resource data = loader.get("data");
         root = data.dir().getAbsolutePath();
         testUploadFull();
+        before();
     }
 
     @Test
@@ -382,8 +383,9 @@ public class ResumableUploadTest extends CatalogRESTTestSupport {
         request.setHeader("Content-type", "text/plain");
         MockHttpServletResponse response = dispatch(request);
         assertEquals(Status.SUCCESS_CREATED.getCode(), response.getStatusCode());
-        String uploadId = FilenameUtils.getBaseName(response.getOutputStreamContent());
-        //assertEquals(uploadId, FilenameUtils.getBaseName(response.getHeader("Location")));
+        String responseBody = response.getOutputStreamContent();
+        String url = responseBody.split("\\r?\\n")[1];
+        String uploadId = FilenameUtils.getBaseName(url);
         return uploadId;
     }
 
