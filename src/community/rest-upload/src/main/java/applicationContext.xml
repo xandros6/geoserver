@@ -8,7 +8,7 @@
     <bean class="org.geoserver.config.GeoServerPropertyConfigurer">
         <constructor-arg ref="dataDirectory" />
         <property name="location"
-            value="file:myDirectory/resumableUpload.properties" />
+            value="file:resumableUpload.properties" />
         <property name="properties">
             <props>
                 <prop key="resumable.tempPath">tmp/upload</prop>
