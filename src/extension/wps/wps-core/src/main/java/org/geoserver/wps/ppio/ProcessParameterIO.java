@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -167,8 +167,9 @@ public abstract class ProcessParameterIO {
         }
 
         // load by factory
-        List<PPIOFactory> ppioFactories = GeoServerExtensions.extensions(PPIOFactory.class, context);
-        for(PPIOFactory factory : ppioFactories){
+        List<PPIOFactory> ppioFactories = GeoServerExtensions
+                .extensions(PPIOFactory.class, context);
+        for (PPIOFactory factory : ppioFactories) {
             l.addAll(factory.getProcessParameterIO());
         }
 
@@ -198,29 +199,30 @@ public abstract class ProcessParameterIO {
     /*
      * Look for PPIO matching the parameter type and suitable for direction handling
      */
-    private static List<ProcessParameterIO> findByDirection(Parameter<?> p, ApplicationContext context, PPIODirection direciton) {
-        List<ProcessParameterIO> decoder = new ArrayList<ProcessParameterIO>();
+    private static List<ProcessParameterIO> findByDirection(Parameter<?> p,
+            ApplicationContext context, PPIODirection direciton) {
+        List<ProcessParameterIO> ppios = new ArrayList<ProcessParameterIO>();
         List<ProcessParameterIO> matches = findAll(p, context);
-        for(ProcessParameterIO ppio : matches){
-            if(ppio.getDirection() == PPIODirection.BOTH || ppio.getDirection() == direciton){
-                decoder.add(ppio);
+        for (ProcessParameterIO ppio : matches) {
+            if (ppio.getDirection() == PPIODirection.BOTH || ppio.getDirection() == direciton) {
+                ppios.add(ppio);
             }
         }
-        return decoder;
+        return ppios;
     }
 
     /*
      * Look for PPIO matching the parameter type and suitable for output handling
      */
     public static List<ProcessParameterIO> findEncoder(Parameter<?> p, ApplicationContext context) {
-        return findByDirection(p,context,PPIODirection.ENCODING);
+        return findByDirection(p, context, PPIODirection.ENCODING);
     }
 
     /*
      * Look for PPIO matching the parameter type and suitable for input handling
      */
     public static List<ProcessParameterIO> findDecoder(Parameter<?> p, ApplicationContext context) {
-        return findByDirection(p,context,PPIODirection.DECODING);
+        return findByDirection(p, context, PPIODirection.DECODING);
     }
 
 
@@ -303,8 +305,8 @@ public abstract class ProcessParameterIO {
 
     /**
      * Used to advertise if the PPIO can support encoding, decoding, or both.
-     * By default BOTH is returned, subclass can override with their
-     * specific abilities
+     * By default BOTH is returned, subclass can override with their specific
+     * abilities
      */
     public PPIODirection getDirection() {
         return PPIODirection.BOTH;
