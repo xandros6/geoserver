@@ -166,6 +166,12 @@ public abstract class ProcessParameterIO {
             l.addAll(GeoServerExtensions.extensions(ProcessParameterIO.class));
         }
 
+        // load by factory
+        List<PPIOFactory> ppioFactories = GeoServerExtensions.extensions(PPIOFactory.class, context);
+        for(PPIOFactory factory : ppioFactories){
+            l.addAll(factory.getProcessParameterIO());
+        }
+
         // find parameters that match
         List<ProcessParameterIO> matches = new ArrayList<ProcessParameterIO>();
 
@@ -188,6 +194,35 @@ public abstract class ProcessParameterIO {
 
         return matches;
     }
+
+    /*
+     * Look for PPIO matching the parameter type and suitable for direction handling
+     */
+    private static List<ProcessParameterIO> findByDirection(Parameter<?> p, ApplicationContext context, PPIODirection direciton) {
+        List<ProcessParameterIO> decoder = new ArrayList<ProcessParameterIO>();
+        List<ProcessParameterIO> matches = findAll(p, context);
+        for(ProcessParameterIO ppio : matches){
+            if(ppio.getDirection() == PPIODirection.BOTH || ppio.getDirection() == direciton){
+                decoder.add(ppio);
+            }
+        }
+        return decoder;
+    }
+
+    /*
+     * Look for PPIO matching the parameter type and suitable for output handling
+     */
+    public static List<ProcessParameterIO> findEncoder(Parameter<?> p, ApplicationContext context) {
+        return findByDirection(p,context,PPIODirection.ENCODING);
+    }
+
+    /*
+     * Look for PPIO matching the parameter type and suitable for input handling
+     */
+    public static List<ProcessParameterIO> findDecoder(Parameter<?> p, ApplicationContext context) {
+        return findByDirection(p,context,PPIODirection.DECODING);
+    }
+
 
     /**
      * Returns true if the specified parameter is a complex one
@@ -255,6 +290,24 @@ public abstract class ProcessParameterIO {
      */
     public final String getIdentifer() {
         return identifer;
+    }
+
+    public enum PPIODirection {
+        /** Only encoding supported, PPIO suitable only for outputs */
+        ENCODING,
+        /** Only decoding supported, PPIO suitable only for inputs */
+        DECODING,
+        /** Both encoding and decoding supported */
+        BOTH
+    };
+
+    /**
+     * Used to advertise if the PPIO can support encoding, decoding, or both.
+     * By default BOTH is returned, subclass can override with their
+     * specific abilities
+     */
+    public PPIODirection getDirection() {
+        return PPIODirection.BOTH;
     }
 
 }

@@ -161,8 +161,8 @@ public class DescribeProcess {
                 ? BigInteger.valueOf( Long.MAX_VALUE ) : BigInteger.valueOf( p.maxOccurs ) );
              
             input.setMinOccurs( BigInteger.valueOf( p.minOccurs ) );
-            
-            List<ProcessParameterIO> ppios = ProcessParameterIO.findAll( p, context);
+
+            List<ProcessParameterIO> ppios = ProcessParameterIO.findDecoder( p, context);
             if ( ppios.isEmpty() ) {
                 throw new WPSException( "Could not find process parameter for type " + p.key + "," + p.type );
             }
@@ -327,8 +327,8 @@ public class DescribeProcess {
             
             output.setIdentifier( Ows11Util.code( p.key ) );
             output.setTitle( Ows11Util.languageString( p.title ) );
-            
-            List<ProcessParameterIO> ppios = ProcessParameterIO.findAll( p, context);
+
+            List<ProcessParameterIO> ppios = ProcessParameterIO.findEncoder( p, context);
             if ( ppios.isEmpty() ) {
                 throw new WPSException( "Could not find process parameter for type " + p.key + "," + p.type );
             }
