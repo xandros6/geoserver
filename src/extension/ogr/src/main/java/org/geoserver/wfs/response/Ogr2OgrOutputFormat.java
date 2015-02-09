@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -190,6 +191,15 @@ public class Ogr2OgrOutputFormat extends WFSGetFeatureOutputFormat {
      */
     public void addFormat(OgrFormat parameters) {
         formats.put(parameters.formatName, parameters);
+    }
+
+    /**
+     * Get a list of supported ogr format
+     *
+     * @return
+     */
+    public List<OgrFormat> getFormatsList() {
+        return new ArrayList<OgrFormat>(formats.values());
     }
 
     /**
