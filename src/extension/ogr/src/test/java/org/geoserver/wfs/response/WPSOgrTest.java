@@ -58,8 +58,10 @@ public class WPSOgrTest extends WPSTestSupport {
                 + "service=wps&request=describeprocess&identifier=gs:BufferFeatureCollection");
         String base = "/wps:ProcessDescriptions/ProcessDescription/ProcessOutputs";
         for (OgrFormat f : OgrConfiguration.DEFAULT.formats) {
-            assertXpathExists(base + "/Output[1]/ComplexOutput/Supported/Format[MimeType='"
-                    + f.mimeType + "']", d);
+            if(f.mimeType != null){
+                assertXpathExists(base + "/Output[1]/ComplexOutput/Supported/Format[MimeType='"
+                        + f.mimeType + "']", d);
+            }
         }
     }
 
