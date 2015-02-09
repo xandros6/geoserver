@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -23,8 +23,8 @@ class OgrConfiguration {
         DEFAULT.formats = new OgrFormat[] {
                 new OgrFormat("MapInfo File", "OGR-TAB", ".tab", false, null),
                 new OgrFormat("MapInfo File", "OGR-MIF", ".mif", false, null, "-dsco", "FORMAT=MIF"),
-                new OgrFormat("CSV", "OGR-CSV", ".csv", true, "text/csv"),
-                new OgrFormat("KML", "OGR-KML", ".kml", true, "application/vnd.google-earth.kml"),
+                new OgrFormat("CSV", "OGR-CSV", ".csv", true, "text/csv", OgrType.TEXT),
+                new OgrFormat("KML", "OGR-KML", ".kml", true, "application/vnd.google-earth.kml", OgrType.XML),
         };
     }
     
