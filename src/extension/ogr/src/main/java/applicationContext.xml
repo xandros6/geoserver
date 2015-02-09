@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<!-- 
- Copyright (C) 2014 - Open Source Geospatial Foundation. All rights reserved.
+<!--
+ Copyright (C) 2014 - 2015 Open Source Geospatial Foundation. All rights reserved.
  This code is licensed under the GPL 2.0 license, available at the root
  application directory.
  -->
@@ -16,5 +16,10 @@
             <ref local="ogr2ogrOutputFormat"/>
         </constructor-arg>
     </bean>
-    
+    <bean id="ogr2ogrPPIOFactory" class="org.geoserver.wfs.response.Ogr2OgrPPIOFactory">
+        <constructor-arg>
+            <ref local="ogr2ogrOutputFormat"/>
+        </constructor-arg>
+    </bean>
+
 </beans>
