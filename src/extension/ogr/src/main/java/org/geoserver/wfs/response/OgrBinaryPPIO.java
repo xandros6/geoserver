@@ -14,6 +14,10 @@ import org.geoserver.platform.Operation;
 import org.geoserver.wps.ppio.BinaryPPIO;
 import org.geotools.feature.FeatureCollection;
 
+/**
+ * Process binary output parameter using ogr2ogr process
+ */
+
 public class OgrBinaryPPIO extends BinaryPPIO {
 
     private Ogr2OgrOutputFormat ogr2OgrOutputFormat;
