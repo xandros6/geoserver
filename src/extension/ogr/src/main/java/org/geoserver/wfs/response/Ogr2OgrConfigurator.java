@@ -1,4 +1,4 @@
-/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -76,16 +76,12 @@ public class Ogr2OgrConfigurator implements ApplicationListener<ContextClosedEve
                             "Could not find/load the ogr2ogr.xml configuration file, using internal defaults");
         }
 
-        if(of.getOgrExecutable() == null){
-            of.setOgrExecutable(configuration.ogr2ogrLocation);
-        }
-        if(of.getGdalData() == null){
-            of.setGdalData(configuration.gdalData);
-        }
-        of.clearFormats();
         // let's load the configuration
-        OGRWrapper wrapper = new OGRWrapper(of.getOgrExecutable(), of.getGdalData());
+        OGRWrapper wrapper = new OGRWrapper(configuration.ogr2ogrLocation, configuration.gdalData);
         Set<String> supported = wrapper.getSupportedFormats();
+        of.setOgrExecutable(configuration.ogr2ogrLocation);
+        of.setGdalData(configuration.gdalData);
+        of.clearFormats();
         for (OgrFormat format : configuration.formats) {
             if (supported.contains(format.ogrFormat)) {
                 of.addFormat(format);
