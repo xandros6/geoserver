@@ -198,7 +198,7 @@ public class Ogr2OgrOutputFormat extends WFSGetFeatureOutputFormat {
      *
      * @return
      */
-    public List<OgrFormat> getFormatsList() {
+    public List<OgrFormat> getFormats() {
         return new ArrayList<OgrFormat>(formats.values());
     }
 
