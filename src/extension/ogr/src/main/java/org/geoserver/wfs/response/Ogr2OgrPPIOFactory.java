@@ -18,6 +18,10 @@ import org.geoserver.wps.ppio.PPIOFactory;
 import org.geoserver.wps.ppio.ProcessParameterIO;
 import org.geotools.util.Version;
 
+/**
+ * Factory to create an output PPIO for each OGR format managed by ogr2ogr libraries.
+ */
+
 public class Ogr2OgrPPIOFactory implements PPIOFactory {
 
     private Ogr2OgrOutputFormat ogr2OgrOutputFormat;
@@ -26,31 +30,41 @@ public class Ogr2OgrPPIOFactory implements PPIOFactory {
         this.ogr2OgrOutputFormat = ogr2OgrOutputFormat;
     }
 
+    /**
+     * This allow to instantiate the right type of PPIO subclass, {@link org.geoserver.wps.ppio.BinaryPPIO} for binary,
+     * {@link org.geoserver.wps.ppio.CDataPPIO} for text, {@link org.geoserver.wps.ppio.XMLPPIO} for xml to serve the format as a process parameter
+     * output.
+     */
     @Override
     public List<ProcessParameterIO> getProcessParameterIO() {
         List<ProcessParameterIO> ogrParams = new ArrayList<ProcessParameterIO>();
-        for (OgrFormat of : this.ogr2OgrOutputFormat.getFormatsList()) {
+        for (OgrFormat of : this.ogr2OgrOutputFormat.getFormats()) {
             ProcessParameterIO ppio = null;
             GetFeatureType gft = WfsFactory.eINSTANCE.createGetFeatureType();
             gft.setOutputFormat(of.formatName);
             Operation operation = new Operation("GetFeature", new Service("WFS", null, new Version(
-                    "1.0.0"), Arrays.asList("GetFeature")), null, new Object[] { gft });
+                    "1.1.0"), Arrays.asList("GetFeature")), null, new Object[] { gft });
             String mimeType = of.mimeType;
-            if(mimeType == null || mimeType.isEmpty()){
+            if (mimeType == null || mimeType.isEmpty()) {
                 of.mimeType = ogr2OgrOutputFormat.getMimeType(null, operation);
             }
-            switch (of.type) {
-            case BINARY:
+            if (of.type == null) {
+                // Binary is default type
                 ppio = new OgrBinaryPPIO(of, ogr2OgrOutputFormat, operation);
-                break;
-            case TEXT:
-                ppio = new OgrCDataPPIO(of, ogr2OgrOutputFormat, operation);
-                break;
-            case XML:
-                ppio = new OgrXMLPPIO(of, ogr2OgrOutputFormat, operation);
-                break;
-            default:
-                break;
+            } else {
+                switch (of.type) {
+                case BINARY:
+                    ppio = new OgrBinaryPPIO(of, ogr2OgrOutputFormat, operation);
+                    break;
+                case TEXT:
+                    ppio = new OgrCDataPPIO(of, ogr2OgrOutputFormat, operation);
+                    break;
+                case XML:
+                    ppio = new OgrXMLPPIO(of, ogr2OgrOutputFormat, operation);
+                    break;
+                default:
+                    break;
+                }
             }
             if (ppio != null) {
                 ogrParams.add(ppio);
