@@ -4,13 +4,16 @@
  */
 package org.geoserver.wfs.response;
 
+import static junit.framework.Assert.assertEquals;
 import static org.custommonkey.xmlunit.XMLAssert.assertXpathExists;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
@@ -18,51 +21,130 @@ import org.geoserver.wps.WPSTestSupport;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
+import com.mockrunner.mock.web.MockHttpServletResponse;
+import com.thoughtworks.xstream.XStream;
+
 public class WPSOgrTest extends WPSTestSupport {
 
-    protected static void setUp() throws Exception {
-        OgrConfiguration.DEFAULT.ogr2ogrLocation = Ogr2OgrTestUtil.getOgr2Ogr();
-        OgrConfiguration.DEFAULT.gdalData = Ogr2OgrTestUtil.getGdalData();
+    private File loadConfiguration() throws Exception {
+        String ogrConfigruationName = "ogr2ogr.xml";
+        GeoServerResourceLoader loader = GeoServerExtensions.bean(GeoServerResourceLoader.class);
+
+        XStream xstream = buildXStream();
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource(ogrConfigruationName).getFile());
+        OgrConfiguration ogrConfiguration = (OgrConfiguration) xstream.fromXML(file);
+        ogrConfiguration.ogr2ogrLocation = Ogr2OgrTestUtil.getOgr2Ogr();
+        ogrConfiguration.gdalData = Ogr2OgrTestUtil.getGdalData();
+
+        File configuration = loader.createFile(ogrConfigruationName);
+        xstream.toXML(ogrConfiguration, new FileOutputStream(configuration));
+
         Ogr2OgrConfigurator configurator = applicationContext.getBean(Ogr2OgrConfigurator.class);
         configurator.loadConfiguration();
+
+        return configuration;
     }
 
     @Test
     public void testConfigurationLoad() throws Exception {
-        // Force resource
-        GeoServerResourceLoader loader = GeoServerExtensions.bean(GeoServerResourceLoader.class);
+        File configuration = null;
         try {
-            loader.createFile("ogr2ogr.xml");
-            loader.copyFromClassPath("ogr2ogr.xml", "ogr2ogr.xml");
+            configuration = loadConfiguration();
+            Ogr2OgrConfigurator configurator = applicationContext
+                    .getBean(Ogr2OgrConfigurator.class);
+            configurator.loadConfiguration();
+            List<String> formatNames = new ArrayList<>();
+            for (OgrFormat f : configurator.of.getFormats()) {
+                formatNames.add(f.formatName);
+            }
+            assertTrue(formatNames.contains("OGR-TAB"));
+            assertTrue(formatNames.contains("OGR-MIF"));
+            assertTrue(formatNames.contains("OGR-CSV"));
+            assertTrue(formatNames.contains("OGR-KML"));
         } catch (IOException e) {
-            LOGGER.log(Level.FINER, e.getMessage(), e);
+            System.err.println(e.getStackTrace());
+        } finally {
+            if (configuration != null) {
+                configuration.delete();
+            }
         }
-        Ogr2OgrConfigurator configurator = applicationContext.getBean(Ogr2OgrConfigurator.class);
-        configurator.of.setOgrExecutable(Ogr2OgrTestUtil.getOgr2Ogr());
-        configurator.of.setGdalData(Ogr2OgrTestUtil.getGdalData());
-        configurator.loadConfiguration();
-        List<String> formatNames = new ArrayList<>();
-        for (OgrFormat f : configurator.of.getFormatsList()) {
-            formatNames.add(f.formatName);
-        }
-        assertTrue(formatNames.contains("OGR-TAB"));
-        assertTrue(formatNames.contains("OGR-MIF"));
-        assertTrue(formatNames.contains("OGR-CSV"));
-        assertTrue(formatNames.contains("OGR-KML"));
     }
 
     @Test
     public void testDescribeProcess() throws Exception {
-        setUp();
+        OgrConfiguration.DEFAULT.ogr2ogrLocation = Ogr2OgrTestUtil.getOgr2Ogr();
+        OgrConfiguration.DEFAULT.gdalData = Ogr2OgrTestUtil.getGdalData();
+        Ogr2OgrConfigurator configurator = applicationContext.getBean(Ogr2OgrConfigurator.class);
+        configurator.loadConfiguration();
         Document d = getAsDOM(root()
                 + "service=wps&request=describeprocess&identifier=gs:BufferFeatureCollection");
         String base = "/wps:ProcessDescriptions/ProcessDescription/ProcessOutputs";
         for (OgrFormat f : OgrConfiguration.DEFAULT.formats) {
-            if(f.mimeType != null){
+            if (f.mimeType != null) {
                 assertXpathExists(base + "/Output[1]/ComplexOutput/Supported/Format[MimeType='"
                         + f.mimeType + "']", d);
             }
         }
+    }
+
+    @Test
+    public void testOGRKMLOutputExecute() throws Exception {
+        File configuration = null;
+        try {
+            configuration = loadConfiguration();
+            Ogr2OgrConfigurator configurator = applicationContext
+                    .getBean(Ogr2OgrConfigurator.class);
+            configurator.loadConfiguration();
+            String xml = "<wps:Execute service='WPS' version='1.0.0' xmlns:wps='http://www.opengis.net/wps/1.0.0' "
+                    + "xmlns:ows='http://www.opengis.net/ows/1.1'>"
+                    + "<ows:Identifier>gs:BufferFeatureCollection</ows:Identifier>"
+                    + "<wps:DataInputs>"
+                    + "<wps:Input>"
+                    + "<ows:Identifier>features</ows:Identifier>"
+                    + "<wps:Data>"
+                    + "<wps:ComplexData mimeType=\"application/json\"><![CDATA["
+                    + readFileIntoString("states-FeatureCollection.json")
+                    + "]]></wps:ComplexData>"
+                    + "</wps:Data>"
+                    + "</wps:Input>"
+                    + "<wps:Input>"
+                    + "<ows:Identifier>distance</ows:Identifier>"
+                    + "<wps:Data>"
+                    + "<wps:LiteralData>10</wps:LiteralData>"
+                    + "</wps:Data>"
+                    + "</wps:Input>"
+                    + "</wps:DataInputs>"
+                    + "<wps:ResponseForm>"
+                    + "<wps:RawDataOutput mimeType=\"application/vnd.google-earth.kml\">"
+                    + "<ows:Identifier>result</ows:Identifier>"
+                    + "</wps:RawDataOutput>"
+                    + "</wps:ResponseForm>" + "</wps:Execute>";
+
+            MockHttpServletResponse r = postAsServletResponse("wps", xml);
+
+            assertEquals("application/vnd.google-earth.kml", r.getContentType());
+            assertTrue(r.getOutputStreamContent().length() > 0);
+
+        } catch (IOException e) {
+            System.err.println(e.getStackTrace());
+        } finally {
+            if (configuration != null) {
+                configuration.delete();
+            }
+        }
+    }
+
+    private static XStream buildXStream() {
+        XStream xstream = new XStream();
+        xstream.alias("OgrConfiguration", OgrConfiguration.class);
+        xstream.alias("Format", OgrFormat.class);
+        xstream.addImplicitCollection(OgrFormat.class, "options", "option", String.class);
+        return xstream;
+    }
+
+    private String urlEncode(String string) throws Exception {
+        return URLEncoder.encode(string, "ASCII");
     }
 
 }
