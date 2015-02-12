@@ -7,18 +7,21 @@ package org.geoserver.wfs.response;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
+import java.lang.reflect.Field;
+
+import javax.xml.transform.stream.StreamResult;
 
 import net.opengis.wfs.FeatureCollectionType;
-import net.opengis.wfs.GetFeatureType;
 import net.opengis.wfs.WfsFactory;
 
 import org.geoserver.platform.Operation;
-import org.geoserver.platform.Service;
 import org.geoserver.wps.ppio.XMLPPIO;
 import org.geotools.feature.FeatureCollection;
-import org.geotools.util.Version;
 import org.xml.sax.ContentHandler;
+
+/**
+ * Process XML output parameter using ogr2ogr process
+ */
 
 public class OgrXMLPPIO extends XMLPPIO {
 
@@ -47,7 +50,19 @@ public class OgrXMLPPIO extends XMLPPIO {
     }
 
     @Override
-    public void encode(Object object, ContentHandler handler) throws Exception {
+    public void encode(Object value, ContentHandler handler) throws Exception {
+        FeatureCollection<?, ?> features = (FeatureCollection<?, ?>) value;
+        FeatureCollectionType fc = WfsFactory.eINSTANCE.createFeatureCollectionType();
+        fc.getFeature().add(features);
+
+        // Use reflection to get output stream from handler and write to it directly
+        Field f = handler.getClass().getDeclaredField("m_result");
+        f.setAccessible(true);// Very important, this allows the setting to work.
+        StreamResult res = (StreamResult) f.get(handler);
+        OutputStream os = res.getOutputStream();
+
+        encode(fc, os);
+
     }
 
     @Override
