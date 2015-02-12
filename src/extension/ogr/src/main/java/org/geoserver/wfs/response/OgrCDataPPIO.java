@@ -14,6 +14,9 @@ import org.geoserver.platform.Operation;
 import org.geoserver.wps.ppio.CDataPPIO;
 import org.geotools.feature.FeatureCollection;
 
+/**
+ * Process text based output parameter using ogr2ogr process
+ */
 public class OgrCDataPPIO extends CDataPPIO {
 
     private Ogr2OgrOutputFormat ogr2OgrOutputFormat;
