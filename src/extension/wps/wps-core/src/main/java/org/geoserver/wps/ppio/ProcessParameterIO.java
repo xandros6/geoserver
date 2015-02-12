@@ -27,12 +27,29 @@ import com.vividsolutions.jts.geom.Envelope;
  * <p>
  * Instances of this interface are registered in a spring context to handle additional types of
  * </p>
- * 
+ *
  * @author Lucas Reed, Refractions Research Inc
  * @author Justin Deoliveira, OpenGEO
- * 
+ *
  */
 public abstract class ProcessParameterIO {
+
+    /**
+     * PPIO possible direction:
+     * <ul>
+     * <li>encoding : PPIO suitable only for outputs</li>
+     * <li>decoding : PPIO suitable only for inputs</li>
+     * <li>both : PPIO suitable both for inputs and outputs</li>
+     * </ul>
+     */
+    public enum PPIODirection {
+        /** Only encoding supported, PPIO suitable only for outputs */
+        ENCODING,
+        /** Only decoding supported, PPIO suitable only for inputs */
+        DECODING,
+        /** Both encoding and decoding supported */
+        BOTH
+    };
 
     /**
      * list of default ppios supported out of the box
@@ -90,7 +107,7 @@ public abstract class ProcessParameterIO {
         // grids
         defaults.add(new GeoTiffPPIO());
         defaults.add(new ArcGridPPIO());
-        
+
         defaults.add(new ImagePPIO.PNGPPIO());
         defaults.add(new ImagePPIO.JPEGPPIO());
 
@@ -98,7 +115,7 @@ public abstract class ProcessParameterIO {
         defaults.add(new BoundingBoxPPIO(Envelope.class));
         defaults.add(new BoundingBoxPPIO(ReferencedEnvelope.class));
         defaults.add(new BoundingBoxPPIO(org.opengis.geometry.Envelope.class));
-        
+
         // filters
         defaults.add(new FilterPPIO.Filter10());
         defaults.add(new FilterPPIO.Filter11());
@@ -200,11 +217,11 @@ public abstract class ProcessParameterIO {
      * Look for PPIO matching the parameter type and suitable for direction handling
      */
     private static List<ProcessParameterIO> findByDirection(Parameter<?> p,
-            ApplicationContext context, PPIODirection direciton) {
+            ApplicationContext context, PPIODirection direction) {
         List<ProcessParameterIO> ppios = new ArrayList<ProcessParameterIO>();
         List<ProcessParameterIO> matches = findAll(p, context);
         for (ProcessParameterIO ppio : matches) {
-            if (ppio.getDirection() == PPIODirection.BOTH || ppio.getDirection() == direciton) {
+            if (ppio.getDirection() == PPIODirection.BOTH || ppio.getDirection() == direction) {
                 ppios.add(ppio);
             }
         }
@@ -225,10 +242,9 @@ public abstract class ProcessParameterIO {
         return findByDirection(p, context, PPIODirection.DECODING);
     }
 
-
     /**
      * Returns true if the specified parameter is a complex one
-     * 
+     *
      * @param param
      * @param applicationContext
      * @return
@@ -294,18 +310,8 @@ public abstract class ProcessParameterIO {
         return identifer;
     }
 
-    public enum PPIODirection {
-        /** Only encoding supported, PPIO suitable only for outputs */
-        ENCODING,
-        /** Only decoding supported, PPIO suitable only for inputs */
-        DECODING,
-        /** Both encoding and decoding supported */
-        BOTH
-    };
-
     /**
-     * Used to advertise if the PPIO can support encoding, decoding, or both.
-     * By default BOTH is returned, subclass can override with their specific
+     * Used to advertise if the PPIO can support encoding, decoding, or both. By default BOTH is returned, subclass can override with their specific
      * abilities
      */
     public PPIODirection getDirection() {
