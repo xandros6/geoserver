@@ -5,11 +5,13 @@
 
 package org.geoserver.wfs.response;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import net.opengis.wfs.FeatureCollectionType;
 import net.opengis.wfs.WfsFactory;
@@ -18,6 +20,8 @@ import org.geoserver.platform.Operation;
 import org.geoserver.wps.ppio.XMLPPIO;
 import org.geotools.feature.FeatureCollection;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 /**
  * Process XML output parameter using ogr2ogr process
@@ -55,13 +59,15 @@ public class OgrXMLPPIO extends XMLPPIO {
         FeatureCollectionType fc = WfsFactory.eINSTANCE.createFeatureCollectionType();
         fc.getFeature().add(features);
 
-        // Use reflection to get output stream from handler and write to it directly
-        Field f = handler.getClass().getDeclaredField("m_result");
-        f.setAccessible(true);// Very important, this allows the setting to work.
-        StreamResult res = (StreamResult) f.get(handler);
-        OutputStream os = res.getOutputStream();
-
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
         encode(fc, os);
+
+        InputStream bis = new ByteArrayInputStream(os.toByteArray());
+        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+        SAXParser saxParser = saxParserFactory.newSAXParser();
+        XMLReader parser = saxParser.getXMLReader();
+        parser.setContentHandler(handler);
+        parser.parse(new InputSource(bis));
 
     }
 
