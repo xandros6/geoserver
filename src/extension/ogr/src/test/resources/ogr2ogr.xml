@@ -21,6 +21,8 @@
             <fileExtension>.csv</fileExtension>
             <singleFile>true</singleFile>
             <mimeType>text/csv</mimeType>
+            <option>-lco</option>
+            <option>GEOMETRY=AS_WKT</option>
             <type>text</type>
         </Format>
         <Format>
