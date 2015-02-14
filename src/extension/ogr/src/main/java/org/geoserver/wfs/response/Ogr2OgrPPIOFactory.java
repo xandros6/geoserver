@@ -44,23 +44,30 @@ public class Ogr2OgrPPIOFactory implements PPIOFactory {
             gft.setOutputFormat(of.formatName);
             Operation operation = new Operation("GetFeature", new Service("WFS", null, new Version(
                     "1.1.0"), Arrays.asList("GetFeature")), null, new Object[] { gft });
-            String mimeType = of.mimeType;
-            if (mimeType == null || mimeType.isEmpty()) {
-                of.mimeType = ogr2OgrOutputFormat.getMimeType(null, operation);
+            // String computedMimeType = of.mimeType;
+            // if (computedMimeType == null || computedMimeType.isEmpty()) {
+            String computedMimeType = ogr2OgrOutputFormat.getMimeType(null, operation);
+            if (of.formatName != null && !of.formatName.isEmpty()) {
+                computedMimeType = computedMimeType + "; subtype=" + of.formatName;
             }
+            // }
             if (of.type == null) {
                 // Binary is default type
-                ppio = new OgrBinaryPPIO(of, ogr2OgrOutputFormat, operation);
+                ppio = new OgrBinaryPPIO(computedMimeType, of.fileExtension, ogr2OgrOutputFormat,
+                        operation);
             } else {
                 switch (of.type) {
                 case BINARY:
-                    ppio = new OgrBinaryPPIO(of, ogr2OgrOutputFormat, operation);
+                    ppio = new OgrBinaryPPIO(computedMimeType, of.fileExtension,
+                            ogr2OgrOutputFormat, operation);
                     break;
                 case TEXT:
-                    ppio = new OgrCDataPPIO(of, ogr2OgrOutputFormat, operation);
+                    ppio = new OgrCDataPPIO(computedMimeType, of.fileExtension,
+                            ogr2OgrOutputFormat, operation);
                     break;
                 case XML:
-                    ppio = new OgrXMLPPIO(of, ogr2OgrOutputFormat, operation);
+                    ppio = new OgrXMLPPIO(computedMimeType, of.fileExtension, ogr2OgrOutputFormat,
+                            operation);
                     break;
                 default:
                     break;

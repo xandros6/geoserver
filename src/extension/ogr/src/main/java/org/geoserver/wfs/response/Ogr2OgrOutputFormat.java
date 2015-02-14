@@ -136,20 +136,21 @@ public class Ogr2OgrOutputFormat extends WFSGetFeatureOutputFormat {
     public String getMimeType(Object value, Operation operation) throws ServiceException {
         GetFeatureRequest request = GetFeatureRequest.adapt(operation.getParameters()[0]);
         String outputFormat = request.getOutputFormat();
-        
+        String mimeType = "";
         OgrFormat format = formats.get(outputFormat);
         if (format == null) {
             throw new WFSException("Unknown output format " + outputFormat);
         } else if (format.singleFile && request.getQueries().size() <= 1) {
-            if(format.mimeType != null) {
-                return format.mimeType;
+            if (format.mimeType != null) {
+                mimeType = format.mimeType;
             } else {
                 // use a default binary blob
-                return "application/octet-stream";
+                mimeType = "application/octet-stream";
             }
         } else {
-            return "application/zip";
+            mimeType = "application/zip";
         }
+        return mimeType;
     }
     
     @Override
