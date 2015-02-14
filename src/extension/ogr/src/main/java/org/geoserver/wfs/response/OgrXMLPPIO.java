@@ -31,21 +31,25 @@ public class OgrXMLPPIO extends XMLPPIO {
 
     private Ogr2OgrOutputFormat ogr2OgrOutputFormat;
 
-    private OgrFormat of;
-
     private Operation operation;
 
-    public OgrXMLPPIO(OgrFormat of, Ogr2OgrOutputFormat ogr2OgrOutputFormat, Operation operation) {
-        super(FeatureCollectionType.class, FeatureCollection.class, of.mimeType,
+    private String fileExtension;
+
+    public OgrXMLPPIO(String mimeType, String fileExtension,
+            Ogr2OgrOutputFormat ogr2OgrOutputFormat, Operation operation) {
+        super(FeatureCollectionType.class, FeatureCollection.class, mimeType,
                 org.geoserver.wfs.xml.v1_1_0.WFS.FEATURECOLLECTION);
-        this.of = of;
+        this.fileExtension = fileExtension;
         this.ogr2OgrOutputFormat = ogr2OgrOutputFormat;
         this.operation = operation;
     }
 
     @Override
     public void encode(Object value, OutputStream os) throws Exception {
-        ogr2OgrOutputFormat.write(value, os, this.operation);
+        FeatureCollection<?, ?> features = (FeatureCollection<?, ?>) value;
+        FeatureCollectionType fc = WfsFactory.eINSTANCE.createFeatureCollectionType();
+        fc.getFeature().add(features);
+        ogr2OgrOutputFormat.write(fc, os, this.operation);
     }
 
     @Override
@@ -54,13 +58,15 @@ public class OgrXMLPPIO extends XMLPPIO {
     }
 
     @Override
+    public String getFileExtension() {
+        return this.fileExtension;
+    }
+
+    @Override
     public void encode(Object value, ContentHandler handler) throws Exception {
-        FeatureCollection<?, ?> features = (FeatureCollection<?, ?>) value;
-        FeatureCollectionType fc = WfsFactory.eINSTANCE.createFeatureCollectionType();
-        fc.getFeature().add(features);
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        encode(fc, os);
+        encode(value, os);
 
         InputStream bis = new ByteArrayInputStream(os.toByteArray());
         SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();

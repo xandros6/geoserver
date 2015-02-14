@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import net.opengis.wfs.FeatureCollectionType;
+import net.opengis.wfs.WfsFactory;
 
 import org.geoserver.platform.Operation;
 import org.geoserver.wps.ppio.CDataPPIO;
@@ -21,25 +22,29 @@ public class OgrCDataPPIO extends CDataPPIO {
 
     private Ogr2OgrOutputFormat ogr2OgrOutputFormat;
 
-    private OgrFormat of;
+    private String fileExtension;
 
     private Operation operation;
 
-    public OgrCDataPPIO(OgrFormat of, Ogr2OgrOutputFormat ogr2OgrOutputFormat, Operation operation) {
-        super(FeatureCollectionType.class, FeatureCollection.class, of.mimeType);
-        this.of = of;
+    public OgrCDataPPIO(String mimeType, String fileExtension,
+            Ogr2OgrOutputFormat ogr2OgrOutputFormat, Operation operation) {
+        super(FeatureCollectionType.class, FeatureCollection.class, mimeType);
+        this.fileExtension = fileExtension;
         this.ogr2OgrOutputFormat = ogr2OgrOutputFormat;
         this.operation = operation;
     }
 
     @Override
     public void encode(Object value, OutputStream os) throws Exception {
-        ogr2OgrOutputFormat.write(value, os, this.operation);
+        FeatureCollection<?, ?> features = (FeatureCollection<?, ?>) value;
+        FeatureCollectionType fc = WfsFactory.eINSTANCE.createFeatureCollectionType();
+        fc.getFeature().add(features);
+        ogr2OgrOutputFormat.write(fc, os, this.operation);
     }
 
     @Override
     public String getFileExtension() {
-        return this.of.fileExtension;
+        return this.fileExtension;
     }
 
     @Override
