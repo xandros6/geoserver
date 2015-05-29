@@ -6,11 +6,15 @@
 package org.geoserver.web.data.resource;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.beanutils.BeanToPropertyValueTransformer;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -30,6 +34,9 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.validation.IValidatable;
+import org.apache.wicket.validation.IValidator;
+import org.apache.wicket.validation.ValidationError;
 import org.geoserver.catalog.AttributeTypeInfo;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.FeatureTypeInfo;
@@ -40,10 +47,15 @@ import org.geoserver.web.data.layer.SQLViewEditPage;
 import org.geoserver.web.wicket.GeoServerAjaxFormLink;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geotools.data.wfs.internal.v2_0.storedquery.StoredQueryConfiguration;
+import org.geotools.filter.FilterAttributeExtractor;
+import org.geotools.filter.text.cql2.CQLException;
+import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.jdbc.VirtualTable;
 import org.geotools.measure.Measure;
 import org.geotools.util.logging.Logging;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.FeatureType;
+import org.opengis.filter.Filter;
 
 @SuppressWarnings("serial")
 public class FeatureResourceConfigurationPanel extends ResourceConfigurationPanel {
@@ -107,7 +119,8 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
         };
         attributePanel.add(attributes);
         
-        TextArea<String> cqlDefinitionFilter = new TextArea<String>("cqlDefinitionFilter");
+        TextArea<String> cqlDefinitionFilter = new TextArea<String>("cqlDefinitionFilter", new FilterModel(model));
+        cqlDefinitionFilter.add(new CqlDefinitionFilterValidator(model));        
         add(cqlDefinitionFilter);
         
         // reload links
@@ -190,6 +203,98 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
     static class ReloadWarningDialog extends WebPage {
         public ReloadWarningDialog(StringResourceModel message) {
             add(new Label("message", message));
+        }
+    }
+    
+    /*
+     * Wicket model to wrap org.opengis.filter.Filter
+     */
+    private class FilterModel implements IModel<String> {
+
+        private FeatureTypeInfo typeInfo;
+
+        public FilterModel(IModel model) {
+            this.typeInfo = (FeatureTypeInfo) model.getObject();
+        }
+
+        @Override
+        public void detach() {
+
+        }
+
+        @Override
+        public String getObject() {
+            Filter filter = typeInfo.getFilter();
+            return filter == null ? "" : ECQL.toCQL(filter);
+        }
+
+        @Override
+        public void setObject(String cqlDefinitionFilterString) {
+            try {
+                typeInfo.setFilter(ECQL.toFilter(cqlDefinitionFilterString));
+            } catch (CQLException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            }
+        }
+
+    }
+
+    /*
+     * Wicket validator to check CQL filter string
+     */
+    private class CqlDefinitionFilterValidator implements IValidator<String> {
+
+        private FeatureTypeInfo typeInfo;
+
+        public CqlDefinitionFilterValidator(IModel model) {
+            this.typeInfo = (FeatureTypeInfo) model.getObject();
+        }
+
+        @Override
+        public void validate(IValidatable<String> validatable) {
+            try {
+                validateCqlDefinitionFilter(typeInfo, validatable.getValue());
+            } catch (Exception e) {
+                ValidationError error = new ValidationError();
+                error.setMessage(e.getMessage());
+                validatable.error(error);
+            }
+
+        }
+
+    }
+
+    /*
+     * Validate that CQL filter syntax is valid, and attribute names used in the CQL filter are actually part of the layer
+     */
+    private void validateCqlDefinitionFilter(FeatureTypeInfo typeInfo,
+            String cqlDefinitionFilterString) throws Exception {
+        Filter cqlDefinitionFilter = null;
+        // if (resourceInfo instanceof FeatureTypeInfo) {
+        // FeatureTypeInfo ftinfo = (FeatureTypeInfo) resourceInfo;
+        // String cqlDefinitionFilterString = ftinfo.getCqlDefinitionFilter();
+        if (cqlDefinitionFilterString != null && !cqlDefinitionFilterString.isEmpty()) {
+            cqlDefinitionFilter = ECQL.toFilter(cqlDefinitionFilterString);
+            FeatureType ft = typeInfo.getFeatureType();
+            if (ft instanceof SimpleFeatureType) {
+
+                SimpleFeatureType sft = (SimpleFeatureType) ft;
+                BeanToPropertyValueTransformer transformer = new BeanToPropertyValueTransformer(
+                        "localName");
+                Collection<String> featureAttributesNames = CollectionUtils.collect(
+                        sft.getAttributeDescriptors(), transformer);
+
+                FilterAttributeExtractor filterAttriubtes = new FilterAttributeExtractor(null);
+                cqlDefinitionFilter.accept(filterAttriubtes, null);
+                Set<String> filterAttributesNames = filterAttriubtes.getAttributeNameSet();
+                for (String filterAttributeName : filterAttributesNames) {
+                    if (!featureAttributesNames.contains(filterAttributeName)) {
+                        throw new ResourceConfigurationException(
+                                ResourceConfigurationException.CQL_ATTRIBUTE_NAME_NOT_FOUND_$1,
+                                new Object[] { filterAttributeName });
+                    }
+                }
+            }
         }
     }
     

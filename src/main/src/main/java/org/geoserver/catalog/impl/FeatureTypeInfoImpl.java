@@ -39,8 +39,6 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
     boolean skipNumberMatched = false;
     boolean circularArcPresent;
     
-    protected String cqlDefinitionFilter;
-    
     public boolean isCircularArcPresent() {
     	return circularArcPresent;
 	}
@@ -215,15 +213,5 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
     public void setLinearizationTolerance(Measure tolerance) {
         this.linearizationTolerance = tolerance;
     }
-
-    @Override
-    public String getCqlDefinitionFilter() {
-        return cqlDefinitionFilter;
-    }
-
-    @Override
-    public void setCqlDefinitionFilter(String cqlDefinitionFilter) {
-        this.cqlDefinitionFilter = cqlDefinitionFilter;
-    }    
     
 }

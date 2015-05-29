@@ -322,14 +322,5 @@ public abstract class DecoratingFeatureTypeInfo extends AbstractDecorator<Featur
     public void setCircularArcPresent(boolean enabled) {
     	delegate.setCircularArcPresent(enabled);
     }
-    
-    @Override
-    public String getCqlDefinitionFilter() {
-        return delegate.getCqlDefinitionFilter();
-    }
-    
-    @Override
-    public void setCqlDefinitionFilter(String cqlDefinitionFilter) {
-        delegate.setCqlDefinitionFilter(cqlDefinitionFilter);        
-    }
+
 }

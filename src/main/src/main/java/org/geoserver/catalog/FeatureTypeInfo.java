@@ -191,15 +191,4 @@ public interface FeatureTypeInfo extends ResourceInfo {
 	
 	void setCircularArcPresent(boolean arcsPresent);
 
-    /**
-     * Return CQL filter used to restrict the list of features returned by the layer
-     * 
-     */
-    public String getCqlDefinitionFilter();
-
-    /**
-     * Set CQL filter to restrict the list of features returned by the layer
-     * 
-     */
-    public void setCqlDefinitionFilter(String cqlDefinitionFilter);
 }

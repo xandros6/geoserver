@@ -281,7 +281,6 @@ public class ResourceConfigurationPage extends GeoServerSecuredPage {
         try {
             Catalog catalog = getCatalog();
             ResourceInfo resourceInfo = getResourceInfo();
-            validateCqlDefinitionFilter(resourceInfo);
             if (isNew) {
                 // updating grid if is a coverage
                 if (resourceInfo instanceof CoverageInfo) {
@@ -343,40 +342,6 @@ public class ResourceConfigurationPage extends GeoServerSecuredPage {
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "Error saving layer", e);
             error(e.getMessage());
-        }
-    }
-
-    /*
-     * Validate that CQL filter syntax is valid, and attribute names used in the CQL filter are actually part of the layer
-     */
-
-    private void validateCqlDefinitionFilter(ResourceInfo resourceInfo) throws Exception {
-        if (resourceInfo instanceof FeatureTypeInfo) {
-            FeatureTypeInfo ftinfo = (FeatureTypeInfo) resourceInfo;
-            String cqlDefinitionFilterString = ftinfo.getCqlDefinitionFilter();
-            if (cqlDefinitionFilterString != null && !cqlDefinitionFilterString.isEmpty()) {
-                Filter cqlDefinitionFilter = ECQL.toFilter(cqlDefinitionFilterString);
-                FeatureType ft = ftinfo.getFeatureType();
-                if (ft instanceof SimpleFeatureType) {
-
-                    SimpleFeatureType sft = (SimpleFeatureType) ft;
-                    BeanToPropertyValueTransformer transformer = new BeanToPropertyValueTransformer(
-                            "localName");
-                    Collection featureAttributesNames = CollectionUtils.collect(
-                            sft.getAttributeDescriptors(), transformer);
-
-                    FilterAttributeExtractor filterAttriubtes = new FilterAttributeExtractor(null);
-                    cqlDefinitionFilter.accept(filterAttriubtes, null);
-                    Set<String> filterAttributesNames = filterAttriubtes.getAttributeNameSet();
-                    for (String filterAttributeName : filterAttributesNames) {
-                        if (!featureAttributesNames.contains(filterAttributeName)) {
-                            throw new ResourceConfigurationException(
-                                    ResourceConfigurationException.CQL_ATTRIBUTE_NAME_NOT_FOUND_$1,
-                                    new Object[] { filterAttributeName });
-                        }
-                    }
-                }
-            }
         }
     }
 
