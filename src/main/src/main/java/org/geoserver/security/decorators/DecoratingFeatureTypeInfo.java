@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -321,5 +321,15 @@ public abstract class DecoratingFeatureTypeInfo extends AbstractDecorator<Featur
     @Override
     public void setCircularArcPresent(boolean enabled) {
     	delegate.setCircularArcPresent(enabled);
+    }
+    
+    @Override
+    public String getCqlDefinitionFilter() {
+        return delegate.getCqlDefinitionFilter();
+    }
+    
+    @Override
+    public void setCqlDefinitionFilter(String cqlDefinitionFilter) {
+        delegate.setCqlDefinitionFilter(cqlDefinitionFilter);        
     }
 }

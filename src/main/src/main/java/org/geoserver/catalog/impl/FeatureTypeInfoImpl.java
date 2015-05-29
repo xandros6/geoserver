@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -38,6 +38,8 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
     boolean overridingServiceSRS;
     boolean skipNumberMatched = false;
     boolean circularArcPresent;
+    
+    protected String cqlDefinitionFilter;
     
     public boolean isCircularArcPresent() {
     	return circularArcPresent;
@@ -213,6 +215,15 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
     public void setLinearizationTolerance(Measure tolerance) {
         this.linearizationTolerance = tolerance;
     }
-    
+
+    @Override
+    public String getCqlDefinitionFilter() {
+        return cqlDefinitionFilter;
+    }
+
+    @Override
+    public void setCqlDefinitionFilter(String cqlDefinitionFilter) {
+        this.cqlDefinitionFilter = cqlDefinitionFilter;
+    }    
     
 }

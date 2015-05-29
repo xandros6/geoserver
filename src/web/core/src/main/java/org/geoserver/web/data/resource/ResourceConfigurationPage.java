@@ -7,13 +7,17 @@ package org.geoserver.web.data.resource;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 
+import org.apache.commons.beanutils.BeanToPropertyValueTransformer;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.WicketRuntimeException;
@@ -33,6 +37,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CoverageInfo;
+import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.ProjectionPolicy;
@@ -48,8 +53,13 @@ import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.factory.GeoTools;
 import org.geotools.feature.NameImpl;
+import org.geotools.filter.FilterAttributeExtractor;
+import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.coverage.grid.GridGeometry;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.FeatureType;
+import org.opengis.filter.Filter;
 
 /**
  * Page allowing to configure a layer and its resource.
@@ -271,6 +281,7 @@ public class ResourceConfigurationPage extends GeoServerSecuredPage {
         try {
             Catalog catalog = getCatalog();
             ResourceInfo resourceInfo = getResourceInfo();
+            validateCqlDefinitionFilter(resourceInfo);
             if (isNew) {
                 // updating grid if is a coverage
                 if (resourceInfo instanceof CoverageInfo) {
@@ -332,6 +343,40 @@ public class ResourceConfigurationPage extends GeoServerSecuredPage {
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "Error saving layer", e);
             error(e.getMessage());
+        }
+    }
+
+    /*
+     * Validate that CQL filter syntax is valid, and attribute names used in the CQL filter are actually part of the layer
+     */
+
+    private void validateCqlDefinitionFilter(ResourceInfo resourceInfo) throws Exception {
+        if (resourceInfo instanceof FeatureTypeInfo) {
+            FeatureTypeInfo ftinfo = (FeatureTypeInfo) resourceInfo;
+            String cqlDefinitionFilterString = ftinfo.getCqlDefinitionFilter();
+            if (cqlDefinitionFilterString != null && !cqlDefinitionFilterString.isEmpty()) {
+                Filter cqlDefinitionFilter = ECQL.toFilter(cqlDefinitionFilterString);
+                FeatureType ft = ftinfo.getFeatureType();
+                if (ft instanceof SimpleFeatureType) {
+
+                    SimpleFeatureType sft = (SimpleFeatureType) ft;
+                    BeanToPropertyValueTransformer transformer = new BeanToPropertyValueTransformer(
+                            "localName");
+                    Collection featureAttributesNames = CollectionUtils.collect(
+                            sft.getAttributeDescriptors(), transformer);
+
+                    FilterAttributeExtractor filterAttriubtes = new FilterAttributeExtractor(null);
+                    cqlDefinitionFilter.accept(filterAttriubtes, null);
+                    Set<String> filterAttributesNames = filterAttriubtes.getAttributeNameSet();
+                    for (String filterAttributeName : filterAttributesNames) {
+                        if (!featureAttributesNames.contains(filterAttributeName)) {
+                            throw new ResourceConfigurationException(
+                                    ResourceConfigurationException.CQL_ATTRIBUTE_NAME_NOT_FOUND_$1,
+                                    new Object[] { filterAttributeName });
+                        }
+                    }
+                }
+            }
         }
     }
 

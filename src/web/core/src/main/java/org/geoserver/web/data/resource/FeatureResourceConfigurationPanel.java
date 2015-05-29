@@ -21,6 +21,7 @@ import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -105,6 +106,9 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
             
         };
         attributePanel.add(attributes);
+        
+        TextArea<String> cqlDefinitionFilter = new TextArea<String>("cqlDefinitionFilter");
+        add(cqlDefinitionFilter);
         
         // reload links
         WebMarkupContainer reloadContainer = new WebMarkupContainer("reloadContainer");

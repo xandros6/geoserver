@@ -192,8 +192,14 @@ public interface FeatureTypeInfo extends ResourceInfo {
 	void setCircularArcPresent(boolean arcsPresent);
 
     /**
-     * The live feature resource, an instance of of {@link FeatureResource}.
+     * Return CQL filter used to restrict the list of features returned by the layer
+     * 
      */
-    //FeatureResource getResource(ProgressListener listener)
-    //        throws IOException;
+    public String getCqlDefinitionFilter();
+
+    /**
+     * Set CQL filter to restrict the list of features returned by the layer
+     * 
+     */
+    public void setCqlDefinitionFilter(String cqlDefinitionFilter);
 }
