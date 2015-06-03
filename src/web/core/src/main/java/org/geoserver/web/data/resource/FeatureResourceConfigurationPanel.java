@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -48,7 +48,6 @@ import org.geoserver.web.wicket.GeoServerAjaxFormLink;
 import org.geoserver.web.wicket.ParamResourceModel;
 import org.geotools.data.wfs.internal.v2_0.storedquery.StoredQueryConfiguration;
 import org.geotools.filter.FilterAttributeExtractor;
-import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.jdbc.VirtualTable;
 import org.geotools.measure.Measure;
@@ -119,8 +118,8 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
         };
         attributePanel.add(attributes);
         
-        TextArea<String> cqlDefinitionFilter = new TextArea<String>("cqlDefinitionFilter", new FilterModel(model));
-        cqlDefinitionFilter.add(new CqlDefinitionFilterValidator(model));        
+        TextArea<String> cqlDefinitionFilter = new TextArea<String>("cqlDefinitionFilter");
+        cqlDefinitionFilter.add(new CqlDefinitionFilterValidator(model));
         add(cqlDefinitionFilter);
         
         // reload links
@@ -205,40 +204,7 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
             add(new Label("message", message));
         }
     }
-    
-    /*
-     * Wicket model to wrap org.opengis.filter.Filter
-     */
-    private class FilterModel implements IModel<String> {
-
-        private FeatureTypeInfo typeInfo;
-
-        public FilterModel(IModel model) {
-            this.typeInfo = (FeatureTypeInfo) model.getObject();
-        }
-
-        @Override
-        public void detach() {
-
-        }
-
-        @Override
-        public String getObject() {
-            Filter filter = typeInfo.getFilter();
-            return filter == null ? "" : ECQL.toCQL(filter);
-        }
-
-        @Override
-        public void setObject(String cqlDefinitionFilterString) {
-            try {
-                typeInfo.setFilter(ECQL.toFilter(cqlDefinitionFilterString));
-            } catch (CQLException e) {
-                LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            }
-        }
-
-    }
-
+ 
     /*
      * Wicket validator to check CQL filter string
      */

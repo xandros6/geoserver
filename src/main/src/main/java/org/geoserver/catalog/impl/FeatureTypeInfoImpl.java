@@ -17,6 +17,8 @@ import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geotools.data.FeatureSource;
 import org.geotools.factory.Hints;
+import org.geotools.filter.text.cql2.CQLException;
+import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.measure.Measure;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
@@ -27,7 +29,9 @@ import org.opengis.util.ProgressListener;
 public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
         FeatureTypeInfo {
 
-    protected Filter filter;
+    protected transient Filter filter;
+
+    protected String cqlDefinitionFilter;
 
     protected int maxFeatures;
     protected int numDecimals;
@@ -77,8 +81,19 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
         this.attributes = attributes;
     }
     
+    /*
+     * The filter is computed by current cqlDefinitionFilter
+     */
     public Filter getFilter() {
-        return filter;
+        Filter definitionFilter = null;
+        try {
+            if (this.getCqlDefinitionFilter() != null && !this.getCqlDefinitionFilter().isEmpty()) {
+                definitionFilter = ECQL.toFilter(this.getCqlDefinitionFilter());
+            }
+        } catch (CQLException e) {
+            LOGGER.severe("Failed to generate filter from ECQL string" + e.getMessage());
+        }
+        return definitionFilter;
     }
 
     public void setFilter(Filter filter) {
@@ -163,13 +178,13 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
      * not the implementation 
      */
     public boolean equals(Object obj) {
-        if ( !(obj instanceof FeatureTypeInfo ) ) {
+        if (!(obj instanceof FeatureTypeInfo)) {
             return false;
         }
-        if ( !super.equals( obj ) ) {
+        if (!super.equals(obj)) {
             return false;
         }
-        
+
         final FeatureTypeInfo other = (FeatureTypeInfo) obj;
         if (attributes == null) {
             if (other.getAttributes() != null)
@@ -180,11 +195,6 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
             if (other.getResponseSRS() != null)
                 return false;
         } else if (!responseSRS.equals(other.getResponseSRS()))
-            return false;
-        if (filter == null) {
-            if (other.getFilter() != null)
-                return false;
-        } else if (!filter.equals(other.getFilter()))
             return false;
         if (circularArcPresent != other.isCircularArcPresent())
             return false;
@@ -197,9 +207,11 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
             return false;
         if (numDecimals != other.getNumDecimals())
             return false;
-        if(overridingServiceSRS != other.isOverridingServiceSRS())
+        if (overridingServiceSRS != other.isOverridingServiceSRS())
             return false;
         if (skipNumberMatched != other.getSkipNumberMatched())
+            return false;
+        if (!cqlDefinitionFilter.equals(other.getCqlDefinitionFilter()))
             return false;
         return true;
     }
@@ -212,6 +224,16 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
     @Override
     public void setLinearizationTolerance(Measure tolerance) {
         this.linearizationTolerance = tolerance;
+    }
+
+    @Override
+    public String getCqlDefinitionFilter() {
+        return cqlDefinitionFilter;
+    }
+
+    @Override
+    public void setCqlDefinitionFilter(String cqlDefinitionFilter) {
+        this.cqlDefinitionFilter = cqlDefinitionFilter;
     }
     
 }
