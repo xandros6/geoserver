@@ -1,4 +1,4 @@
-/* (c) 2015 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -324,13 +324,13 @@ public abstract class DecoratingFeatureTypeInfo extends AbstractDecorator<Featur
     }
     
     @Override
-    public String getCqlDefinitionFilter() {
-        return delegate.getCqlDefinitionFilter();
+    public String getCqlFilter() {
+        return delegate.getCqlFilter();
     }
 
     @Override
-    public void setCqlDefinitionFilter(String cqlDefinitionFilter) {
-        delegate.setCqlDefinitionFilter(cqlDefinitionFilter);
+    public void setCqlFilter(String cqlFilter) {
+        delegate.setCqlFilter(cqlFilter);
     }
 
 }

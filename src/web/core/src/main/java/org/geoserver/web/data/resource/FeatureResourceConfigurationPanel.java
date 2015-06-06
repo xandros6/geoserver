@@ -1,4 +1,4 @@
-/* (c) 2015 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -118,9 +118,9 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
         };
         attributePanel.add(attributes);
         
-        TextArea<String> cqlDefinitionFilter = new TextArea<String>("cqlDefinitionFilter");
-        cqlDefinitionFilter.add(new CqlDefinitionFilterValidator(model));
-        add(cqlDefinitionFilter);
+        TextArea<String> cqlFilter = new TextArea<String>("cqlFilter");
+        cqlFilter.add(new CqlFilterValidator(model));
+        add(cqlFilter);
         
         // reload links
         WebMarkupContainer reloadContainer = new WebMarkupContainer("reloadContainer");
@@ -208,18 +208,18 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
     /*
      * Wicket validator to check CQL filter string
      */
-    private class CqlDefinitionFilterValidator implements IValidator<String> {
+    private class CqlFilterValidator implements IValidator<String> {
 
         private FeatureTypeInfo typeInfo;
 
-        public CqlDefinitionFilterValidator(IModel model) {
+        public CqlFilterValidator(IModel model) {
             this.typeInfo = (FeatureTypeInfo) model.getObject();
         }
 
         @Override
         public void validate(IValidatable<String> validatable) {
             try {
-                validateCqlDefinitionFilter(typeInfo, validatable.getValue());
+                validateCqlFilter(typeInfo, validatable.getValue());
             } catch (Exception e) {
                 ValidationError error = new ValidationError();
                 error.setMessage(e.getMessage());
@@ -233,14 +233,11 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
     /*
      * Validate that CQL filter syntax is valid, and attribute names used in the CQL filter are actually part of the layer
      */
-    private void validateCqlDefinitionFilter(FeatureTypeInfo typeInfo,
-            String cqlDefinitionFilterString) throws Exception {
-        Filter cqlDefinitionFilter = null;
-        // if (resourceInfo instanceof FeatureTypeInfo) {
-        // FeatureTypeInfo ftinfo = (FeatureTypeInfo) resourceInfo;
-        // String cqlDefinitionFilterString = ftinfo.getCqlDefinitionFilter();
-        if (cqlDefinitionFilterString != null && !cqlDefinitionFilterString.isEmpty()) {
-            cqlDefinitionFilter = ECQL.toFilter(cqlDefinitionFilterString);
+    private void validateCqlFilter(FeatureTypeInfo typeInfo,
+            String cqlFilterString) throws Exception {
+        Filter cqlFilter = null;
+        if (cqlFilterString != null && !cqlFilterString.isEmpty()) {
+            cqlFilter = ECQL.toFilter(cqlFilterString);
             FeatureType ft = typeInfo.getFeatureType();
             if (ft instanceof SimpleFeatureType) {
 
@@ -251,7 +248,7 @@ public class FeatureResourceConfigurationPanel extends ResourceConfigurationPane
                         sft.getAttributeDescriptors(), transformer);
 
                 FilterAttributeExtractor filterAttriubtes = new FilterAttributeExtractor(null);
-                cqlDefinitionFilter.accept(filterAttriubtes, null);
+                cqlFilter.accept(filterAttriubtes, null);
                 Set<String> filterAttributesNames = filterAttriubtes.getAttributeNameSet();
                 for (String filterAttributeName : filterAttributesNames) {
                     if (!featureAttributesNames.contains(filterAttributeName)) {

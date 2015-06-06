@@ -7,17 +7,13 @@ package org.geoserver.web.data.resource;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Level;
 
-import org.apache.commons.beanutils.BeanToPropertyValueTransformer;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.PageParameters;
 import org.apache.wicket.WicketRuntimeException;
@@ -37,7 +33,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CoverageInfo;
-import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.ProjectionPolicy;
@@ -53,13 +48,8 @@ import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.factory.GeoTools;
 import org.geotools.feature.NameImpl;
-import org.geotools.filter.FilterAttributeExtractor;
-import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.coverage.grid.GridGeometry;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.FeatureType;
-import org.opengis.filter.Filter;
 
 /**
  * Page allowing to configure a layer and its resource.

@@ -1,4 +1,4 @@
-/* (c) 2015 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -171,13 +171,13 @@ public interface FeatureTypeInfo extends ResourceInfo {
      * Return the ECQL string used as default featue type filter
      *
      */
-    String getCqlDefinitionFilter();
+    String getCqlFilter();
 
     /**
      * Set the ECQL string used as default featue type filter
      *
      */
-    void setCqlDefinitionFilter(String cqlDefinitionFilterString);
+    void setCqlFilter(String cqlFilterString);
     
     /**
      * Returns the underlying feature source instance.

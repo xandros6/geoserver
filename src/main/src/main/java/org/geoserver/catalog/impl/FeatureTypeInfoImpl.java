@@ -1,4 +1,4 @@
-/* (c) 2015 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -31,7 +31,7 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
 
     protected transient Filter filter;
 
-    protected String cqlDefinitionFilter;
+    protected String cqlFilter;
 
     protected int maxFeatures;
     protected int numDecimals;
@@ -82,13 +82,13 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
     }
     
     /*
-     * The filter is computed by current cqlDefinitionFilter
+     * The filter is computed by current cqlFilter
      */
     public Filter getFilter() {
         Filter definitionFilter = null;
         try {
-            if (this.getCqlDefinitionFilter() != null && !this.getCqlDefinitionFilter().isEmpty()) {
-                definitionFilter = ECQL.toFilter(this.getCqlDefinitionFilter());
+            if (this.getCqlFilter() != null && !this.getCqlFilter().isEmpty()) {
+                definitionFilter = ECQL.toFilter(this.getCqlFilter());
             }
         } catch (CQLException e) {
             LOGGER.severe("Failed to generate filter from ECQL string" + e.getMessage());
@@ -211,8 +211,12 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
             return false;
         if (skipNumberMatched != other.getSkipNumberMatched())
             return false;
-        if (!cqlDefinitionFilter.equals(other.getCqlDefinitionFilter()))
+        if (cqlFilter == null) {
+            if (other.getCqlFilter() != null)
+                return false;
+        } else if (!cqlFilter.equals(other.getCqlFilter()))
             return false;
+        
         return true;
     }
 
@@ -227,13 +231,13 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
     }
 
     @Override
-    public String getCqlDefinitionFilter() {
-        return cqlDefinitionFilter;
+    public String getCqlFilter() {
+        return cqlFilter;
     }
 
     @Override
-    public void setCqlDefinitionFilter(String cqlDefinitionFilter) {
-        this.cqlDefinitionFilter = cqlDefinitionFilter;
+    public void setCqlFilter(String cqlFilter) {
+        this.cqlFilter = cqlFilter;
     }
     
 }
