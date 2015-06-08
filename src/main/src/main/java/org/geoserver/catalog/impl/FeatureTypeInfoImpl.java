@@ -91,13 +91,14 @@ public class FeatureTypeInfoImpl extends ResourceInfoImpl implements
                 definitionFilter = ECQL.toFilter(this.getCqlFilter());
             }
         } catch (CQLException e) {
-            LOGGER.severe("Failed to generate filter from ECQL string" + e.getMessage());
+            LOGGER.severe("Failed to generate filter from ECQL string " + e.getMessage());
         }
         return definitionFilter;
     }
 
     public void setFilter(Filter filter) {
         this.filter = filter;
+        this.cqlFilter = (filter != null ? ECQL.toCQL(filter) : null);
     }
     
     public int getMaxFeatures() {
