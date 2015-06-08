@@ -101,10 +101,11 @@ public class DefaultDataStoreEditPanel extends StoreEditPanel {
             for (Param p : dsParams) {
                 ParamInfo paramInfo = new ParamInfo(p);
                 // hide the repository params, the resource pool will inject it transparently
-                if(!Repository.class.equals(paramInfo.getBinding())) {
+                if (!Repository.class.equals(paramInfo.getBinding())) {
                     paramsMetadata.put(p.key, paramInfo);
+                    // set deprecated params for new store, set default value
                     if (isNew) {
-                        // set default value
+                        paramsMetadata.get(p.key).setDeprecated(p.isDeprecated());
                         applyParamDefault(paramInfo, info);
                     }
                 }
@@ -152,6 +153,7 @@ public class DefaultDataStoreEditPanel extends StoreEditPanel {
         final String paramName = paramMetadata.getName();
         final String paramLabel = paramMetadata.getName();
         final boolean required = paramMetadata.isRequired();
+        final boolean deprecated = paramMetadata.isDeprecated();
         final Class<?> binding = paramMetadata.getBinding();
         final List<Serializable> options = paramMetadata.getOptions();
 
@@ -215,6 +217,10 @@ public class DefaultDataStoreEditPanel extends StoreEditPanel {
             }
             parameterPanel = tp;
         }
+        
+        parameterPanel.setVisible(!deprecated);
+        parameterPanel.setVisibilityAllowed(!deprecated);
+        
         return parameterPanel;
     }   
 

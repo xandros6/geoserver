@@ -36,6 +36,8 @@ public class ParamInfo implements Serializable {
     private Class<?> binding;
 
     private boolean required;
+    
+    private boolean deprecated;
 
     private Serializable value;
     
@@ -44,6 +46,7 @@ public class ParamInfo implements Serializable {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ParamInfo(Param param) {
         this.name = param.key;
+        this.deprecated = false;
         // the "short" Param constructor sets the title equal to the key, that's not
         // very useful, use the description in that case instead
         this.title = param.title != null && !param.title.toString().equals(param.key) ? param.title
@@ -111,5 +114,13 @@ public class ParamInfo implements Serializable {
 
     public boolean isRequired() {
         return required;
+    }
+    
+    public boolean isDeprecated() {
+        return deprecated;
+    }
+    
+    public void setDeprecated(boolean deprecated) {
+        this.deprecated = deprecated;
     }
 }
