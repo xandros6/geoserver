@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -11,6 +11,9 @@ import static org.junit.Assert.*;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.geoserver.catalog.Catalog;
+import org.geoserver.catalog.FeatureTypeInfo;
+import org.geoserver.catalog.LayerInfo;
 import org.geoserver.data.test.MockData;
 import org.geoserver.wfs.json.JSONType;
 import org.geoserver.wms.wms_1_1_1.GetFeatureInfoTest;
@@ -190,6 +193,33 @@ public class GetFeatureInfoJSONTest extends GetFeatureInfoTest {
                 .getDouble(0)));
         assertTrue(new NumberRange<Double>(Double.class, 500025d, 500050d).contains((Number) coords
                 .getDouble(1)));
+    }
+    
+    /**
+     * Tests CQL filter
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testCQLFilter() throws Exception {
+        String layer = getLayerId(MockData.FORESTS);
+
+        String request = "wms?version=1.1.1&bbox=-0.002,-0.002,0.002,0.002&styles=&format=jpeg"
+                + "&request=GetFeatureInfo&layers=" + layer + "&query_layers=" + layer
+                + "&width=20&height=20&x=10&y=10" + "&info_format=" + JSONType.json;
+
+        JSONObject json = (JSONObject) getAsJSON(request);
+        JSONArray features = json.getJSONArray("features");
+        assertTrue(features.size() > 0);
+
+        // Add CQL filter
+        FeatureTypeInfo info = getCatalog().getFeatureTypeByName(layer);
+        info.setCqlFilter("NAME LIKE 'Red%'");
+        getCatalog().save(info);
+        json = (JSONObject) getAsJSON(request);
+        features = json.getJSONArray("features");
+        assertEquals(0, features.size());
+
     }
 
  
