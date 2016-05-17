@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2016 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -16,6 +16,7 @@ import java.util.Map;
 import org.geoserver.catalog.LayerGroupInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.LegendInfo;
+import org.geoserver.wms.legendgraphic.LegendUtils.LegendLayout;
 import org.geotools.feature.NameImpl;
 import org.geotools.styling.Style;
 import org.opengis.feature.type.FeatureType;
@@ -241,6 +242,31 @@ public class GetLegendGraphicRequest extends WMSRequest {
      * default legend graphic height, in pixels, to apply if no WIDTH parameter was passed
      */
     public static final int DEFAULT_HEIGHT = 20;
+    
+    /**
+     * default legend graphic layout is vertical
+     */
+    private static final LegendLayout DEFAULT_LAYOUT = LegendLayout.VERTICAL;
+    
+    /**
+     * default column height is not limited
+     */
+    private static final int DEFAULT_COLUMN_HEIGHT = 0;
+    
+    /**
+     * default row width is not limited
+     */
+    private static final int DEFAULT_ROW_WIDTH = 0;
+    
+    /**
+     * default column number is one
+     */
+    private static final int DEFAULT_COLUMNS = 1;
+    
+    /**
+     * default row number is not limited
+     */
+    private static final int DEFAULT_ROWS = 0;
 
     /**
      * The default image format in which to produce a legend graphic. Not really used when
@@ -319,6 +345,31 @@ public class GetLegendGraphicRequest extends WMSRequest {
      * 
      */
     private Locale locale;
+    
+    /**
+     * Optional legend layout
+     */
+    private LegendLayout layout = DEFAULT_LAYOUT;
+    
+    /**
+     * Optional column height limit in px used for vertical layout, no limit if 0
+     */
+    private int columnHeight = DEFAULT_COLUMN_HEIGHT;
+    
+    /**
+     * Optional row width limit in px used for horizontal layout, no limit if 0
+     */
+    private int rowWidth = DEFAULT_ROW_WIDTH;
+    
+    /**
+     * Optional number of maximum column used for vertical layout, no limit if 0
+     */
+    private int columns = DEFAULT_COLUMNS;
+    
+    /**
+     * Optional number of maximum row used for horizontal layout, no limit if 0
+     */
+    private int rows = DEFAULT_ROWS;
 
     /**
      * Creates a new GetLegendGraphicRequest object.
@@ -678,4 +729,90 @@ public class GetLegendGraphicRequest extends WMSRequest {
     public Locale getLocale() {
         return this.locale;
     }
+
+    /**
+     * Gets the layout used by legend
+     * @see LegendLayout
+     */
+    public LegendLayout getLayout() {
+        return layout;
+    }
+
+    /**
+     * Sets the layout used by legend
+     * @see LegendLayout
+     */
+    public void setLayout(LegendLayout layout) {
+        this.layout = layout;
+    }
+
+    /**
+     * Gets the column height limit in px used for vertical layout 
+     *
+     */
+    public int getColumnHeight() {
+        return columnHeight;
+    }
+
+
+    /**
+     * Sets the column height limit in px used for vertical layout 
+     * The number of row is not limited
+     *
+     */
+    public void setColumnHeight(int columnHeight) {
+        this.columnHeight = columnHeight;
+    }
+
+    /**
+     * Gets the row width limit in px used for horizontal layout 
+     *
+     */
+    public int getRowWidth() {
+        return rowWidth;
+    }
+
+    /**
+     * Sets the row width limit in px used for horizontal layout 
+     * The number of column is not limited
+     *
+     */
+    public void setRowWidth(int rowWidth) {
+        this.rowWidth = rowWidth;
+    }
+
+    /**
+     * Gets the column number limit used for vertical layout 
+     *
+     */
+    public int getColumns() {
+        return columns;
+    }
+
+    /**
+     * Sets the column number limit used for vertical layout 
+     * The number of rows is not limited
+     *
+     */
+    public void setColumns(int columns) {
+        this.columns = columns;
+    }
+
+    /**
+     * Gets the row number limit used for horizontal layout 
+     *
+     */
+    public int getRows() {
+        return rows;
+    }
+
+    /**
+     * Sets the row number limit used for horizontal layout
+     * The number of columns is not limited
+     *
+     */
+    public void setRows(int rows) {
+        this.rows = rows;
+    }
+    
 }

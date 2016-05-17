@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2016 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -81,6 +81,11 @@ public class LegendUtils {
 			throw new NullPointerException("Message cannot be null");
 		if(argument==null)
 			throw new NullPointerException(message+" cannot be null");
+	}
+	
+	/**Legend layouts */
+	public enum LegendLayout{
+	    HORIZONTAL,VERTICAL;
 	}
 	
 	public enum VAlign{
