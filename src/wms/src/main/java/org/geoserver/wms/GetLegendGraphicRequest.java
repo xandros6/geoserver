@@ -259,9 +259,9 @@ public class GetLegendGraphicRequest extends WMSRequest {
     private static final int DEFAULT_ROW_WIDTH = 0;
     
     /**
-     * default column number is one
+     * default column number is not limited
      */
-    private static final int DEFAULT_COLUMNS = 1;
+    private static final int DEFAULT_COLUMNS = 0;
     
     /**
      * default row number is not limited

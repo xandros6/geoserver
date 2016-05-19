@@ -9,7 +9,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
 import java.awt.image.RenderedImage;
@@ -31,6 +30,7 @@ import org.geoserver.catalog.LegendInfo;
 import org.geoserver.platform.ServiceException;
 import org.geoserver.wms.GetLegendGraphicRequest;
 import org.geoserver.wms.GetLegendGraphicRequest.LegendRequest;
+import org.geoserver.wms.legendgraphic.LegendUtils.LegendLayout;
 import org.geoserver.wms.map.ImageUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.data.DataUtilities;
@@ -672,27 +672,263 @@ public class BufferedImageLegendGraphicBuilder {
         return LegendUtils.renderLabel(label, graphics, request);
     }
 
-    /**
-     * Receives a list of <code>BufferedImages</code> and produces a new one which holds all the
-     * images in <code>imageStack</code> one above the other, handling labels.
-     * 
-     * @param imageStack
-     *            the list of BufferedImages, one for each applicable Rule
-     * @param rules
-     *            The applicable rules, one for each image in the stack (if not null it's used to
-     *            compute labels)
-     * @param request
-     *            The request.
-     * @param forceLabelsOn
-     *            true for force labels on also with a single image.
-     * @param forceLabelsOff
-     *            true for force labels off also with more than one rule.
-     * 
-     * @return the stack image with all the images on the argument list.
-     * 
-     * @throws IllegalArgumentException
-     *             if the list is empty
-     */
+	/**
+	 * Receives a list of <code>BufferedImages</code> and produces a new one
+	 * which holds all the images in <code>imageStack</code> one above the
+	 * other, handling labels.
+	 * 
+	 * @param imageStack
+	 *            the list of BufferedImages, one for each applicable Rule
+	 * @param rules
+	 *            The applicable rules, one for each image in the stack (if not
+	 *            null it's used to compute labels)
+	 * @param request
+	 *            The request.
+	 * @param forceLabelsOn
+	 *            true for force labels on also with a single image.
+	 * @param forceLabelsOff
+	 *            true for force labels off also with more than one rule.
+	 * 
+	 * @return the stack image with all the images on the argument list.
+	 * 
+	 * @throws IllegalArgumentException
+	 *             if the list is empty
+	 */
+	private BufferedImage mergeLegends(List<RenderedImage> imageStack, Rule[] rules, GetLegendGraphicRequest req,
+			boolean forceLabelsOn, boolean forceLabelsOff) {
+
+		final boolean transparent = req.isTransparent();
+		final Color backgroundColor = LegendUtils.getBackgroundColor(req);
+		Font labelFont = LegendUtils.getLabelFont(req);
+		boolean useAA = LegendUtils.isFontAntiAliasing(req);
+
+		/*
+		 * Builds legend nodes (graphics + label)
+		 */
+		final int imgCount = imageStack.size();
+		List<BufferedImage> nodes = new ArrayList<BufferedImage>();
+		for (int i = 0; i < imgCount; i++) {
+			BufferedImage img = (BufferedImage) imageStack.get(i);
+			BufferedImage label = renderLabel(img, rules[i], req, forceLabelsOff);
+			nodes.add(joinBufferedImage(img, label, labelFont, useAA, transparent, backgroundColor));
+		}
+
+		/*
+		 * Disposes legend nodes into a matrix according to layout rules
+		 */
+		BufferedImage[][] legendMatrix = null;
+		LegendLayout layout = req.getLayout();
+		if (layout == LegendLayout.HORIZONTAL) {
+			int rowNumber = req.getRows() > 0 ? req.getRows() : nodes.size();
+			int colNumber = (int) Math.ceil((float) nodes.size() / rowNumber);
+			legendMatrix = new BufferedImage[rowNumber][colNumber];
+			for (int i = 0; i < nodes.size(); i++) {
+				int rn = i / colNumber;
+				int cn = i - (rn * colNumber);
+				legendMatrix[rn][cn] = nodes.get(i);
+			}
+		}
+		if (layout == LegendLayout.VERTICAL) {
+			int colNumber = req.getColumns() > 0 ? req.getColumns() : nodes.size();
+			int rowNumber = (int) Math.ceil((float) nodes.size() / colNumber);
+			legendMatrix = new BufferedImage[rowNumber][colNumber];
+			for (int i = 0; i < nodes.size(); i++) {
+				int cn = i / rowNumber;
+				int rn = i - (cn * rowNumber);
+				legendMatrix[rn][cn] = nodes.get(i);
+			}
+		}
+
+		/*
+		 * Computes total width and height and limits they according to layout
+		 * rules
+		 */
+		int totalHeight = 0;
+		int totalWidth = 0;
+		for (int rowNumber = 0; rowNumber < legendMatrix.length; rowNumber++) {
+			BufferedImage[] row = legendMatrix[rowNumber];
+			int rowWidth = 0;
+			int rowHeigth = 0;
+			for (int columnNumber = 0; columnNumber < row.length; columnNumber++) {
+				BufferedImage node = legendMatrix[rowNumber][columnNumber];
+				if (node != null) {
+					rowWidth = rowWidth + node.getWidth();
+					rowHeigth = Math.max(rowHeigth, node.getHeight());
+				}
+			}
+			totalWidth = Math.max(totalWidth, rowWidth);
+			totalHeight = totalHeight + rowHeigth;
+		}
+
+		// buffer the width a bit
+		totalWidth += 2;
+
+		int maxHeight = req.getColumnHeight();
+		int maxWidth = req.getRowWidth();
+		if (layout == LegendLayout.VERTICAL && maxHeight > 0) {
+			totalHeight = maxHeight;
+		}
+		if (layout == LegendLayout.HORIZONTAL && maxWidth > 0) {
+			totalWidth = maxWidth;
+		}
+
+		// Build final image
+		final BufferedImage finalLegend = buildFinalLegend(totalHeight, totalWidth, transparent, backgroundColor,
+				labelFont, useAA, legendMatrix);
+
+		return finalLegend;
+
+	}
+
+	/**
+	 * Renders legend matrix and cut off the node that exceeds the maximum
+	 * limits
+	 * 
+	 * @param totalHeight
+	 *            maximum height of legend
+	 * @param totalWidth
+	 *            maximum width of legend
+	 * @param transparent
+	 *            if true make legend transparent
+	 * @param backgroundColor
+	 *            background color of legend
+	 * @param labelFont
+	 *            font to use
+	 * @param useAA
+	 *            if true applies anti aliasing
+	 * @param legendMatrix
+	 *            the matrix of nodes of legend
+	 * @return BufferedImage of legend
+	 * 
+	 */
+	private BufferedImage buildFinalLegend(int totalHeight, int totalWidth, boolean transparent, Color backgroundColor,
+			Font labelFont, boolean useAA, BufferedImage[][] legendMatrix) {
+		final BufferedImage finalLegend = ImageUtils.createImage(totalWidth, totalHeight, (IndexColorModel) null,
+				transparent);
+		final Map<RenderingHints.Key, Object> hintsMap = new HashMap<RenderingHints.Key, Object>();
+		Graphics2D finalGraphics = ImageUtils.prepareTransparency(transparent, backgroundColor, finalLegend, hintsMap);
+		finalGraphics.setFont(labelFont);
+		if (useAA) {
+			finalGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+					RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		} else {
+			finalGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+					RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+		}
+
+		int vOffset = 0;
+		for (int rowNumber = 0; rowNumber < legendMatrix.length; rowNumber++) {
+			BufferedImage[] row = legendMatrix[rowNumber];
+			int rowH = 0;
+			int hOffset = 0;
+			for (int columnNumber = 0; columnNumber < row.length; columnNumber++) {
+				BufferedImage node = legendMatrix[rowNumber][columnNumber];
+				if (node != null) {
+					int maxW = hOffset + node.getWidth();
+					int maxH = vOffset + node.getHeight();
+					if (maxW <= totalWidth && maxH <= totalHeight) {
+						finalGraphics.drawImage(node, hOffset, vOffset, null);
+						hOffset = hOffset + node.getWidth();
+						rowH = Math.max(rowH, node.getHeight());
+					} else {
+						break;
+					}
+				}
+			}
+			vOffset = vOffset + rowH;
+		}
+
+		finalGraphics.dispose();
+
+		return finalLegend;
+	}
+
+	/**
+	 * Join image and label to create a single legend node image
+	 * 
+	 * @param img
+	 *            image of legend
+	 * @param label
+	 *            label of legend
+	 * @param labelFont
+	 *            font to use
+	 * @param useAA
+	 *            if true applies anti aliasing
+	 * @param transparent
+	 *            if true make legend transparent
+	 * @param backgroundColor
+	 *            background color of legend
+	 * @return BufferedImage of image and label side by side and vertically
+	 *         center
+	 */
+	private BufferedImage joinBufferedImage(BufferedImage img, BufferedImage label, Font labelFont, boolean useAA,
+			boolean transparent, Color backgroundColor) {
+		// do some calculate first
+		int offset = 0;
+		int wid = img.getWidth() + label.getWidth() + offset + 2;
+		int height = Math.max(img.getHeight(), label.getHeight()) + offset;
+		// create a new buffer and draw two image into the new image
+		BufferedImage newImage = ImageUtils.createImage(wid, height, (IndexColorModel) null, transparent);
+		final Map<RenderingHints.Key, Object> hintsMap = new HashMap<RenderingHints.Key, Object>();
+		Graphics2D g2 = ImageUtils.prepareTransparency(transparent, backgroundColor, newImage, hintsMap);
+		g2.setFont(labelFont);
+		if (useAA) {
+			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		} else {
+			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+		}
+		// move the images to the vertical center of the row
+		int imgOffset = (int) Math.round((height - img.getHeight()) / 2d);
+		int labelOffset = (int) Math.round((height - label.getHeight()) / 2d);
+		g2.drawImage(img, null, 0, imgOffset);
+		g2.drawImage(label, null, img.getWidth() + offset, labelOffset);
+		g2.dispose();
+		return newImage;
+	}
+    
+	/**
+	 * Renders the legend image label
+	 * 
+	 * @param img
+	 *            the BufferedImage
+	 * @param rule
+	 *            the applicable rule for img, if rule is not null the label will be rendered
+	 * @param req
+	 *            the request
+	 * @param forceLabelsOff
+	 *            true for force labels off also with more than one rule
+	 * @return the BufferedImage of label
+	 * 
+	 */
+	private BufferedImage renderLabel(RenderedImage img, Rule rule, GetLegendGraphicRequest req,
+			boolean forceLabelsOff) {
+		BufferedImage labelImg = null;
+		if (!forceLabelsOff && rule != null) {
+			// What's the label on this rule? We prefer to use
+			// the 'title' if it's available, but fall-back to 'name'
+			final Description description = rule.getDescription();
+			Locale locale = req.getLocale();
+			String label = "";
+			if (description != null && description.getTitle() != null) {
+				final InternationalString title = description.getTitle();
+				if (locale != null) {
+					label = title.toString(locale);
+				} else {
+					label = title.toString();
+				}
+			} else if (rule.getName() != null) {
+				label = rule.getName();
+			}
+			if (label != null && label.length() > 0) {
+				final BufferedImage renderedLabel = getRenderedLabel((BufferedImage) img, label, req);
+				labelImg = renderedLabel;
+			}
+		}
+		return labelImg;
+	}
+    
+    
+    /*
     private BufferedImage mergeLegends(List<RenderedImage> imageStack, Rule[] rules,
             GetLegendGraphicRequest req, boolean forceLabelsOn, boolean forceLabelsOff) {
 
@@ -834,7 +1070,7 @@ public class BufferedImageLegendGraphicBuilder {
         }
         return finalLegend;
     }
-    
+    */
     
 
     /**
