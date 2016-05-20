@@ -709,8 +709,12 @@ public class BufferedImageLegendGraphicBuilder {
 		List<BufferedImage> nodes = new ArrayList<BufferedImage>();
 		for (int i = 0; i < imgCount; i++) {
 			BufferedImage img = (BufferedImage) imageStack.get(i);
-			BufferedImage label = renderLabel(img, rules[i], req, forceLabelsOff);
-			nodes.add(joinBufferedImage(img, label, labelFont, useAA, transparent, backgroundColor));
+			if(rules != null && rules[i] != null){
+				BufferedImage label = renderLabel(img, rules[i], req, forceLabelsOff);
+				nodes.add(joinBufferedImage(img, label, labelFont, useAA, transparent, backgroundColor));
+			}else{
+				nodes.add(img);
+			}
 		}
 
 		/*
