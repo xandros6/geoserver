@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2016 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -23,11 +23,14 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+import javax.sql.RowSet;
+
 import org.geoserver.wms.legendgraphic.Cell.ClassesEntryLegendBuilder;
 import org.geoserver.wms.legendgraphic.Cell.ColorMapEntryLegendBuilder;
 import org.geoserver.wms.legendgraphic.Cell.RampColorMapEntryLegendBuilder;
 import org.geoserver.wms.legendgraphic.Cell.SingleColorMapEntryLegendBuilder;
 import org.geoserver.wms.legendgraphic.LegendUtils.HAlign;
+import org.geoserver.wms.legendgraphic.LegendUtils.LegendLayout;
 import org.geoserver.wms.legendgraphic.LegendUtils.VAlign;
 import org.geoserver.wms.map.ImageUtils;
 import org.geotools.styling.ColorMap;
@@ -117,6 +120,16 @@ public class ColorMapLegendCreator {
         private final Map<String, Object> additionalOptions = new HashMap<String, Object>();
 
         private Color backgroundColor;
+        
+        private LegendLayout layout;
+        
+        private int columnHeight;
+        
+        private int rowWidth;
+        
+        private int columns;
+
+        private int rows ;
 
         private String grayChannelName = LegendUtils.DEFAULT_CHANNEL_NAME;
 
@@ -308,6 +321,26 @@ public class ColorMapLegendCreator {
 
         public void setBorderRule(boolean borderRule) {
             this.borderRule = borderRule;
+        }
+        
+        public void setLayout(LegendLayout layout) {
+            this.layout = layout;
+        }
+        
+        public void setColumnHeight(int columnHeight) {
+            this.columnHeight = columnHeight;
+        }
+        
+        public void setRowWidth(int rowWidth) {
+            this.rowWidth = rowWidth;
+        }
+        
+        public void setColumns(int columns) {
+            this.columns = columns;
+        }
+        
+        public void setRows(int rows) {
+            this.rows = rows;
         }
 
         /**
@@ -505,6 +538,16 @@ public class ColorMapLegendCreator {
     private double dy;
 
     private boolean bandInformation;
+    
+    private LegendLayout layout;
+    
+    private int columnHeight;
+    
+    private int rowWidth;
+    
+    private int columns;
+
+    private int rows ;
 
     public ColorMapLegendCreator(final Builder builder) {
         this.backgroundColor = builder.backgroundColor;
@@ -530,7 +573,11 @@ public class ColorMapLegendCreator {
         this.requestedDimension = (Dimension) builder.requestedDimension.clone();
         this.transparent = builder.transparent;
         this.bandInformation = builder.bandInformation;
-
+        this.layout = builder.layout;
+        this.rowWidth = builder.rowWidth;
+        this.rows = builder.rows;
+        this.columnHeight = builder.columnHeight;
+        this.columns = builder.columns;
     }
 
     public synchronized BufferedImage getLegend() {
@@ -826,8 +873,10 @@ public class ColorMapLegendCreator {
 
     private BufferedImage mergeRows(Queue<BufferedImage> legendsQueue) {
 
+        List<BufferedImage> imgs = new ArrayList<BufferedImage>(legendsQueue);
         // create the final image
-
+        return LegendMerger.mergeLegends(imgs, (int)dx, (int)dy, (int)(margin+0.5), this.backgroundColor, this.transparent, true, this.layout, this.rowWidth, this.rows, this.columnHeight, this.columns);
+/*
         // I am doing a straight cast since I know that I built this
         // dimension object by using the widths and heights of the various
         // bufferedimages for the various bkgColor map entries.
@@ -858,6 +907,7 @@ public class ColorMapLegendCreator {
 
         finalGraphics.dispose();
         return finalLegend;
+        */
     }
 
 }

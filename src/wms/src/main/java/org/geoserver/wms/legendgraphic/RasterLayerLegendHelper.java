@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2016 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -157,6 +157,13 @@ public class RasterLayerLegendHelper {
             // passing additional options
             cmapLegendBuilder.setAdditionalOptions(request.getLegendOptions());
 
+            // setting layout options          
+            cmapLegendBuilder.setLayout(request.getLayout());
+            cmapLegendBuilder.setColumnHeight(request.getColumnHeight());
+            cmapLegendBuilder.setColumns(request.getColumns());
+            cmapLegendBuilder.setRowWidth(request.getRowWidth());
+            cmapLegendBuilder.setRows(request.getRows());
+            
             // setting type of colormap
             cmapLegendBuilder.setColorMapType(cmap.getType());
 
