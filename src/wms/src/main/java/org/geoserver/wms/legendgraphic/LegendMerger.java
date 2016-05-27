@@ -65,20 +65,26 @@ public class LegendMerger {
         int totalWidth = 0;
         int rowNumber = 0;
         int columnNumber = 0;
+        if(legendMatrix.length > 0){
+            columnNumber = legendMatrix[0].length;
+        }
+        int[] colsWidth = new int[columnNumber];
         for (rowNumber = 0; rowNumber < legendMatrix.length; rowNumber++) {
             BufferedImage[] row = legendMatrix[rowNumber];
-            int rowWidth = 0;
             int rowHeigth = 0;
             for (columnNumber = 0; columnNumber < row.length; columnNumber++) {
                 BufferedImage node = legendMatrix[rowNumber][columnNumber];
                 if (node != null) {
-                    rowWidth = rowWidth + node.getWidth();
+                    colsWidth[columnNumber] = Math.max( colsWidth[columnNumber], node.getWidth());
                     rowHeigth = Math.max(rowHeigth, node.getHeight());
                 }
             }
-            totalWidth = Math.max(totalWidth, rowWidth);
             totalHeight = totalHeight + rowHeigth;
         }
+        
+        for(int w : colsWidth){
+            totalWidth = totalWidth + w;
+        }        
 
         if (layout == LegendLayout.VERTICAL && maxHeight > 0 && totalHeight > maxHeight) {
             totalHeight = maxHeight;
@@ -98,7 +104,7 @@ public class LegendMerger {
             totalWidth = 1;
 
         // Build final image
-        final BufferedImage finalLegend = buildFinalLegend(dx, dy, margin, totalHeight, totalWidth,
+        final BufferedImage finalLegend = buildFinalLegend(dx, dy, margin, totalHeight, totalWidth, colsWidth,
                 transparent, backgroundColor, antialias, legendMatrix);
 
         return finalLegend;
@@ -166,23 +172,31 @@ public class LegendMerger {
             legendMatrix = createVerticalLayoutMatrix(nodes,  req.getColumnHeight(), req.getColumns());
         }
 
-        //Computes total width and height and limits they according to layout rules
+        // Computes total width and height and limits they according to layout rules
         int totalHeight = 0;
         int totalWidth = 0;
-        for (int rowNumber = 0; rowNumber < legendMatrix.length; rowNumber++) {
+        int rowNumber = 0;
+        int columnNumber = 0;
+        if(legendMatrix.length > 0){
+            columnNumber = legendMatrix[0].length;
+        }
+        int[] colsWidth = new int[columnNumber];
+        for (rowNumber = 0; rowNumber < legendMatrix.length; rowNumber++) {
             BufferedImage[] row = legendMatrix[rowNumber];
-            int rowWidth = 0;
             int rowHeigth = 0;
-            for (int columnNumber = 0; columnNumber < row.length; columnNumber++) {
+            for (columnNumber = 0; columnNumber < row.length; columnNumber++) {
                 BufferedImage node = legendMatrix[rowNumber][columnNumber];
                 if (node != null) {
-                    rowWidth = rowWidth + node.getWidth();
+                    colsWidth[columnNumber] = Math.max( colsWidth[columnNumber], node.getWidth());
                     rowHeigth = Math.max(rowHeigth, node.getHeight());
                 }
             }
-            totalWidth = Math.max(totalWidth, rowWidth);
             totalHeight = totalHeight + rowHeigth;
         }
+        
+        for(int w : colsWidth){
+            totalWidth = totalWidth + w;
+        }        
 
         // buffer the width a bit
         totalWidth += buffer;
@@ -201,7 +215,7 @@ public class LegendMerger {
         if(totalWidth == 0) totalWidth = 1;
 
         // Build final image
-        final BufferedImage finalLegend = buildFinalLegend(0, 0, 0, totalHeight, totalWidth, transparent, backgroundColor, useAA, legendMatrix);
+        final BufferedImage finalLegend = buildFinalLegend(0, 0, 0, totalHeight, totalWidth, colsWidth, transparent, backgroundColor, useAA, legendMatrix);
 
         return finalLegend;
 
@@ -354,6 +368,7 @@ public class LegendMerger {
      *            maximum height of legend
      * @param totalWidth
      *            maximum width of legend
+     * @param colsWidth 
      * @param transparent
      *            if true make legend transparent
      * @param backgroundColor
@@ -365,7 +380,7 @@ public class LegendMerger {
      * @return BufferedImage of legend
      * 
      */
-    private static BufferedImage buildFinalLegend(int dx, int dy, int margin, int totalHeight, int totalWidth, boolean transparent, Color backgroundColor,
+    private static BufferedImage buildFinalLegend(int dx, int dy, int margin, int totalHeight, int totalWidth, int[] colsWidth, boolean transparent, Color backgroundColor,
             boolean useAA, BufferedImage[][] legendMatrix) {
         final BufferedImage finalLegend = ImageUtils.createImage(totalWidth, totalHeight, (IndexColorModel) null,
                 transparent);
@@ -388,11 +403,11 @@ public class LegendMerger {
             for (int columnNumber = 0; columnNumber < row.length; columnNumber++) {
                 BufferedImage node = legendMatrix[rowNumber][columnNumber];
                 if (node != null) {
-                    int maxW = hOffset + node.getWidth();
+                    int maxW = hOffset + colsWidth[columnNumber];
                     int maxH = vOffset + node.getHeight();
                     if (maxW <= totalWidth && maxH <= totalHeight) {
                         finalGraphics.drawImage(node, hOffset, vOffset, null);
-                        hOffset = hOffset + node.getWidth() + dx;
+                        hOffset = hOffset + colsWidth[columnNumber] + dx;
                         rowH = Math.max(rowH, node.getHeight());
                     } else {
                         break;
