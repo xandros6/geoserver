@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import javax.sql.RowSet;
-
 import org.geoserver.wms.legendgraphic.Cell.ClassesEntryLegendBuilder;
 import org.geoserver.wms.legendgraphic.Cell.ColorMapEntryLegendBuilder;
 import org.geoserver.wms.legendgraphic.Cell.RampColorMapEntryLegendBuilder;
@@ -872,11 +870,6 @@ public class ColorMapLegendCreator {
     }
 
     private BufferedImage mergeRows(Queue<BufferedImage> legendsQueue) {
-
-        List<BufferedImage> imgs = new ArrayList<BufferedImage>(legendsQueue);
-        // create the final image
-        return LegendMerger.mergeLegends(imgs, (int)dx, (int)dy, (int)(margin+0.5), this.backgroundColor, this.transparent, true, this.layout, this.rowWidth, this.rows, this.columnHeight, this.columns);
-/*
         // I am doing a straight cast since I know that I built this
         // dimension object by using the widths and heights of the various
         // bufferedimages for the various bkgColor map entries.
@@ -887,27 +880,48 @@ public class ColorMapLegendCreator {
 
         final int totalWidth = (int) finalDimension.getWidth();
         final int totalHeight = (int) finalDimension.getHeight();
-        final BufferedImage finalLegend = ImageUtils.createImage(totalWidth, totalHeight,
+        BufferedImage finalLegend = ImageUtils.createImage(totalWidth, totalHeight,
                 (IndexColorModel) null, transparent);
-        final Map<Key, Object> hintsMap = new HashMap<Key, Object>();
-        Graphics2D finalGraphics = ImageUtils.prepareTransparency(transparent, backgroundColor,
-                finalLegend, hintsMap);
-        hintsMap.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        finalGraphics.setRenderingHints(hintsMap);
 
-        int topOfRow = (int) (margin + 0.5);
-        for (int i = 0; i < numRows; i++) {
-            final BufferedImage img = legendsQueue.remove();
+        /*
+         * For RAMP type, only HORIZONTAL or VERTICAL condition is valid
+         */
+        if (colorMapType == ColorMapType.RAMP) {
 
-            // draw the image
-            finalGraphics.drawImage(img, (int) (margin + 0.5), topOfRow, null);
-            topOfRow += img.getHeight() + dy;
+            final Map<Key, Object> hintsMap = new HashMap<Key, Object>();
+            Graphics2D finalGraphics = ImageUtils.prepareTransparency(transparent, backgroundColor,
+                    finalLegend, hintsMap);
+            hintsMap.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            finalGraphics.setRenderingHints(hintsMap);
 
+            int topOfRow = (int) (margin + 0.5);
+            for (int i = 0; i < numRows; i++) {
+                final BufferedImage img = legendsQueue.remove();
+
+                // draw the image
+                finalGraphics.drawImage(img, (int) (margin + 0.5), topOfRow, null);
+                topOfRow += img.getHeight() + dy;
+
+            }
+
+            if (colorMapType == ColorMapType.RAMP && this.layout == LegendLayout.HORIZONTAL) {
+                BufferedImage newImage = new BufferedImage(totalHeight, totalWidth,
+                        finalLegend.getType());
+                Graphics2D g2 = newImage.createGraphics();
+                g2.rotate(-Math.PI / 2, 0, 0);
+                g2.drawImage(finalLegend, null, -totalWidth, 0);
+                finalLegend = newImage;
+                g2.dispose();
+                finalGraphics.dispose();
+            }
+        } else {
+            List<BufferedImage> imgs = new ArrayList<BufferedImage>(legendsQueue);
+            finalLegend = LegendMerger.mergeRasterLegends(imgs, (int) dx, (int) dy, (int) margin,
+                    backgroundColor, transparent, true, layout, rowWidth, rows, columnHeight,
+                    columns);
         }
 
-        finalGraphics.dispose();
         return finalLegend;
-        */
-    }
 
+    }
 }

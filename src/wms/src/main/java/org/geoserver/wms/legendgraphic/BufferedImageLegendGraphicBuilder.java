@@ -440,7 +440,7 @@ public class BufferedImageLegendGraphicBuilder {
             
         }
         // all legend graphics are merged if we have a layer group
-        BufferedImage finalLegend = mergeLegends(layersImages,null,request, forceLabelsOn, forceLabelsOff);
+        BufferedImage finalLegend = mergeGroups(layersImages,null,request, forceLabelsOn, forceLabelsOff);
         if(finalLegend == null) {
             throw new IllegalArgumentException("no legend passed");
         }
@@ -672,6 +672,35 @@ public class BufferedImageLegendGraphicBuilder {
             boolean forceLabelsOn, boolean forceLabelsOff) {
 
         return LegendMerger.mergeLegends(imageStack, rules, req, forceLabelsOn, forceLabelsOff);
+
+    }
+    
+    /**
+     * Receives a list of <code>BufferedImages</code> and produces a new one
+     * which holds all the images in <code>imageStack</code> one above the
+     * other, handling labels.
+     * 
+     * @param imageStack
+     *            the list of BufferedImages, one for each applicable Rule
+     * @param rules
+     *            The applicable rules, one for each image in the stack (if not
+     *            null it's used to compute labels)
+     * @param request
+     *            The request.
+     * @param forceLabelsOn
+     *            true for force labels on also with a single image.
+     * @param forceLabelsOff
+     *            true for force labels off also with more than one rule.
+     * 
+     * @return the stack image with all the images on the argument list.
+     * 
+     * @throws IllegalArgumentException
+     *             if the list is empty
+     */
+    private BufferedImage mergeGroups(List<RenderedImage> imageStack, Rule[] rules, GetLegendGraphicRequest req,
+            boolean forceLabelsOn, boolean forceLabelsOff) {
+
+        return LegendMerger.mergeGroups(imageStack, rules, req, forceLabelsOn, forceLabelsOff);
 
     }
 
