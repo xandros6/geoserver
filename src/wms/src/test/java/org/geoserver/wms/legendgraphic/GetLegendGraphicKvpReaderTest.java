@@ -21,11 +21,11 @@ import org.geoserver.platform.ServiceException;
 import org.geoserver.wms.GetLegendGraphicRequest;
 import org.geoserver.wms.WMS;
 import org.geoserver.wms.WMSTestSupport;
-import org.geoserver.wms.legendgraphic.LegendUtils.LegendLayout;
 import org.geotools.feature.NameImpl;
 import org.geotools.styling.Style;
 import org.junit.Before;
 import org.opengis.feature.type.Name;
+
 import org.springframework.mock.web.MockHttpServletRequest;
 
 
@@ -70,15 +70,8 @@ public class GetLegendGraphicKvpReaderTest extends WMSTestSupport {
      * <li>HEIGHT/Optional
      * <li>LANGUAGE/Optional
      * <li>EXCEPTIONS/Optional
-     * <li>LAYOUT/Optional
-     * <li>COLUMNHEIGHT/Optional
-     * <li>ROWWIDTH/Optional
-     * <li>COLUMNS/Optional
-     * <li>ROWS/Optional
      * </ul>
      */
-    
-    
     @Before
     public void setParameters() throws Exception { 
         requiredParameters = new HashMap<String, String>();
@@ -95,9 +88,6 @@ public class GetLegendGraphicKvpReaderTest extends WMSTestSupport {
         optionalParameters.put("WIDTH", "120");
         optionalParameters.put("HEIGHT", "90");
         optionalParameters.put("LANGUAGE", "en");
-        optionalParameters.put("LAYOUT", "HORIZONTAL");
-        optionalParameters.put("ROWWIDTH", "500");
-        optionalParameters.put("ROW", "5");
         // ??optionalParameters.put("EXCEPTIONS", "");
         allParameters = new HashMap<String, String>(requiredParameters);
         allParameters.putAll(optionalParameters);

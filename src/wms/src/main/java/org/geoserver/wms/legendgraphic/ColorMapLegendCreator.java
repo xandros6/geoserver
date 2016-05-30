@@ -904,7 +904,7 @@ public class ColorMapLegendCreator {
 
             }
 
-            if (colorMapType == ColorMapType.RAMP && this.layout == LegendLayout.HORIZONTAL) {
+            if (this.layout == LegendLayout.HORIZONTAL) {
                 BufferedImage newImage = new BufferedImage(totalHeight, totalWidth,
                         finalLegend.getType());
                 Graphics2D g2 = newImage.createGraphics();

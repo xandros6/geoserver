@@ -572,7 +572,7 @@ public class LegendMerger {
             BufferedImage img, Font labelFont, boolean useAA, boolean transparent,
             Color backgroundColor) {
         // do some calculate first
-        int offset = 5;
+        int offset = 0;
         int height = img.getHeight() + label.getHeight() + offset;
         int wid = Math.max(img.getWidth(), label.getWidth()) + offset;
         // create a new buffer and draw two image into the new image
