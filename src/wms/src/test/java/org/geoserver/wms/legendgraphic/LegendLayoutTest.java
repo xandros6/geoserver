@@ -221,8 +221,6 @@ public class LegendLayoutTest extends BaseLegendTest{
             req.setLegendOptions(legendOptions);
 
             BufferedImage image = this.legendProducer.buildLegendGraphic(req);
-            File outputfile2 = new File("C:/himage.jpg");
-            ImageIO.write(image, "jpg", outputfile2);
 
             // Check output
             assertEquals(2*HEIGHT_HINT, image.getHeight());
@@ -262,11 +260,6 @@ public class LegendLayoutTest extends BaseLegendTest{
         this.legendProducer.buildLegendGraphic(req);
 
         BufferedImage image = this.legendProducer.buildLegendGraphic(req);
-        File outputfile2 = new File("C:/himage.jpg");
-        ImageIO.write(image, "jpg", outputfile2);
-        
-        // was the legend painted?
-        assertNotBlank("testVectorLayersHorizontal", image, LegendUtils.DEFAULT_BG_COLOR);
 
         assertEquals(HEIGHT_HINT, image.getHeight());
         assertPixel(image, 10, HEIGHT_HINT/2, new Color(192,160,0));
