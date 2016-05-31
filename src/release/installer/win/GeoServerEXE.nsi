@@ -2,7 +2,7 @@
 
 ; Define your application name
 !define APPNAME "GeoServer"
-!define VERSION "2.9-SNAPSHOT"
+!define VERSION "2.10-SNAPSHOT"
 ;!define LONGVERSION "2.0.0.0"
 !define APPNAMEANDVERSION "${APPNAME} ${VERSION}"
 
@@ -796,6 +796,8 @@ Section "Main" SectionMain
     SetOutPath "$INSTDIR\wrapper\lib"
     File /a wrapper.jar
     File /a wrapper.dll
+
+    CreateDirectory "$INSTDIR\work"
 	
     ; Install the service (and start it)
     nsExec::Exec "$INSTDIR\wrapper.exe -it ./wrapper/wrapper.conf wrapper.java.additional.4=-Djetty.port=$Port"
