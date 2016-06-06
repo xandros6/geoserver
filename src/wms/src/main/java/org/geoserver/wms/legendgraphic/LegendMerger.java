@@ -272,10 +272,10 @@ public class LegendMerger {
             int columnHeight = 0;
             for (int i = 0; i < nodes.size(); i++) {
                 BufferedImage node = nodes.get(i);
-                columnHeight = columnHeight + node.getHeight();
                 if (columnHeight <= maxHeight) {
                     // Fill current column
                     legendMatrix[cn].addNode(node);
+                    columnHeight = columnHeight + node.getHeight();
                 } else {
                     // Add current node to next column
                     i--;
@@ -340,10 +340,10 @@ public class LegendMerger {
             int rowWidth = 0;
             for (int i = 0; i < nodes.size(); i++) {
                 BufferedImage node = nodes.get(i);
-                rowWidth = rowWidth + node.getWidth();
                 if (rowWidth <= maxWidth) {
                     // Fill current column
                     legendMatrix[rn].addNode(node);
+                    rowWidth = rowWidth + node.getWidth();
                 } else {
                     // Add current node to next column
                     i--;

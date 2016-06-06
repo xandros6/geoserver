@@ -11,10 +11,8 @@ import static org.junit.Assert.assertNotNull;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.File;
 import java.util.HashMap;
 
-import javax.imageio.ImageIO;
 import javax.media.jai.PlanarImage;
 
 import org.geoserver.catalog.CoverageInfo;
@@ -170,7 +168,7 @@ public class LegendLayoutTest extends BaseLegendTest{
             BufferedImage image = this.legendProducer.buildLegendGraphic(req);
 
             // Check output
-            assertEquals(2*HEIGHT_HINT, image.getHeight());
+            assertEquals(3*HEIGHT_HINT, image.getHeight());
             assertPixel(image, 9, 13, new Color(115, 38, 0));
             assertPixel(image, 9, 43, new Color(168, 0, 0));
 
@@ -225,7 +223,7 @@ public class LegendLayoutTest extends BaseLegendTest{
             // Check output
             assertEquals(2*HEIGHT_HINT, image.getHeight());
             assertPixel(image, 9, 13, new Color(115, 38, 0));
-            assertPixel(image, 190, 43, new Color(255, 235, 175));
+            assertPixel(image, 190, 43, new Color(209, 255, 115));
 
         } finally {
             RenderedImage ri = coverage.getRenderedImage();
