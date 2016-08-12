@@ -75,6 +75,7 @@
           <descriptor>release/ext-ncwms.xml</descriptor>
           <descriptor>release/ext-gwc-sqlite.xml</descriptor> 
           <descriptor>release/ext-geogig.xml</descriptor>
+		  <descriptor>release/ext-onelogin.xml</descriptor>	
         </descriptors>
       </configuration>
      </plugin>
@@ -164,6 +165,12 @@
         <module>params-extractor</module>
       </modules>
     </profile>
+	<profile>
+      <id>onelogin</id>
+      <modules>
+        <module>onelogin</module>
+      </modules>
+    </profile>
     <profile>
       <id>communityRelease</id>
       <modules>
@@ -205,6 +212,7 @@
 	<module>ncwms</module>
         <module>web-resource</module>
         <module>gwc-sqlite</module>
+		<module>onelogin</module>
       </modules>
     </profile>
     <profile>

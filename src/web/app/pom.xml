@@ -1164,6 +1164,16 @@
       </dependencies>
    </profile>
    <profile>
+      <id>onelogin</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.geoserver.community</groupId>
+          <artifactId>gs-onelogin</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+   </profile>
+   <profile>
 	<id>jms-cluster</id>
 	<dependencies>
 		<dependency>
