@@ -1,5 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
- * (c) 2001 - 2013 OpenPlans
+/* (c) 2016 Open Source Geospatial Foundation - all rights reserved
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
@@ -12,11 +11,11 @@ import org.geoserver.security.web.auth.AuthenticationFilterPanelInfo;
 /**
  * 
  * Configuration panel extension for {@link JDBCConnectAuthProvider}.
- *  
+ * 
  */
-public class OneloginAuthFilterPanelInfo extends AuthenticationFilterPanelInfo<OneloginAuthenticationFilterConfig, OneloginAuthFilterPanel>{
+public class OneloginAuthFilterPanelInfo extends
+        AuthenticationFilterPanelInfo<OneloginAuthenticationFilterConfig, OneloginAuthFilterPanel> {
 
-    /** serialVersionUID */
     private static final long serialVersionUID = 2786521869232176111L;
 
     public OneloginAuthFilterPanelInfo() {

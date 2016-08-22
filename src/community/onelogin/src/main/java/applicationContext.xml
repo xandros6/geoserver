@@ -23,52 +23,28 @@
 		<constructor-arg index="1"
 			value="GeoServer Web UI Security OneLogin" />
 	</bean>
-	
-	<bean id="metadataGeneratorFilter" class="org.springframework.security.saml.metadata.MetadataGeneratorFilter">
-        <constructor-arg>
-            <bean class="org.springframework.security.saml.metadata.MetadataGenerator">
-                <property name="entityId" value="geoserver123" />
-                <property name="includeDiscoveryExtension" value="false" />
-                <property name="keyManager" ref="keyManager" />   
-                <property name="requestSigned" value="false" />
-                <property name="extendedMetadata">
-                    <bean class="org.springframework.security.saml.metadata.ExtendedMetadata">
-                    </bean>
-                </property>
-            </bean>
-        </constructor-arg>
-    </bean>
+
+	<bean id="oneloginSecurityProvider"
+		class="org.geoserver.security.onelogin.OneloginSecurityProvider">
+		<constructor-arg ref="authenticationManager" />
+	</bean>
+
+	<bean id="oneloginAuthFilterPanelInfo"
+		class="org.geoserver.security.web.onelogin.OneloginAuthFilterPanelInfo">
+		<property name="id" value="security.oneloginAuthFilter" />
+		<property name="shortTitleKey" value="OneloginAuthFilterPanel.short" />
+		<property name="titleKey" value="OneloginAuthFilterPanel.title" />
+		<property name="descriptionKey" value="OneloginAuthFilterPanel.description" />
+	</bean>
+
+	<!-- SAML CONFIGURATION (see http://projects.spring.io/spring-security-saml/) -->
 
 	<bean id="metadata"
 		class="org.springframework.security.saml.metadata.CachingMetadataManager">
 		<constructor-arg>
-			<list>
-				<!-- Example of classpath metadata with Extended Metadata -->
-				<bean
-					class="org.springframework.security.saml.metadata.ExtendedMetadataDelegate">
-					<constructor-arg>
-						<bean class="org.opensaml.saml2.metadata.provider.HTTPMetadataProvider">
-							<constructor-arg>
-								<value type="java.lang.String">https://app.onelogin.com/saml/metadata/575443</value>
-							</constructor-arg>
-							<constructor-arg>
-								<value type="int">5000</value>
-							</constructor-arg>
-							<property name="parserPool" ref="parserPool" />
-						</bean>
-					</constructor-arg>
-					<constructor-arg>
-						<bean
-							class="org.springframework.security.saml.metadata.ExtendedMetadata">
-						</bean>
-					</constructor-arg>
-				</bean>
-			</list>
+			<null />
 		</constructor-arg>
 	</bean>
-
-	<bean id="samlUserDetailsService"
-		class="org.geoserver.security.onelogin.SAMLUserDetailsServiceImpl" />
 
 	<bean id="samlEntryPoint" class="org.springframework.security.saml.SAMLEntryPoint">
 		<property name="defaultProfileOptions">
@@ -96,8 +72,7 @@
 	<bean id="webSSOprofileConsumer"
 		class="org.springframework.security.saml.websso.WebSSOProfileConsumerImpl">
 		<property name="responseSkew" value="600" />
-    </bean>
-		
+	</bean>
 
 	<!-- SAML 2.0 Holder-of-Key WebSSO Assertion Consumer -->
 	<bean id="hokWebSSOprofileConsumer"
@@ -169,14 +144,44 @@
 	<bean id="velocityEngine" class="org.springframework.security.saml.util.VelocityFactory"
 		factory-method="getEngine" />
 
-	<bean id="oneloginSecurityProvider"
-		class="org.geoserver.security.onelogin.OneloginSecurityProvider">
-		<constructor-arg index="0" ref="authenticationManager" />
-		<constructor-arg index="1" ref="samlUserDetailsService" />
-		<constructor-arg index="2" ref="samlEntryPoint" />
-		<constructor-arg index="3" ref="metadataGeneratorFilter" />
-		<constructor-arg index="4" ref="samlAuthenticationProvider" />
+	<!-- Central storage of cryptographic keys -->
+	<bean id="keyManager" class="org.springframework.security.saml.key.EmptyKeyManager" />
+
+	<bean id="samlUserDetailsService"
+		class="org.geoserver.security.onelogin.SAMLUserDetailsServiceImpl" />
+
+	<bean id="samlAuthenticationProvider"
+		class="org.springframework.security.saml.SAMLAuthenticationProvider">
+		<property name="userDetails" ref="samlUserDetailsService" />
 	</bean>
+
+	<bean id="samlWebSSOProcessingFilter" class="org.springframework.security.saml.SAMLProcessingFilter">
+		<property name="authenticationManager">
+			<bean factory-bean="authenticationManager" factory-method="authenticationManager" />
+		</property>
+		<property name="authenticationSuccessHandler" ref="successRedirectHandler" />
+		<property name="authenticationFailureHandler" ref="failureRedirectHandler" />
+	</bean>
+	
+	<bean id="successLogoutHandler" class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler">
+        <property name="defaultTargetUrl" value="/"/>
+    </bean>
+    
+    <bean id="logoutHandler"
+          class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler">
+        <property name="invalidateHttpSession" value="false"/>
+    </bean>    
+    
+    <bean id="samlLogoutFilter" class="org.springframework.security.saml.SAMLLogoutFilter">
+        <constructor-arg index="0" ref="successLogoutHandler"/>
+        <constructor-arg index="1" ref="logoutHandler"/>
+        <constructor-arg index="2" ref="logoutHandler"/>
+    </bean>
+    
+	<bean id="samlLogoutProcessingFilter" class="org.springframework.security.saml.SAMLLogoutProcessingFilter">
+        <constructor-arg index="0" ref="successLogoutHandler"/>
+        <constructor-arg index="1" ref="logoutHandler"/>
+    </bean>
 
 	<!-- Provider of default SAML Context -->
 	<bean id="contextProvider"
@@ -186,17 +191,23 @@
 		class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
 		<property name="defaultTargetUrl" value="/" />
 	</bean>
-	
+
 	<bean id="failureRedirectHandler"
-          class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
-        <property name="useForward" value="true"/>
-        <property name="defaultFailureUrl" value="/error.jsp"/>
-    </bean>
+		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+		<property name="useForward" value="true" />
+		<property name="defaultFailureUrl" value="/" />
+	</bean>
 
 	<!-- Initialization of OpenSAML library -->
 	<bean class="org.springframework.security.saml.SAMLBootstrap" />
 
+	<bean id="samlLogger" class="org.springframework.security.saml.log.SAMLDefaultLogger" />
+
 	<!-- XML parser pool needed for OpenSAML parsing -->
+
+	<bean id="parserPoolHolder"
+		class="org.springframework.security.saml.parser.ParserPoolHolder" />
+
 	<bean id="parserPool" class="org.opensaml.xml.parse.StaticBasicParserPool"
 		init-method="initialize">
 		<property name="builderFeatures">
@@ -206,48 +217,5 @@
 			</map>
 		</property>
 	</bean>
-	
-	 <bean id="samlWebSSOProcessingFilter" class="org.springframework.security.saml.SAMLProcessingFilter">
-        <property name="authenticationManager">
-            <bean factory-bean="authenticationManager" factory-method="authenticationManager" />
-        </property>
-        <property name="authenticationSuccessHandler" ref="successRedirectHandler"/>
-        <property name="authenticationFailureHandler" ref="failureRedirectHandler"/>
-    </bean>
 
-	<bean id="parserPoolHolder"
-		class="org.springframework.security.saml.parser.ParserPoolHolder" />
-
-	<!-- Central storage of cryptographic keys -->
-	<bean id="keyManager" class="org.springframework.security.saml.key.EmptyKeyManager" />
-
-	<bean class="org.geoserver.platform.ModuleStatusImpl">
-		<constructor-arg index="0" value="gs-onelogin" />
-		<constructor-arg index="1"
-			value="GeoServer Web UI Security OneLogin" />
-	</bean>
-
-	<bean id="oneloginAuthProviderPanelInfo"
-		class="org.geoserver.security.web.onelogin.OneloginAuthProviderPanelInfo">
-		<property name="id" value="security.oneloginAuthProvider" />
-		<property name="shortTitleKey" value="OneloginAuthProviderPanel.short" />
-		<property name="titleKey" value="OneloginAuthProviderPanel.title" />
-		<property name="descriptionKey" value="OneloginAuthProviderPanel.description" />
-	</bean>
-
-	<bean id="oneloginAuthFilterPanelInfo"
-		class="org.geoserver.security.web.onelogin.OneloginAuthFilterPanelInfo">
-		<property name="id" value="security.oneloginAuthFilter" />
-		<property name="shortTitleKey" value="OneloginAuthFilterPanel.short" />
-		<property name="titleKey" value="OneloginAuthFilterPanel.title" />
-		<property name="descriptionKey" value="OneloginAuthFilterPanel.description" />
-	</bean>
-
-	<bean id="samlLogger" class="org.springframework.security.saml.log.SAMLDefaultLogger" />
-	
-
-	<bean id="samlAuthenticationProvider" class="org.springframework.security.saml.SAMLAuthenticationProvider">
-        <property name="userDetails" ref="samlUserDetailsService" />
-    </bean>
-    
 </beans>
