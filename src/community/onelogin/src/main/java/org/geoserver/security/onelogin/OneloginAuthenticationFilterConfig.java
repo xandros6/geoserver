@@ -14,8 +14,27 @@ import org.geoserver.security.config.SecurityFilterConfig;
 public class OneloginAuthenticationFilterConfig extends SecurityFilterConfig implements
         SecurityAuthFilterConfig {
 
-    /** serialVersionUID */
     private static final long serialVersionUID = 1199751476823173800L;
+
+    private String entityId;
+
+    private String metadataURL;
+
+    public String getEntityId() {
+        return entityId;
+    }
+
+    public void setEntityId(String entityId) {
+        this.entityId = entityId;
+    }
+
+    public String getMetadataURL() {
+        return metadataURL;
+    }
+
+    public void setMetadataURL(String metadataURL) {
+        this.metadataURL = metadataURL;
+    }
 
     @Override
     public boolean providesAuthenticationEntryPoint() {

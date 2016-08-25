@@ -10,7 +10,7 @@ import org.geoserver.security.web.auth.AuthenticationFilterPanelInfo;
 
 /**
  * 
- * Configuration panel extension for {@link JDBCConnectAuthProvider}.
+ * Configuration panel extension for {@link OneloginAuthFilterPanel}.
  * 
  */
 public class OneloginAuthFilterPanelInfo extends

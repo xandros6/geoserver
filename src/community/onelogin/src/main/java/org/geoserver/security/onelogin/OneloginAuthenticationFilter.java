@@ -64,7 +64,7 @@ public class OneloginAuthenticationFilter extends GeoServerCompositeFilter imple
              * Create metadata filter
              */
             MetadataGenerator generator = new MetadataGenerator();
-            generator.setEntityId("geoserver123");
+            generator.setEntityId(authConfig.getEntityId());
             generator.setIncludeDiscoveryExtension(false);
             generator.setKeyManager(new EmptyKeyManager());
             generator.setRequestSigned(false);
@@ -80,7 +80,7 @@ public class OneloginAuthenticationFilter extends GeoServerCompositeFilter imple
             HttpClient httpClient = new HttpClient(clientParams);
             httpClient.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
             HTTPMetadataProvider pro = new HTTPMetadataProvider(new Timer(true), httpClient,
-                    "https://app.onelogin.com/saml/metadata/575443");
+                    authConfig.getMetadataURL());
             pro.setParserPool(parserPool);
             ExtendedMetadataDelegate emd = new ExtendedMetadataDelegate(pro, new ExtendedMetadata());
 
