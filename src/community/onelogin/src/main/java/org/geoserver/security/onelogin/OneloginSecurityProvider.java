@@ -24,6 +24,7 @@ import org.springframework.security.saml.SAMLProcessingFilter;
 
 /**
  * Security provider for OneLogin
+ * @author Xandros
  *
  */
 
@@ -40,11 +41,15 @@ public class OneloginSecurityProvider extends AbstractFilterProvider implements
         securityManager.addListener(this);
     }
 
+   
+    /**
+     * Adds {@link #SAMLAuthenticationProvider} as {@link #AuthenticationProvider}
+     */
     @Override
     public void handlePostChanged(GeoServerSecurityManager securityManager) {
         List<GeoServerAuthenticationProvider> aps = securityManager.getAuthenticationProviders();
         if (aps != null && !aps.contains(this.samlAuthenticationProvider)) {
-            securityManager.getProviders().add(samlAuthenticationProvider);
+            securityManager.getProviders().add(this.samlAuthenticationProvider);
         }
     }
 
@@ -64,6 +69,14 @@ public class OneloginSecurityProvider extends AbstractFilterProvider implements
         return new OneloginAuthenticationFilter(context);
     }
 
+    /**
+     * Configures filter chain for:
+     * <ul>
+     * <li>IDP login callback for URL: <code>/saml/SSO</code> to {@link #SAMLProcessingFilter}</li>
+     * <li>IDP single logout callback for URL: <code>/saml/SingleLogout</code> to {@link #SAMLLogoutProcessingFilter}</li>
+     * <li>IDP logout callback for URL: <code>/saml/logout</code> to {@link #SAMLLogoutFilter}</li>
+     * </ul>
+     */
     @Override
     public void configureFilterChain(GeoServerSecurityFilterChain filterChain) {
         if (filterChain.getRequestChainByName("samlSSOChain") == null) {
@@ -81,8 +94,8 @@ public class OneloginSecurityProvider extends AbstractFilterProvider implements
             filterChain.getRequestChains().add(0, samlChain);
         }
         if (filterChain.getRequestChainByName("samlLogout") == null) {
-            RequestFilterChain samlChain = new ConstantFilterChain(
-                    SAMLLogoutFilter.FILTER_URL + "/**");
+            RequestFilterChain samlChain = new ConstantFilterChain(SAMLLogoutFilter.FILTER_URL
+                    + "/**");
             samlChain.setFilterNames("samlLogoutFilter");
             samlChain.setName("samlLogout");
             filterChain.getRequestChains().add(0, samlChain);

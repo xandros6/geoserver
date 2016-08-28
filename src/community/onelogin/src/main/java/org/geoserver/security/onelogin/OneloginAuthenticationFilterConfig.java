@@ -4,15 +4,14 @@
  */
 package org.geoserver.security.onelogin;
 
-import org.geoserver.security.config.SecurityAuthFilterConfig;
-import org.geoserver.security.config.SecurityFilterConfig;
+import org.geoserver.security.config.PreAuthenticatedUserNameFilterConfig;
 
 /**
  * Configuration for OneLogin authentication
+ * @author Xandros
  */
 
-public class OneloginAuthenticationFilterConfig extends SecurityFilterConfig implements
-        SecurityAuthFilterConfig {
+public class OneloginAuthenticationFilterConfig extends PreAuthenticatedUserNameFilterConfig {
 
     private static final long serialVersionUID = 1199751476823173800L;
 
@@ -34,11 +33,6 @@ public class OneloginAuthenticationFilterConfig extends SecurityFilterConfig imp
 
     public void setMetadataURL(String metadataURL) {
         this.metadataURL = metadataURL;
-    }
-
-    @Override
-    public boolean providesAuthenticationEntryPoint() {
-        return true;
     }
 
 }

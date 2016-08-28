@@ -168,8 +168,7 @@
     </bean>
     
     <bean id="logoutHandler"
-          class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler">
-        <property name="invalidateHttpSession" value="false"/>
+          class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler">      
     </bean>    
     
     <bean id="samlLogoutFilter" class="org.springframework.security.saml.SAMLLogoutFilter">
