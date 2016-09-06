@@ -107,7 +107,7 @@ implements LogoutHandler {
                  */
 
                 ExtendedMetadataDelegate emd = new ExtendedMetadataDelegate(pro,
-                        new ExtendedMetadata());
+                        em);
 
                 /*
                  * Set metadata provider and add filter to chain
