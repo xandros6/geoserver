@@ -77,6 +77,7 @@ implements LogoutHandler {
                 generator.setIncludeDiscoveryExtension(false);
                 generator.setKeyManager(new EmptyKeyManager());
                 generator.setRequestSigned(false);
+                generator.setWantAssertionSigned(false); 
                 ExtendedMetadata em = new ExtendedMetadata();
                 em.setRequireLogoutRequestSigned(false);
                 generator.setExtendedMetadata(em);
