@@ -18,6 +18,8 @@ public class OneloginAuthenticationFilterConfig extends PreAuthenticatedUserName
     private String entityId;
 
     private String metadataURL;
+    
+    private Boolean wantAssertionSigned = false;
 
     public String getEntityId() {
         return entityId;
@@ -33,6 +35,14 @@ public class OneloginAuthenticationFilterConfig extends PreAuthenticatedUserName
 
     public void setMetadataURL(String metadataURL) {
         this.metadataURL = metadataURL;
+    }
+
+    public Boolean getWantAssertionSigned() {
+        return wantAssertionSigned;
+    }
+
+    public void setWantAssertionSigned(Boolean wantAssertionSigned) {
+        this.wantAssertionSigned = wantAssertionSigned;
     }
 
 }

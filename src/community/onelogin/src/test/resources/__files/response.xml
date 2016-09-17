@@ -14,7 +14,7 @@
 		<saml:Issuer>https://localhost:8443/saml/metadata
 		</saml:Issuer>
 		<saml:Subject>
-			<saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">abc@xyz.com</saml:NameID>
+			<saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">user</saml:NameID>
 			<saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
 				<saml:SubjectConfirmationData
 					NotOnOrAfter="2016-09-15T11:30:43Z" Recipient="http://localhost:8080/geoserver/saml/SSO"
