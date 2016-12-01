@@ -1,0 +1,56 @@
+{
+  "id" : "c017039f-4177-4b30-ac66-00685c54d4b5",
+  "name" : "broker",
+  "modelVersion" : "6.1",
+  "accesscontrolproviders" : [ {
+    "id" : "f1d9cdad-940a-4a0e-8748-52757856562c",
+    "name" : "AllowAll",
+    "type" : "AllowAll",
+    "priority" : 9999
+  } ],
+  "authenticationproviders" : [ {
+    "id" : "fce65310-63c4-4060-aaf6-535c6da419fa",
+    "name" : "plain",
+    "type" : "Plain",
+    "users" : [ {
+      "id" : "a1b2289a-e557-4145-93a4-f28e9d52070c",
+      "name" : "guest",
+      "type" : "managed",
+      "password" : "guest"
+    } ]
+  } ],
+  "keystores" : [ {
+    "id" : "460de726-98e3-4a0b-be8d-6cbb8979e691",
+    "name" : "development.sun.com",
+    "password" : "javacaps",
+    "storeUrl" : "clientkeystore"
+  } ],
+  "ports" : [ {
+    "id" : "40942cb6-6abc-4f20-ad84-8bcaaed918ee",
+    "name" : "AMQP",
+    "port" : "${qpid.amqp_port}",
+    "authenticationProvider" : "plain",
+    "keyStore" : "default",
+    "transports" : [ "SSL" ],
+    "virtualhostaliases" : [ {
+      "id" : "e6271875-9182-473a-b361-cfabafced6ac",
+      "name" : "defaultAlias",
+      "type" : "defaultAlias"
+    }, {
+      "id" : "d968f2c0-d566-4f7d-ad69-2048207e2a48",
+      "name" : "hostnameAlias",
+      "type" : "hostnameAlias"
+    }, {
+      "id" : "40bd83a3-bfcd-488a-ba9b-e3bbe76229d2",
+      "name" : "nameAlias",
+      "type" : "nameAlias"
+    } ]
+  } ],
+  "virtualhostnodes" : [ {
+    "id" : "863d2e4d-5de2-408c-a8b6-10874b8ce417",
+    "name" : "default",
+    "type" : "JSON",
+    "defaultVirtualHostNode" : "true",
+    "virtualHostInitialConfiguration" : "{\"type\" : \"Memory\",\"name\" : \"default\",\"modelVersion\" : \"6.0\"}"
+  } ]
+}

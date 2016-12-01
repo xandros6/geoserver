@@ -80,6 +80,7 @@
           <descriptor>release/ext-backup-restore.xml</descriptor>
           <descriptor>release/ext-wmts-multi-dimensional.xml</descriptor> 
           <descriptor>release/ext-onelogin.xml</descriptor> 
+		  <descriptor>release/ext-notification.xml</descriptor> 
         </descriptors>
       </configuration>
      </plugin>
@@ -175,6 +176,12 @@
         <module>onelogin</module>
       </modules>
     </profile>
+	<profile>
+      <id>notification</id>
+      <modules>
+        <module>notification</module>
+      </modules>
+    </profile>
     <profile>
       <id>communityRelease</id>
       <modules>
@@ -221,6 +228,7 @@
         <module>security/oauth2-geonode</module>
         <module>wmts-multi-dimensional</module>
         <module>onelogin</module>
+		<module>notification</module>
       </modules>
     </profile>
     <profile>
