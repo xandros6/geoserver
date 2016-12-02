@@ -14,6 +14,10 @@
 	<name>GeoServer notification event system</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>
+		<dependency>
+			<groupId>org.geoserver</groupId>
+			<artifactId>gs-main</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.qpid</groupId>
@@ -21,13 +25,18 @@
 			<version>6.1.0</version>
 			<scope>test</scope>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.geoserver</groupId>
+			<artifactId>gs-main</artifactId>
+			<classifier>tests</classifier>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.rabbitmq</groupId>
 			<artifactId>amqp-client</artifactId>
 			<version>4.0.0</version>
 		</dependency>
-		
+
 	</dependencies>
 
 
