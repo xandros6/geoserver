@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geoserver.notification;
+package org.geoserver.notification.support;
 
 import org.apache.qpid.server.Broker;
 import org.apache.qpid.server.BrokerOptions;

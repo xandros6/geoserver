@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geoserver.notification;
+package org.geoserver.notification.support;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;

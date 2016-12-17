@@ -5,9 +5,9 @@
 
 package org.geoserver.notification;
 
-import org.geoserver.catalog.event.CatalogListener;
+import org.geoserver.wfs.TransactionPlugin;
 
-public interface INotificationCatalogListener extends CatalogListener {
+public interface INotificationTransactionListener extends TransactionPlugin {
 
     public NotificationConfiguration getNotificationConfiguration();
 

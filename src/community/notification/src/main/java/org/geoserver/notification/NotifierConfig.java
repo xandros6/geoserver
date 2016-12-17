@@ -6,34 +6,43 @@
 package org.geoserver.notification;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.geoserver.config.util.XStreamPersisterFactory;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.resource.Paths;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
-import org.geoserver.security.PropertyFileWatcher;
-import org.geoserver.util.IOUtils;
+import org.geotools.util.logging.Logging;
 
 public class NotifierConfig {
 
-    protected static final String PROPERTYFILENAME = "notifier.properties";
+    static Logger LOGGER = Logging.getLogger(NotifierConfig.class);
+
+    public static final String PROPERTYFILENAME = "notifier.xml";
 
     private GeoServerResourceLoader loader;
-    
-    private PropertyFileWatcher fw;
 
-    public NotifierConfig(GeoServerResourceLoader loader) throws IOException {
+    private XStreamPersisterFactory xstreamPersisterFactory;
+
+    public NotifierConfig(GeoServerResourceLoader loader,
+            XStreamPersisterFactory xstreamPersisterFactory) throws IOException {
         this.loader = loader;
-        Resource f = getConfigurationFile(loader);
-        fw = new PropertyFileWatcher(f);
+        this.xstreamPersisterFactory = xstreamPersisterFactory;
     }
 
-    public Resource getConfigurationFile(GeoServerResourceLoader loader) throws IOException {
-        Resource f = loader.get(Paths.path("notifier", NotifierConfig.PROPERTYFILENAME));
-        if (!Resources.exists(f)) {
-            //IOUtils.copy(NotifierConfig.class.getResourceAsStream(NotifierConfig.PROPERTYFILENAME), 
-            //        f.out());
+    public NotificationConfiguration getConfiguration() {
+        NotificationConfiguration nc = null;
+        try {
+            Resource f = this.loader.get(Paths.path("notifier", NotifierConfig.PROPERTYFILENAME));
+            if (Resources.exists(f)) {
+                nc = xstreamPersisterFactory.createXMLPersister().load(f.in(),
+                        NotificationConfiguration.class);
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
-        return f;
+        return nc;
     }
 }

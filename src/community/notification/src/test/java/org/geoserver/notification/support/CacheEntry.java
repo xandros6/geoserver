@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geoserver.notification;
+package org.geoserver.notification.support;
 
 import java.io.Serializable;
 import java.util.Arrays;

@@ -5,24 +5,36 @@
 
 package org.geoserver.notification;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerInitializer;
+import org.geoserver.platform.GeoServerExtensions;
 import org.geotools.util.logging.Logging;
 
-public class NotifierInitializer  implements GeoServerInitializer {
+public class NotifierInitializer implements GeoServerInitializer {
 
     static Logger LOGGER = Logging.getLogger(NotifierInitializer.class);
 
-    Notifier notifier;
-    
-    public NotifierInitializer( Notifier notifier) {
-        this.notifier = notifier;
+    private NotifierConfig notifierConfig;
+
+    public NotifierInitializer(NotifierConfig notifierConfig) {
+        this.notifierConfig = notifierConfig;
     }
 
     public void initialize(GeoServer geoServer) throws Exception {
-        notifier.setServer(geoServer);
+        List<INotificationCatalogListener> catalogListeners = GeoServerExtensions
+                .extensions(INotificationCatalogListener.class);
+        for (INotificationCatalogListener cl : catalogListeners) {
+            cl.setNotificationConfiguration(this.notifierConfig.getConfiguration());
+            geoServer.getCatalog().addListener(cl);
+        }
+        List<INotificationTransactionListener> transactionListeners = GeoServerExtensions
+                .extensions(INotificationTransactionListener.class);
+        for (INotificationTransactionListener tl : transactionListeners) {
+            tl.setNotificationConfiguration(this.notifierConfig.getConfiguration());
+        }
     }
 
 }

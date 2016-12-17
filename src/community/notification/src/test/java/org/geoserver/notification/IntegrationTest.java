@@ -9,6 +9,11 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.geoserver.notification.support.BrokerManager;
+import org.geoserver.notification.support.CacheEntry;
+import org.geoserver.notification.support.Receiver;
+import org.geoserver.notification.support.Sender;
+import org.geoserver.notification.support.SimpleCache;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

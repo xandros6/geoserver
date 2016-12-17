@@ -1,0 +1,26 @@
+<notificationConfiguration>
+	<queueSize>1000</queueSize>
+	<notificator>
+		<queueSize>1000</queueSize>
+		<processorThreads>1</processorThreads>
+		<messageFilter>
+			type = catalog or type = transaction
+		</messageFilter>
+		<genericProcessor>
+			<encoder>
+				<GeoNodeJsonEncoder/>
+			</encoder>
+			<sender>
+				<FanoutRabbitMQSender>
+					<username></username>
+					<password></password>
+					<host></host>
+					<port></port>
+					<virtualHost></virtualHost>
+					<exchangeName></exchangeName>
+					<routingKey></routingKey>
+				</FanoutRabbitMQSender>
+			</sender>
+		</genericProcessor>
+	</notificator>
+</notificationConfiguration>

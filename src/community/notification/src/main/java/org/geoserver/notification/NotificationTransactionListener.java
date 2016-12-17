@@ -5,13 +5,13 @@
 
 package org.geoserver.notification;
 
-import org.geoserver.catalog.CatalogException;
-import org.geoserver.catalog.event.CatalogAddEvent;
-import org.geoserver.catalog.event.CatalogModifyEvent;
-import org.geoserver.catalog.event.CatalogPostModifyEvent;
-import org.geoserver.catalog.event.CatalogRemoveEvent;
+import net.opengis.wfs.TransactionResponseType;
+import net.opengis.wfs.TransactionType;
 
-public class NotificationCatalogListener implements INotificationCatalogListener {
+import org.geoserver.wfs.TransactionEvent;
+import org.geoserver.wfs.WFSException;
+
+public class NotificationTransactionListener implements INotificationTransactionListener {
 
     private NotificationConfiguration notifierConfig;
 
@@ -26,31 +26,33 @@ public class NotificationCatalogListener implements INotificationCatalogListener
     }
 
     @Override
-    public void handleAddEvent(CatalogAddEvent event) throws CatalogException {
+    public TransactionType beforeTransaction(TransactionType request) throws WFSException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void beforeCommit(TransactionType request) throws WFSException {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void handleRemoveEvent(CatalogRemoveEvent event) throws CatalogException {
+    public void afterTransaction(TransactionType request, TransactionResponseType result,
+            boolean committed) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void handleModifyEvent(CatalogModifyEvent event) throws CatalogException {
+    public int getPriority() {
         // TODO Auto-generated method stub
-
+        return 0;
     }
 
     @Override
-    public void handlePostModifyEvent(CatalogPostModifyEvent event) throws CatalogException {
+    public void dataStoreChange(TransactionEvent event) throws WFSException {
         // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void reloaded() {
 
     }
 
