@@ -1,56 +1,70 @@
 {
-  "id" : "c017039f-4177-4b30-ac66-00685c54d4b5",
-  "name" : "broker",
-  "modelVersion" : "6.1",
-  "accesscontrolproviders" : [ {
-    "id" : "f1d9cdad-940a-4a0e-8748-52757856562c",
-    "name" : "AllowAll",
-    "type" : "AllowAll",
-    "priority" : 9999
-  } ],
+  "id" : "ff1df0db-afff-4dbb-bc11-a591abeba3d9",
+  "name" : "${broker.name}",
+  "modelVersion" : "3.0",
+  "defaultVirtualHost" : "default",
   "authenticationproviders" : [ {
-    "id" : "fce65310-63c4-4060-aaf6-535c6da419fa",
-    "name" : "plain",
-    "type" : "Plain",
-    "users" : [ {
-      "id" : "a1b2289a-e557-4145-93a4-f28e9d52070c",
-      "name" : "guest",
-      "type" : "managed",
-      "password" : "guest"
+    "id" : "f94b5c6d-8c68-4175-8b0d-b255c7f0efb3",
+    "name" : "passwordFile",
+    "type" : "PlainPasswordFile",
+    "path" : "${qpid.home_dir}${file.separator}etc${file.separator}passwd",
+    "preferencesproviders" : [ {
+      "id" : "56d0d962-994a-4146-a89c-00f46a3357f4",
+      "name" : "fileSystemPreferences",
+      "type" : "FileSystemPreferences",
+      "path" : "${qpid.work_dir}${file.separator}user.preferences.json"
     } ]
   } ],
-  "keystores" : [ {
-    "id" : "460de726-98e3-4a0b-be8d-6cbb8979e691",
-    "name" : "development.sun.com",
-    "password" : "javacaps",
-    "storeUrl" : "clientkeystore"
+  "plugins" : [ {
+    "id" : "62d1d302-cc78-4982-8e8f-bdbacdcee947",
+    "type" : "MANAGEMENT-HTTP",
+    "name" : "httpManagement"
+  }, {
+    "id" : "c9b25aae-e8e3-424d-b3f7-7c48fc22d3fd",
+    "type" : "MANAGEMENT-JMX",
+    "name" : "jmxManagement"
   } ],
   "ports" : [ {
-    "id" : "40942cb6-6abc-4f20-ad84-8bcaaed918ee",
+    "id" : "81d97299-e885-4d8c-b4e1-4d354faa6738",
     "name" : "AMQP",
     "port" : "${qpid.amqp_port}",
-    "authenticationProvider" : "plain",
-    "keyStore" : "default",
-    "transports" : [ "SSL" ],
+    "authenticationProvider" : "passwordFile",
+    "secureOnlyMechanisms" : [ ],
     "virtualhostaliases" : [ {
-      "id" : "e6271875-9182-473a-b361-cfabafced6ac",
+      "id" : "3e582c11-ef02-44f0-bd71-20bf27e59794",
       "name" : "defaultAlias",
       "type" : "defaultAlias"
     }, {
-      "id" : "d968f2c0-d566-4f7d-ad69-2048207e2a48",
+      "id" : "982ce88a-75af-451d-83ea-c40de6bf3d24",
       "name" : "hostnameAlias",
       "type" : "hostnameAlias"
     }, {
-      "id" : "40bd83a3-bfcd-488a-ba9b-e3bbe76229d2",
+      "id" : "e004ab5b-b9d0-408d-83a8-095c774cc867",
       "name" : "nameAlias",
       "type" : "nameAlias"
     } ]
+  }, {
+    "id" : "1a07db45-ecd4-4627-9355-ce24efbbc3ed",
+    "name" : "HTTP",
+    "port" : "${qpid.http_port}",
+    "authenticationProvider" : "passwordFile",
+    "protocols" : [ "HTTP" ]
+  }, {
+    "id" : "65e39928-17fd-40cc-b112-82bd76a7613d",
+    "name" : "JMX_CONNECTOR",
+    "port" : "${qpid.jmx_port}",
+    "authenticationProvider" : "passwordFile",
+    "protocols" : [ "JMX_RMI" ]
+  }, {
+    "id" : "868a10ba-5662-4852-904b-fcabad8259ed",
+    "name" : "RMI_REGISTRY",
+    "port" : "${qpid.rmi_port}",
+    "protocols" : [ "RMI" ]
   } ],
   "virtualhostnodes" : [ {
-    "id" : "863d2e4d-5de2-408c-a8b6-10874b8ce417",
+    "id" : "9d0e2313-10e4-442b-bda6-b21d0cc58bf2",
     "name" : "default",
     "type" : "JSON",
-    "defaultVirtualHostNode" : "true",
-    "virtualHostInitialConfiguration" : "{\"type\" : \"Memory\",\"name\" : \"default\",\"modelVersion\" : \"6.0\"}"
+    "virtualHostInitialConfiguration" : "${qpid.initial_config_virtualhost_config}"
   } ]
 }

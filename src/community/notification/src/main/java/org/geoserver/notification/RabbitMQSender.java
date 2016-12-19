@@ -7,12 +7,18 @@ package org.geoserver.notification;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.geotools.util.logging.Logging;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
 public abstract class RabbitMQSender implements NotificationSender, Serializable {
+
+    private static Logger LOGGER = Logging.getLogger(RabbitMQSender.class);
 
     /** serialVersionUID */
     private static final long serialVersionUID = 1370640635300148935L;
@@ -36,12 +42,14 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
     public void initialize() throws Exception {
 
         if (uri == null) {
-            this.uri = "amqp://" + this.username + ":”+this.password+”@" + this.host + ":"
+            this.uri = "amqp://" + this.username + ":" + this.password + "@" + this.host + ":"
                     + this.port + "/" + this.virtualHost;
+
         }
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(this.uri);
+        // factory.useSslProtocol();
         conn = factory.newConnection();
         channel = conn.createChannel();
     }
@@ -61,6 +69,8 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
         try {
             this.initialize();
             this.sendMessage(notification, payload);
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, e.getMessage(), e);
         } finally {
             this.close();
         }

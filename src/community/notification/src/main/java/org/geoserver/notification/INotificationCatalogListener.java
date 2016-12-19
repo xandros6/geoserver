@@ -9,8 +9,8 @@ import org.geoserver.catalog.event.CatalogListener;
 
 public interface INotificationCatalogListener extends CatalogListener {
 
-    public NotificationConfiguration getNotificationConfiguration();
-
     public void setNotificationConfiguration(NotificationConfiguration ncfg);
+
+    public NotificationConfiguration getNotificationConfiguration();
 
 }

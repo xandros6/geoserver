@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimpleCache {
     private List<CacheEntry> cache = new CopyOnWriteArrayList<CacheEntry>();
+
     private AtomicInteger counter = new AtomicInteger(0);
 
     public void update(String text) {

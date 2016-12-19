@@ -5,18 +5,19 @@
 
 package org.geoserver.notification;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 
 import org.geoserver.catalog.event.CatalogListener;
-import org.geoserver.config.ConfigurationListener;
 import org.geoserver.data.test.SystemTestData;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.test.GeoServerSystemTestSupport;
 import org.geoserver.wfs.TransactionPlugin;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class SystemTest extends GeoServerSystemTestSupport {
 
@@ -25,19 +26,24 @@ public class SystemTest extends GeoServerSystemTestSupport {
         // TODO Auto-generated method stub
         super.setUpTestData(testData);
         new File(testData.getDataDirectoryRoot(), "notifier").mkdir();
-        testData.copyTo(getClass().getClassLoader().getResourceAsStream(NotifierConfig.PROPERTYFILENAME), "notifier/" + NotifierConfig.PROPERTYFILENAME);
+        testData.copyTo(
+                getClass().getClassLoader().getResourceAsStream(
+                        NotifierInitializer.PROPERTYFILENAME), "notifier/"
+                        + NotifierInitializer.PROPERTYFILENAME);
     }
 
     @Test
     public void testCatalogNotifierIntialization() throws IOException {
         NotificationConfiguration cfg = null;
-        for(CatalogListener listener : getGeoServer().getCatalog().getListeners()){
-            if(listener instanceof INotificationCatalogListener){
+        int counter = 0;
+        for (CatalogListener listener : getGeoServer().getCatalog().getListeners()) {
+            if (listener instanceof INotificationCatalogListener) {
                 INotificationCatalogListener notifierListener = (INotificationCatalogListener) listener;
                 cfg = notifierListener.getNotificationConfiguration();
-                break;
+                counter++;
             }
         }
+        assertEquals(1, counter);
         assertNotNull(cfg);
         assertTrue(cfg.getNotificators().size() == 1);
     }
@@ -45,16 +51,17 @@ public class SystemTest extends GeoServerSystemTestSupport {
     @Test
     public void testTransactionNotifierIntialization() throws IOException {
         NotificationConfiguration cfg = null;
-        for(TransactionPlugin listener : GeoServerExtensions.extensions(TransactionPlugin.class)){
-            if(listener instanceof INotificationTransactionListener){
+        int counter = 0;
+        for (TransactionPlugin listener : GeoServerExtensions.extensions(TransactionPlugin.class)) {
+            if (listener instanceof INotificationTransactionListener) {
                 INotificationTransactionListener notifierListener = (INotificationTransactionListener) listener;
                 cfg = notifierListener.getNotificationConfiguration();
-                break;
+                counter++;
             }
         }
+        assertEquals(1, counter);
         assertNotNull(cfg);
         assertTrue(cfg.getNotificators().size() == 1);
     }
-
 
 }

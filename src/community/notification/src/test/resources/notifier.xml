@@ -8,18 +8,15 @@
 		</messageFilter>
 		<genericProcessor>
 			<encoder>
-				<GeoNodeJsonEncoder/>
 			</encoder>
 			<sender>
-				<FanoutRabbitMQSender>
-					<username></username>
-					<password></password>
-					<host></host>
-					<port></port>
+					<username>guest</username>
+					<password>guest</password>
+					<host>localhost</host>
+					<port>4432</port>
 					<virtualHost></virtualHost>
-					<exchangeName></exchangeName>
-					<routingKey></routingKey>
-				</FanoutRabbitMQSender>
+					<exchangeName>testExchange</exchangeName>
+					<routingKey>testRouting</routingKey>
 			</sender>
 		</genericProcessor>
 	</notificator>

@@ -8,12 +8,7 @@
 	default-autowire="byName">
 
 	<bean id="notificationInitializer" class="org.geoserver.notification.NotifierInitializer">
-		<constructor-arg ref="notifierConfig" />
-	</bean>
-
-	<bean id="notifierConfig" class="org.geoserver.notification.NotifierConfig">
 		<constructor-arg ref="resourceLoader" />
-		<constructor-arg ref="xstreamPersisterFactory" />
 	</bean>
 
 	<bean id="notificationCatalogListener" class="org.geoserver.notification.NotificationCatalogListener">

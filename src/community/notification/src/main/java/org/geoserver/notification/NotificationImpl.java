@@ -1,0 +1,59 @@
+package org.geoserver.notification;
+
+import java.util.Map;
+
+public class NotificationImpl implements Notification {
+
+    private Type type;
+
+    private String handle;
+
+    private Action action;
+
+    private Map<String, Object> properties;
+
+    private String user;
+
+    private Object object;
+
+    public NotificationImpl(Type type, String handle, Action action, Object object,
+            Map<String, Object> properties, String user) {
+        this.type = type;
+        this.handle = handle;
+        this.action = action;
+        this.properties = properties;
+        this.user = user;
+        this.object = object;
+    }
+
+    @Override
+    public String getHandle() {
+        return handle;
+    }
+
+    @Override
+    public Type getType() {
+        return type;
+    }
+
+    @Override
+    public Action getAction() {
+        return action;
+    }
+
+    @Override
+    public Object getObject() {
+        return object;
+    }
+
+    @Override
+    public Map<String, Object> getActionProperties() {
+        return properties;
+    }
+
+    @Override
+    public String getUser() {
+        return user;
+    }
+
+}
