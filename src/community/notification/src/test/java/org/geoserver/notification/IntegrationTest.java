@@ -23,7 +23,6 @@ import org.geoserver.data.test.SystemTestData;
 import org.geoserver.notification.support.BrokerManager;
 import org.geoserver.notification.support.Receiver;
 import org.geoserver.notification.support.ReceiverService;
-import org.geoserver.notification.support.SimpleCache;
 import org.geoserver.security.AccessMode;
 import org.geoserver.test.GeoServerSystemTestSupport;
 import org.junit.AfterClass;
@@ -40,8 +39,6 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
     protected static XpathEngine xp;
 
     private static BrokerManager brokerStarter;
-
-    private SimpleCache cache = new SimpleCache();
 
     @BeforeClass
     public static void startup() throws Exception {

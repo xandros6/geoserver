@@ -21,20 +21,10 @@ public class BrokerManager {
 
     public void startBroker() throws Exception {
         final BrokerOptions brokerOptions = new BrokerOptions();
-        // final String configFileName = "qpid-config.json";
-        // final String passwordFileName = "passwd.properties";
-        // prepare options
-        // final BrokerOptions brokerOptions = new BrokerOptions();
         brokerOptions.setConfigProperty("qpid.amqp_port", PORT);
         brokerOptions.setConfigProperty("qpid.pass_file", PWD_PATH);
         brokerOptions.setConfigProperty("qpid.work_dir", Files.createTempDir().getAbsolutePath());
         brokerOptions.setInitialConfigurationLocation(INITIAL_CONFIG_PATH);
-        /*
-         * brokerOptions.setConfigProperty("qpid.amqp_port", PORT); brokerOptions.setConfigProperty("broker.name", "GEOSERVER");
-         * brokerOptions.setConfigurationStoreLocation(INITIAL_CONFIG_PATH); brokerOptions.setOverwriteConfigurationStore(false);
-         * brokerOptions.setInitialConfigurationLocation(INITIAL_CONFIG_PATH);
-         */
-
         broker.startup(brokerOptions);
     }
 
