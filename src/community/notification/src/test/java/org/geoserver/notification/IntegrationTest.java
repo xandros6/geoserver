@@ -89,13 +89,48 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
     @Test
     public void catalogAddNamespaces() throws Exception {
         ReceiverService event = mock(ReceiverService.class);
-
-        new Receiver(event).receive();
+        Receiver rc = new Receiver(event);
+        rc.receive();
 
         String json = "{'namespace':{ 'prefix':'foo', 'uri':'http://foo.com' }}";
         MockHttpServletResponse response = postAsServletResponse("/rest/namespaces", json,
                 "text/json");
         assertEquals(201, response.getStatus());
+
+        verify(event, times(2)).manage(argThat(new ArgumentMatcher<String>() {
+
+            @Override
+            public boolean matches(Object argument) {
+                // Assert
+                return true;
+            }
+
+        }));
+        rc.close();
+    }
+
+    @Test
+    public void transactionDoubleAdd() throws Exception {
+        ReceiverService event = mock(ReceiverService.class);
+        Receiver rc = new Receiver(event);
+        rc.receive();
+
+        String xml = "<wfs:Transaction service=\"WFS\" version=\"1.0.0\" "
+                + "xmlns:cgf=\"http://www.opengis.net/cite/geometry\" "
+                + "xmlns:ogc=\"http://www.opengis.net/ogc\" "
+                + "xmlns:wfs=\"http://www.opengis.net/wfs\" "
+                + "xmlns:gml=\"http://www.opengis.net/gml\"> " + "<wfs:Insert handle='insert-1'> "
+                + "<cgf:Lines>" + "<cgf:lineStringProperty>" + "<gml:LineString>"
+                + "<gml:coordinates decimal=\".\" cs=\",\" ts=\" \">" + "5,5 6,6"
+                + "</gml:coordinates>" + "</gml:LineString>" + "</cgf:lineStringProperty>"
+                + "<cgf:id>t0001</cgf:id>" + "</cgf:Lines>" + "</wfs:Insert>"
+                + "<wfs:Insert handle='insert-2'> " + "<cgf:Lines>" + "<cgf:lineStringProperty>"
+                + "<gml:LineString>" + "<gml:coordinates decimal=\".\" cs=\",\" ts=\" \">"
+                + "7,7 8,8" + "</gml:coordinates>" + "</gml:LineString>"
+                + "</cgf:lineStringProperty>" + "<cgf:id>t0002</cgf:id>" + "</cgf:Lines>"
+                + "</wfs:Insert>" + "</wfs:Transaction>";
+
+        postAsDOM("wfs", xml);
 
         verify(event, times(1)).manage(argThat(new ArgumentMatcher<String>() {
 
@@ -106,7 +141,34 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
             }
 
         }));
-
+        rc.close();
     }
 
+    @Test
+    public void transactionAddAndUpdate() throws Exception {
+
+        String xml = "<wfs:Transaction service=\"WFS\" version=\"1.0.0\" "
+                + "xmlns:cgf=\"http://www.opengis.net/cite/geometry\" "
+                + "xmlns:ogc=\"http://www.opengis.net/ogc\" "
+                + "xmlns:wfs=\"http://www.opengis.net/wfs\" "
+                + "xmlns:gml=\"http://www.opengis.net/gml\"> " + "<wfs:Insert handle='insert-1'>"
+                + "<sf:WithGMLProperties>" + "<gml:location>" + "<gml:Point>"
+                + "<gml:coordinates>2,2</gml:coordinates>" + "</gml:Point>" + "</gml:location>"
+                + "<gml:name>one</gml:name>" + "<sf:foo>1</sf:foo>" + "</sf:WithGMLProperties>"
+                + "</wfs:Insert>" + " <wfs:Update typeName=\"sf:WithGMLProperties\">"
+                + "   <wfs:Property>" + "     <wfs:ValueReference>gml:name</wfs:ValueReference>"
+                + "     <wfs:Value>two</wfs:Value>" + "   </wfs:Property>" + "   <wfs:Property>"
+                + "     <wfs:ValueReference>gml:location</wfs:ValueReference>" + "     <wfs:Value>"
+                + "        <gml:Point>" + "          <gml:coordinates>7,7</gml:coordinates>"
+                + "        </gml:Point>" + "     </wfs:Value>" + "   </wfs:Property>"
+                + "   <wfs:Property>" + "     <wfs:ValueReference>sf:foo</wfs:ValueReference>"
+                + "     <wfs:Value>2</wfs:Value>" + "   </wfs:Property>" + "   <fes:Filter>"
+                + "     <fes:PropertyIsEqualTo>"
+                + "       <fes:ValueReference>foo</fes:ValueReference>"
+                + "       <fes:Literal>1</fes:Literal>" + "     </fes:PropertyIsEqualTo>"
+                + "   </fes:Filter>" + " </wfs:Update>" + "</wfs:Transaction>";
+
+        postAsDOM("wfs", xml);
+
+    }
 }

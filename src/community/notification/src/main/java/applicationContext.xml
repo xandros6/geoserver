@@ -15,6 +15,7 @@
 	</bean>
 	
 	<bean id="notificationTransactionListener" class="org.geoserver.notification.NotificationTransactionListener">
+	   <constructor-arg ref="catalog" />
     </bean>
 
 	<bean id="notificationXStreamInitializer"

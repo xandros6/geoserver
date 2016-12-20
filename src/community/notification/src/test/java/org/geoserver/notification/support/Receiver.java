@@ -6,6 +6,10 @@
 package org.geoserver.notification.support;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.geotools.util.logging.Logging;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -16,11 +20,17 @@ import com.rabbitmq.client.Envelope;
 
 public class Receiver {
 
+    protected static Logger LOGGER = Logging.getLogger(Receiver.class);
+
     private static final String BROKER_URI = "amqp://guest:guest@localhost:4432";
 
     private final static String QUEUE_NAME = "jms/queue";
 
     private ReceiverService service;
+
+    private Connection connection;
+
+    private Channel channel;
 
     public Receiver(ReceiverService service) {
         this.service = service;
@@ -30,8 +40,8 @@ public class Receiver {
         // let's setup evrything and start listening
         ConnectionFactory factory = createConnectionFactory();
 
-        Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
+        connection = factory.newConnection();
+        channel = connection.createChannel();
         channel.exchangeDeclare("testExchange", "fanout");
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
         channel.queueBind(QUEUE_NAME, "testExchange", "testRouting");
@@ -53,6 +63,23 @@ public class Receiver {
                 service.manage(new String(body)); // put each message into the cache
             }
         };
+    }
+
+    public void close() {
+        if (channel != null) {
+            try {
+                channel.close();
+            } catch (Exception e) {
+                LOGGER.log(Level.FINER, e.getMessage(), e);
+            }
+        }
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (Exception e) {
+                LOGGER.log(Level.FINER, e.getMessage(), e);
+            }
+        }
     }
 
 }

@@ -2,6 +2,7 @@ package org.geoserver.notification.geonode.kombu;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Map;
 
 public class KombuMessage implements Serializable {
 
@@ -21,7 +22,7 @@ public class KombuMessage implements Serializable {
 
     private KombuSource source;
 
-    private KombuProperties properties;
+    private Map<String, Object> properties;
 
     public void setId(String id) {
         this.id = id;
@@ -51,8 +52,8 @@ public class KombuMessage implements Serializable {
         this.source = source;
     }
 
-    public void setProperties(KombuProperties properties) {
-        this.properties = properties;
+    public void setProperties(Map<String, Object> map) {
+        this.properties = map;
     }
 
 }
