@@ -6,6 +6,7 @@
 package org.geoserver.notification;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -18,6 +19,7 @@ import org.custommonkey.xmlunit.XMLUnit;
 import org.custommonkey.xmlunit.XpathEngine;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.data.test.SystemTestData;
+import org.geoserver.notification.common.Bounds;
 import org.geoserver.notification.geonode.kombu.KombuMessage;
 import org.geoserver.notification.geonode.kombu.KombuSource;
 import org.geoserver.notification.support.BrokerManager;
@@ -134,43 +136,45 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
                 + "</wfs:Insert>" + "</wfs:Transaction>";
 
         postAsDOM("wfs", xml);
-        
+
         List<byte[]> ret = service.getMessages();
 
         assertEquals(1, ret.size());
 
         KombuMessage tMsg = toKombu(ret.get(0));
         assertEquals("Data", tMsg.getType());
-        assertEquals(2,tMsg.getProperties().get(NotificationTransactionListener.INSERTED));
+        assertEquals(2, tMsg.getProperties().get(NotificationTransactionListener.INSERTED));
+        assertNotNull(tMsg.getProperties().get(NotificationTransactionListener.BOUNDS));
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES,
+                true);
+        Bounds b = mapper.convertValue(
+                tMsg.getProperties().get(NotificationTransactionListener.BOUNDS), Bounds.class);
+        assertEquals(5d, b.getMinx().doubleValue(), 0);
+        assertEquals(5d, b.getMiny().doubleValue(), 0);
+        assertEquals(8d, b.getMaxx().doubleValue(), 0);
+        assertEquals(8d, b.getMaxy().doubleValue(), 0);
         rc.close();
-        
+
     }
 
     @Test
     public void transactionAddAndUpdate() throws Exception {
-/*
-        String xml = "<wfs:Transaction service=\"WFS\" version=\"1.0.0\" "
-                + "xmlns:cgf=\"http://www.opengis.net/cite/geometry\" "
-                + "xmlns:ogc=\"http://www.opengis.net/ogc\" "
-                + "xmlns:wfs=\"http://www.opengis.net/wfs\" "
-                + "xmlns:gml=\"http://www.opengis.net/gml\"> " + "<wfs:Insert handle='insert-1'>"
-                + "<sf:WithGMLProperties>" + "<gml:location>" + "<gml:Point>"
-                + "<gml:coordinates>2,2</gml:coordinates>" + "</gml:Point>" + "</gml:location>"
-                + "<gml:name>one</gml:name>" + "<sf:foo>1</sf:foo>" + "</sf:WithGMLProperties>"
-                + "</wfs:Insert>" + " <wfs:Update typeName=\"sf:WithGMLProperties\">"
-                + "   <wfs:Property>" + "     <wfs:ValueReference>gml:name</wfs:ValueReference>"
-                + "     <wfs:Value>two</wfs:Value>" + "   </wfs:Property>" + "   <wfs:Property>"
-                + "     <wfs:ValueReference>gml:location</wfs:ValueReference>" + "     <wfs:Value>"
-                + "        <gml:Point>" + "          <gml:coordinates>7,7</gml:coordinates>"
-                + "        </gml:Point>" + "     </wfs:Value>" + "   </wfs:Property>"
-                + "   <wfs:Property>" + "     <wfs:ValueReference>sf:foo</wfs:ValueReference>"
-                + "     <wfs:Value>2</wfs:Value>" + "   </wfs:Property>" + "   <fes:Filter>"
-                + "     <fes:PropertyIsEqualTo>"
-                + "       <fes:ValueReference>foo</fes:ValueReference>"
-                + "       <fes:Literal>1</fes:Literal>" + "     </fes:PropertyIsEqualTo>"
-                + "   </fes:Filter>" + " </wfs:Update>" + "</wfs:Transaction>";
-
-        postAsDOM("wfs", xml);*/
+        /*
+         * String xml = "<wfs:Transaction service=\"WFS\" version=\"1.0.0\" " + "xmlns:cgf=\"http://www.opengis.net/cite/geometry\" " +
+         * "xmlns:ogc=\"http://www.opengis.net/ogc\" " + "xmlns:wfs=\"http://www.opengis.net/wfs\" " + "xmlns:gml=\"http://www.opengis.net/gml\"> " +
+         * "<wfs:Insert handle='insert-1'>" + "<sf:WithGMLProperties>" + "<gml:location>" + "<gml:Point>" + "<gml:coordinates>2,2</gml:coordinates>" +
+         * "</gml:Point>" + "</gml:location>" + "<gml:name>one</gml:name>" + "<sf:foo>1</sf:foo>" + "</sf:WithGMLProperties>" + "</wfs:Insert>" +
+         * " <wfs:Update typeName=\"sf:WithGMLProperties\">" + "   <wfs:Property>" + "     <wfs:ValueReference>gml:name</wfs:ValueReference>" +
+         * "     <wfs:Value>two</wfs:Value>" + "   </wfs:Property>" + "   <wfs:Property>" +
+         * "     <wfs:ValueReference>gml:location</wfs:ValueReference>" + "     <wfs:Value>" + "        <gml:Point>" +
+         * "          <gml:coordinates>7,7</gml:coordinates>" + "        </gml:Point>" + "     </wfs:Value>" + "   </wfs:Property>" +
+         * "   <wfs:Property>" + "     <wfs:ValueReference>sf:foo</wfs:ValueReference>" + "     <wfs:Value>2</wfs:Value>" + "   </wfs:Property>" +
+         * "   <fes:Filter>" + "     <fes:PropertyIsEqualTo>" + "       <fes:ValueReference>foo</fes:ValueReference>" +
+         * "       <fes:Literal>1</fes:Literal>" + "     </fes:PropertyIsEqualTo>" + "   </fes:Filter>" + " </wfs:Update>" + "</wfs:Transaction>";
+         * 
+         * postAsDOM("wfs", xml);
+         */
 
     }
 

@@ -59,7 +59,7 @@ public class Receiver {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope,
                     AMQP.BasicProperties properties, byte[] body) throws IOException {
-                service.manage(body); 
+                service.manage(body);
             }
         };
     }

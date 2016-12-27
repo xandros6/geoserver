@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class ReceiverService {
 
     private CountDownLatch latch = new CountDownLatch(1);
-    
+
     private List<byte[]> messages;
 
     private int messageNumber;
@@ -22,18 +22,17 @@ public class ReceiverService {
         this.messageNumber = number;
         messages = new ArrayList<byte[]>(number);
     }
-    
-    public void manage(byte[] message){
+
+    public void manage(byte[] message) {
         this.messages.add(message);
-        if(this.messages.size() ==  this.messageNumber){
+        if (this.messages.size() == this.messageNumber) {
             latch.countDown();
         }
     }
-    
-    public List<byte[]> getMessages() throws InterruptedException{
-        latch.await(2000,TimeUnit.MILLISECONDS);
+
+    public List<byte[]> getMessages() throws InterruptedException {
+        latch.await(2000, TimeUnit.MILLISECONDS);
         return this.messages;
     }
-    
 
 }

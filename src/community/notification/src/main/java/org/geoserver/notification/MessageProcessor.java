@@ -66,7 +66,6 @@ public class MessageProcessor {
         @Override
         public void run() {
             try {
-                LOGGER.log(Level.SEVERE, "Sending notification " + this.notification);
                 this.processor.process(this.notification);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);

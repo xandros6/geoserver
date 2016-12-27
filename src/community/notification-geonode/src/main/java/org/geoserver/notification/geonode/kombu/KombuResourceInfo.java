@@ -1,5 +1,6 @@
 package org.geoserver.notification.geonode.kombu;
 
+import org.geoserver.notification.common.Bounds;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 
 public abstract class KombuResourceInfo extends KombuWorkspaceItemInfo {
@@ -7,9 +8,9 @@ public abstract class KombuResourceInfo extends KombuWorkspaceItemInfo {
 
     private String store;
 
-    private KobuBounds geographicBunds;
+    private Bounds geographicBunds;
 
-    private KobuBounds bounds;
+    private Bounds bounds;
 
     public String getNativeName() {
         return nativeName;
@@ -27,19 +28,19 @@ public abstract class KombuResourceInfo extends KombuWorkspaceItemInfo {
         this.store = store;
     }
 
-    public KobuBounds getGeographicBunds() {
+    public Bounds getGeographicBunds() {
         return geographicBunds;
     }
 
-    public void setGeographicBunds(KobuBounds geographicBunds) {
+    public void setGeographicBunds(Bounds geographicBunds) {
         this.geographicBunds = geographicBunds;
     }
 
-    public KobuBounds getBounds() {
+    public Bounds getBounds() {
         return bounds;
     }
 
-    public void setBounds(KobuBounds bounds) {
+    public void setBounds(Bounds bounds) {
         this.bounds = bounds;
     }
 

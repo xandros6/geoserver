@@ -1,8 +1,9 @@
-package org.geoserver.notification.geonode.kombu;
+package org.geoserver.notification.common;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.CRS;
 
-public class KobuBounds {
+public class Bounds {
 
     private Double minx;
 
@@ -14,14 +15,15 @@ public class KobuBounds {
 
     private String crs;
 
-    public KobuBounds() {}
-    
-    public KobuBounds(ReferencedEnvelope nativeBoundingBox) {
-        this.minx = nativeBoundingBox.getMinX();
-        this.maxx = nativeBoundingBox.getMaxX();
-        this.miny = nativeBoundingBox.getMinY();
-        this.maxy = nativeBoundingBox.getMaxY();
-        this.crs = nativeBoundingBox.getCoordinateReferenceSystem().getName().toString();
+    public Bounds() {
+    }
+
+    public Bounds(ReferencedEnvelope bb) {
+        this.minx = bb.getMinX();
+        this.maxx = bb.getMaxX();
+        this.miny = bb.getMinY();
+        this.maxy = bb.getMaxY();
+        this.crs = CRS.toSRS(bb.getCoordinateReferenceSystem());
     }
 
     public Double getMinx() {
@@ -62,6 +64,14 @@ public class KobuBounds {
 
     public void setCrs(String crs) {
         this.crs = crs;
+    }
+
+    public ReferencedEnvelope getBb() {
+        try {
+            return new ReferencedEnvelope(minx, maxx, miny, maxy, CRS.decode(crs));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 }

@@ -5,33 +5,33 @@
 		<processorThreads>1</processorThreads>
 		<messageFilter>type='Catalog'</messageFilter>
 		<genericProcessor>
-			<GeoNodeJsonEncoder/>
+			<GeoNodeJsonEncoder />
 			<RabbitMQSender>
-					<username>guest</username>
-					<password>guest</password>
-					<host>localhost</host>
-					<port>4432</port>
-					<virtualHost></virtualHost>
-					<exchangeName>testExchange</exchangeName>
-					<routingKey>testRouting</routingKey>
+				<username>guest</username>
+				<password>guest</password>
+				<host>localhost</host>
+				<port>4432</port>
+				<virtualHost></virtualHost>
+				<exchangeName>testExchange</exchangeName>
+				<routingKey>testRouting</routingKey>
 			</RabbitMQSender>
 		</genericProcessor>
 	</notificator>
 	<notificator>
-        <queueSize>1000</queueSize>
-        <processorThreads>10</processorThreads>
-        <messageFilter>type='Data'</messageFilter>
-        <genericProcessor>
-            <GeoNodeJsonEncoder />
-            <RabbitMQSender>
-                    <username>guest</username>
-                    <password>guest</password>
-                    <host>localhost</host>
-                    <port>4432</port>
-                    <virtualHost></virtualHost>
-                    <exchangeName>testExchange</exchangeName>
-                    <routingKey>testRouting</routingKey>
-            </RabbitMQSender>
-        </genericProcessor>
-    </notificator>
+		<queueSize>1000</queueSize>
+		<processorThreads>10</processorThreads>
+		<messageFilter>type='Data'</messageFilter>
+		<genericProcessor>
+			<GeoNodeJsonEncoder />
+			<RabbitMQSender>
+				<username>guest</username>
+				<password>guest</password>
+				<host>localhost</host>
+				<port>4432</port>
+				<virtualHost></virtualHost>
+				<exchangeName>testExchange</exchangeName>
+				<routingKey>testRouting</routingKey>
+			</RabbitMQSender>
+		</genericProcessor>
+	</notificator>
 </notificationConfiguration>

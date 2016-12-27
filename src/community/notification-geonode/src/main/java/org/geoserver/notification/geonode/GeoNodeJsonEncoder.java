@@ -13,9 +13,9 @@ import java.util.Date;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.notification.common.Bounds;
 import org.geoserver.notification.common.Notification;
 import org.geoserver.notification.common.NotificationEncoder;
-import org.geoserver.notification.geonode.kombu.KobuBounds;
 import org.geoserver.notification.geonode.kombu.KombuFeatureTypeInfo;
 import org.geoserver.notification.geonode.kombu.KombuMessage;
 import org.geoserver.notification.geonode.kombu.KombuNamespaceInfo;
@@ -77,10 +77,10 @@ public class GeoNodeJsonEncoder implements NotificationEncoder {
             source.setNativeName(obj.getNativeName());
             source.setStore(obj.getStore().getName());
             if (obj.getNativeBoundingBox() != null) {
-                source.setGeographicBunds(new KobuBounds(obj.getNativeBoundingBox()));
+                source.setGeographicBunds(new Bounds(obj.getNativeBoundingBox()));
             }
             if (obj.boundingBox() != null) {
-                source.setGeographicBunds(new KobuBounds(obj.boundingBox()));
+                source.setGeographicBunds(new Bounds(obj.boundingBox()));
             }
             message.setSource(source);
         }

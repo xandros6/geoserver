@@ -15,10 +15,12 @@ import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogInfo;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.impl.ModificationProxy;
+import org.geoserver.notification.common.Bounds;
 import org.geoserver.notification.common.Notification;
 import org.geoserver.wfs.TransactionEvent;
 import org.geoserver.wfs.TransactionEventType;
 import org.geoserver.wfs.WFSException;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.type.FeatureType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +35,8 @@ public class NotificationTransactionListener extends NotificationListener implem
     protected static final String UPDATED = "updated";
 
     protected static final String TYPE = "type";
+
+    protected static final String BOUNDS = "bounds";
 
     private Catalog catalog;
 
@@ -88,6 +92,7 @@ public class NotificationTransactionListener extends NotificationListener implem
         TransactionEventType eventType = event.getType();
         Integer affectedFeatures = event.getAffectedFeatures().size();
         FeatureType featureType = event.getAffectedFeatures().getSchema();
+        ReferencedEnvelope featureBound = event.getAffectedFeatures().getBounds();
         FeatureTypeInfo fti = this.catalog.getFeatureTypeByName(featureType.getName());
         CatalogInfo info = ModificationProxy.unwrap(fti);
         String featureTypeName = featureType.getName().getURI();
@@ -113,6 +118,10 @@ public class NotificationTransactionListener extends NotificationListener implem
                     : 0;
             properties.put(DELETED, inserted + affectedFeatures);
         }
+        if (properties.get(BOUNDS) != null) {
+            featureBound.expandToInclude(((Bounds) properties.get(BOUNDS)).getBb());
+        }
+        properties.put(BOUNDS, new Bounds(featureBound));
     }
 
     @Override
