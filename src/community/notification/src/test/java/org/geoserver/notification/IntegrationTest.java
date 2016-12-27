@@ -6,13 +6,11 @@
 package org.geoserver.notification;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.custommonkey.xmlunit.SimpleNamespaceContext;
@@ -20,7 +18,10 @@ import org.custommonkey.xmlunit.XMLUnit;
 import org.custommonkey.xmlunit.XpathEngine;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.data.test.SystemTestData;
+import org.geoserver.notification.geonode.kombu.KombuMessage;
+import org.geoserver.notification.geonode.kombu.KombuSource;
 import org.geoserver.notification.support.BrokerManager;
+import org.geoserver.notification.support.KombuSourceDeserializer;
 import org.geoserver.notification.support.Receiver;
 import org.geoserver.notification.support.ReceiverService;
 import org.geoserver.security.AccessMode;
@@ -29,8 +30,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
-import org.springframework.mock.web.MockHttpServletResponse;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class IntegrationTest extends GeoServerSystemTestSupport {
 
@@ -88,31 +90,32 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
 
     @Test
     public void catalogAddNamespaces() throws Exception {
-        ReceiverService event = mock(ReceiverService.class);
-        Receiver rc = new Receiver(event);
+        ReceiverService service = new ReceiverService(2);
+        Receiver rc = new Receiver(service);
         rc.receive();
 
         String json = "{'namespace':{ 'prefix':'foo', 'uri':'http://foo.com' }}";
-        MockHttpServletResponse response = postAsServletResponse("/rest/namespaces", json,
-                "text/json");
-        assertEquals(201, response.getStatus());
+        postAsServletResponse("/rest/namespaces", json, "text/json");
 
-        verify(event, times(2)).manage(argThat(new ArgumentMatcher<String>() {
+        List<byte[]> ret = service.getMessages();
 
-            @Override
-            public boolean matches(Object argument) {
-                // Assert
-                return true;
-            }
+        assertEquals(2, ret.size());
 
-        }));
+        KombuMessage nsMsg = toKombu(ret.get(0));
+        assertEquals("Catalog", nsMsg.getType());
+        assertEquals("NamespaceInfo", nsMsg.getSource().getType());
+
+        KombuMessage wsMsg = toKombu(ret.get(1));
+        assertEquals("Catalog", wsMsg.getType());
+        assertEquals("WorkspaceInfo", wsMsg.getSource().getType());
+
         rc.close();
     }
 
     @Test
     public void transactionDoubleAdd() throws Exception {
-        ReceiverService event = mock(ReceiverService.class);
-        Receiver rc = new Receiver(event);
+        ReceiverService service = new ReceiverService(1);
+        Receiver rc = new Receiver(service);
         rc.receive();
 
         String xml = "<wfs:Transaction service=\"WFS\" version=\"1.0.0\" "
@@ -131,17 +134,16 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
                 + "</wfs:Insert>" + "</wfs:Transaction>";
 
         postAsDOM("wfs", xml);
+        
+        List<byte[]> ret = service.getMessages();
 
-        verify(event, times(1)).manage(argThat(new ArgumentMatcher<String>() {
+        assertEquals(1, ret.size());
 
-            @Override
-            public boolean matches(Object argument) {
-                // Assert
-                return true;
-            }
-
-        }));
+        KombuMessage tMsg = toKombu(ret.get(0));
+        assertEquals("Data", tMsg.getType());
+        assertEquals(2,tMsg.getProperties().get(NotificationTransactionListener.INSERTED));
         rc.close();
+        
     }
 
     @Test
@@ -170,5 +172,14 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
 
         postAsDOM("wfs", xml);
 
+    }
+
+    private KombuMessage toKombu(byte[] data) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"));
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(KombuSource.class, new KombuSourceDeserializer());
+        mapper.registerModule(module);
+        return mapper.readValue(data, KombuMessage.class);
     }
 }

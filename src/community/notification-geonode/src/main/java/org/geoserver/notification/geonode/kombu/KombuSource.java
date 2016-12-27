@@ -2,7 +2,7 @@ package org.geoserver.notification.geonode.kombu;
 
 import java.io.Serializable;
 
-public class KombuSource implements Serializable {
+public abstract class KombuSource implements Serializable {
 
     /** serialVersionUID */
     private static final long serialVersionUID = -8997506545819486027L;

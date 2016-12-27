@@ -7,9 +7,9 @@ public abstract class KombuResourceInfo extends KombuWorkspaceItemInfo {
 
     private String store;
 
-    private ReferencedEnvelope geographicBunds;
+    private KobuBounds geographicBunds;
 
-    private ReferencedEnvelope bounds;
+    private KobuBounds bounds;
 
     public String getNativeName() {
         return nativeName;
@@ -27,19 +27,19 @@ public abstract class KombuResourceInfo extends KombuWorkspaceItemInfo {
         this.store = store;
     }
 
-    public ReferencedEnvelope getGeographicBunds() {
+    public KobuBounds getGeographicBunds() {
         return geographicBunds;
     }
 
-    public void setGeographicBunds(ReferencedEnvelope geographicBunds) {
+    public void setGeographicBunds(KobuBounds geographicBunds) {
         this.geographicBunds = geographicBunds;
     }
 
-    public ReferencedEnvelope getBounds() {
+    public KobuBounds getBounds() {
         return bounds;
     }
 
-    public void setBounds(ReferencedEnvelope bounds) {
+    public void setBounds(KobuBounds bounds) {
         this.bounds = bounds;
     }
 

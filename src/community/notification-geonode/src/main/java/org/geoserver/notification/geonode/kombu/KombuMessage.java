@@ -56,4 +56,45 @@ public class KombuMessage implements Serializable {
         this.properties = map;
     }
 
+    public String getGenerator() {
+        return generator;
+    }
+
+    public void setGenerator(String generator) {
+        this.generator = generator;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public String getOriginator() {
+        return originator;
+    }
+
+    public KombuSource getSource() {
+        return source;
+    }
+
+    public Map<String, Object> getProperties() {
+        return properties;
+    }
+    
+
 }

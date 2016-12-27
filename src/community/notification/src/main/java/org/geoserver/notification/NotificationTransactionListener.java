@@ -15,6 +15,7 @@ import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogInfo;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.impl.ModificationProxy;
+import org.geoserver.notification.common.Notification;
 import org.geoserver.wfs.TransactionEvent;
 import org.geoserver.wfs.TransactionEventType;
 import org.geoserver.wfs.WFSException;
@@ -25,13 +26,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class NotificationTransactionListener extends NotificationListener implements
         INotificationTransactionListener {
 
-    private static final String INSERTED = "inserted";
+    protected static final String INSERTED = "inserted";
 
-    private static final String DELETED = "deleted";
+    protected static final String DELETED = "deleted";
 
-    private static final String UPDATED = "updated";
+    protected static final String UPDATED = "updated";
 
-    private static final String TYPE = "type";
+    protected static final String TYPE = "type";
 
     private Catalog catalog;
 
@@ -40,16 +41,6 @@ public class NotificationTransactionListener extends NotificationListener implem
     public NotificationTransactionListener(Catalog catalog) {
         super();
         this.catalog = catalog;
-    }
-
-    @Override
-    public NotificationConfiguration getNotificationConfiguration() {
-        return notifierConfig;
-    }
-
-    @Override
-    public void setNotificationConfiguration(NotificationConfiguration ncfg) {
-        this.notifierConfig = ncfg;
     }
 
     @Override
@@ -122,6 +113,16 @@ public class NotificationTransactionListener extends NotificationListener implem
                     : 0;
             properties.put(DELETED, inserted + affectedFeatures);
         }
+    }
+
+    @Override
+    public void setMessageMultiplexer(MessageMultiplexer messageMultiplexer) {
+        this.messageMultiplexer = messageMultiplexer;
+    }
+
+    @Override
+    public MessageMultiplexer getMessageMultiplexer() {
+        return messageMultiplexer;
     }
 
 }

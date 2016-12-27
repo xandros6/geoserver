@@ -55,14 +55,20 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.easymock</groupId>
 			<artifactId>easymockclassextension</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.geoserver.community</groupId>
+			<artifactId>gs-notification-geonode</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.geoserver.community</groupId>
+			<artifactId>gs-notification-common</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.rabbitmq</groupId>

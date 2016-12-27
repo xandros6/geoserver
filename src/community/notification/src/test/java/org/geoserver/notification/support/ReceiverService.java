@@ -5,8 +5,35 @@
 
 package org.geoserver.notification.support;
 
-public interface ReceiverService {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-    public void manage(String message);
+public class ReceiverService {
+
+    private CountDownLatch latch = new CountDownLatch(1);
+    
+    private List<byte[]> messages;
+
+    private int messageNumber;
+
+    public ReceiverService(int number) {
+        this.messageNumber = number;
+        messages = new ArrayList<byte[]>(number);
+    }
+    
+    public void manage(byte[] message){
+        this.messages.add(message);
+        if(this.messages.size() ==  this.messageNumber){
+            latch.countDown();
+        }
+    }
+    
+    public List<byte[]> getMessages() throws InterruptedException{
+        latch.await(2000,TimeUnit.MILLISECONDS);
+        return this.messages;
+    }
+    
 
 }

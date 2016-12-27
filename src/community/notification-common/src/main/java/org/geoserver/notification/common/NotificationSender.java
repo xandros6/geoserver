@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geoserver.notification;
+package org.geoserver.notification.common;
 
 /**
  * Sends an encoded payload to some destination

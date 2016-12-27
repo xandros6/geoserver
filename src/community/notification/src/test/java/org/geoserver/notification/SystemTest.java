@@ -6,14 +6,13 @@
 package org.geoserver.notification;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.geoserver.catalog.event.CatalogListener;
 import org.geoserver.data.test.SystemTestData;
+import org.geoserver.notification.common.NotificationConfiguration;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.test.GeoServerSystemTestSupport;
 import org.geoserver.wfs.TransactionPlugin;
@@ -39,13 +38,10 @@ public class SystemTest extends GeoServerSystemTestSupport {
         for (CatalogListener listener : getGeoServer().getCatalog().getListeners()) {
             if (listener instanceof INotificationCatalogListener) {
                 INotificationCatalogListener notifierListener = (INotificationCatalogListener) listener;
-                cfg = notifierListener.getNotificationConfiguration();
                 counter++;
             }
         }
         assertEquals(1, counter);
-        assertNotNull(cfg);
-        assertTrue(cfg.getNotificators().size() == 1);
     }
 
     @Test
@@ -55,13 +51,10 @@ public class SystemTest extends GeoServerSystemTestSupport {
         for (TransactionPlugin listener : GeoServerExtensions.extensions(TransactionPlugin.class)) {
             if (listener instanceof INotificationTransactionListener) {
                 INotificationTransactionListener notifierListener = (INotificationTransactionListener) listener;
-                cfg = notifierListener.getNotificationConfiguration();
                 counter++;
             }
         }
         assertEquals(1, counter);
-        assertNotNull(cfg);
-        assertTrue(cfg.getNotificators().size() == 1);
     }
 
 }

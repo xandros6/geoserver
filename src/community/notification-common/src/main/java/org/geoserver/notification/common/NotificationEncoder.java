@@ -3,12 +3,12 @@
  * application directory.
  */
 
-package org.geoserver.notification;
+package org.geoserver.notification.common;
 
 /**
  * Encodes a notification into some paylad format
  */
 public interface NotificationEncoder {
 
-    public byte[] encode(Notification notification);
+    public byte[] encode(Notification notification) throws Exception;
 }

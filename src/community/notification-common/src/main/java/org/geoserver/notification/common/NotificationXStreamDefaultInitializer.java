@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geoserver.notification;
+package org.geoserver.notification.common;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -15,8 +15,6 @@ public abstract class NotificationXStreamDefaultInitializer implements
         xs.alias("notificationConfiguration", NotificationConfiguration.class);
         xs.alias("notificator", Notificator.class);
         xs.alias("genericProcessor", NotificationProcessor.class);
-        // xs.alias("encoder", NotificationEncoder.class);
-        // xs.alias("sender", NotificationSender.class);
         xs.addDefaultImplementation(DefaultNotificationProcessor.class, NotificationProcessor.class);
         xs.addImplicitCollection(NotificationConfiguration.class, "notificators");
         xs.allowTypes(new Class[] { NotificationConfiguration.class, Notificator.class,

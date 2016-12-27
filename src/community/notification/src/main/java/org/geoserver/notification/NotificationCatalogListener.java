@@ -14,8 +14,9 @@ import org.geoserver.catalog.event.CatalogModifyEvent;
 import org.geoserver.catalog.event.CatalogPostModifyEvent;
 import org.geoserver.catalog.event.CatalogRemoveEvent;
 import org.geoserver.catalog.impl.ModificationProxy;
-import org.geoserver.notification.Notification.Action;
-import org.geoserver.notification.Notification.Type;
+import org.geoserver.notification.common.Notification;
+import org.geoserver.notification.common.Notification.Action;
+import org.geoserver.notification.common.Notification.Type;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -54,13 +55,13 @@ public class NotificationCatalogListener extends NotificationListener implements
     }
 
     @Override
-    public void setNotificationConfiguration(NotificationConfiguration ncfg) {
-        this.notifierConfig = ncfg;
+    public void setMessageMultiplexer(MessageMultiplexer messageMultiplexer) {
+        this.messageMultiplexer = messageMultiplexer;
     }
 
     @Override
-    public NotificationConfiguration getNotificationConfiguration() {
-        return notifierConfig;
+    public MessageMultiplexer getMessageMultiplexer() {
+        return messageMultiplexer;
     }
 
 }

@@ -1,0 +1,52 @@
+package org.geoserver.notification;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Logger;
+
+import org.geoserver.notification.common.Notification;
+import org.geoserver.notification.common.NotificationConfiguration;
+import org.geoserver.notification.common.Notificator;
+import org.geotools.util.logging.Logging;
+
+public class MessageMultiplexer implements Runnable {
+
+    protected static Queue<Notification> mainQueue;
+
+    private static List<MessageProcessor> messageProcessors;
+
+    protected static Logger LOGGER = Logging.getLogger(NotificationListener.class);
+
+    public void addToMainQueue(Notification notification) {
+        mainQueue.offer(notification);
+    }
+
+    public MessageMultiplexer(NotificationConfiguration notifierConfig) {
+        mainQueue = new ArrayBlockingQueue<Notification>(notifierConfig.getQueueSize().intValue());
+        messageProcessors = new ArrayList<MessageProcessor>(notifierConfig.getNotificators().size());
+        // Create destination queue, and thread pools one for each processor
+        for (Notificator notificator : notifierConfig.getNotificators()) {
+            messageProcessors.add(new MessageProcessor(notificator.getQueueSize().intValue(),
+                    notificator.getProcessorThreads().intValue(), notificator.getMessageFilter(),
+                    notificator.getGenericProcessor()));
+        }
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            consume(mainQueue.poll());
+        }
+    }
+
+    void consume(Notification notification) {
+        if (notification != null) {
+            for (MessageProcessor messageProcessor : messageProcessors) {
+                messageProcessor.process(notification);
+            }
+        }
+    }
+
+}

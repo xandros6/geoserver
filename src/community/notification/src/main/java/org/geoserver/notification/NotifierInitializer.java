@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.GeoServerInitializer;
+import org.geoserver.notification.common.NotificationConfiguration;
+import org.geoserver.notification.common.NotificationXStreamInitializer;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.resource.Paths;
@@ -35,27 +37,28 @@ public class NotifierInitializer implements GeoServerInitializer {
     public void initialize(GeoServer geoServer) throws Exception {
 
         XStream xs = new XStream();
-
         List<NotificationXStreamInitializer> xstreamInitializers = GeoServerExtensions
                 .extensions(NotificationXStreamInitializer.class);
         for (NotificationXStreamInitializer ni : xstreamInitializers) {
             ni.init(xs);
         }
-
         NotificationConfiguration cfg = getConfiguration(xs);
+        MessageMultiplexer mm = new MessageMultiplexer(cfg);
 
         List<INotificationCatalogListener> catalogListeners = GeoServerExtensions
                 .extensions(INotificationCatalogListener.class);
         for (INotificationCatalogListener cl : catalogListeners) {
-            cl.setNotificationConfiguration(cfg);
+            cl.setMessageMultiplexer(mm);
             geoServer.getCatalog().addListener(cl);
         }
 
         List<INotificationTransactionListener> transactionListeners = GeoServerExtensions
                 .extensions(INotificationTransactionListener.class);
         for (INotificationTransactionListener tl : transactionListeners) {
-            tl.setNotificationConfiguration(cfg);
+            tl.setMessageMultiplexer(mm);
         }
+
+        (new Thread(mm)).start();
     }
 
     private NotificationConfiguration getConfiguration(XStream xs) {

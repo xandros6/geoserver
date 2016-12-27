@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geoserver.notification;
+package org.geoserver.notification.common;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -49,19 +49,20 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(this.uri);
-        // factory.useSslProtocol();
         conn = factory.newConnection();
         channel = conn.createChannel();
     }
 
     public void close() throws Exception {
-        if (this.conn != null) {
-            this.conn.close();
-        }
 
         if (this.channel != null) {
             this.channel.close();
         }
+
+        if (this.conn != null) {
+            this.conn.close();
+        }
+
     }
 
     // Prepare Connection Channel
@@ -70,7 +71,7 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
             this.initialize();
             this.sendMessage(notification, payload);
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
         } finally {
             this.close();
         }

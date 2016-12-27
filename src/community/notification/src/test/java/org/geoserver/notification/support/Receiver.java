@@ -51,7 +51,6 @@ public class Receiver {
     protected ConnectionFactory createConnectionFactory() throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(BROKER_URI);
-        // factory.useSslProtocol(); // Note this, we'll get back to it soon...
         return factory;
     }
 
@@ -60,7 +59,7 @@ public class Receiver {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope,
                     AMQP.BasicProperties properties, byte[] body) throws IOException {
-                service.manage(new String(body)); // put each message into the cache
+                service.manage(body); 
             }
         };
     }

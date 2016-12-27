@@ -180,6 +180,7 @@
       <id>notification</id>
       <modules>
         <module>notification</module>
+		<module>notification-common</module>
       </modules>
     </profile>
     <profile>
@@ -229,6 +230,8 @@
         <module>wmts-multi-dimensional</module>
         <module>onelogin</module>
 		<module>notification</module>
+		<module>notification-common</module>
+		<module>notification-geonode</module>
       </modules>
     </profile>
     <profile>

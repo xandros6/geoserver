@@ -7,6 +7,8 @@ package org.geoserver.notification;
 
 import java.util.Map;
 
+import org.geoserver.notification.common.Notification;
+
 public class NotificationImpl implements Notification {
 
     private Type type;

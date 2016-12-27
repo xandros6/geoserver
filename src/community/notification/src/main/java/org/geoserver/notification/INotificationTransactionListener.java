@@ -9,8 +9,8 @@ import org.geoserver.wfs.TransactionPlugin;
 
 public interface INotificationTransactionListener extends TransactionPlugin {
 
-    public NotificationConfiguration getNotificationConfiguration();
+    void setMessageMultiplexer(MessageMultiplexer messageMultiplexer);
 
-    public void setNotificationConfiguration(NotificationConfiguration ncfg);
+    MessageMultiplexer getMessageMultiplexer();
 
 }
