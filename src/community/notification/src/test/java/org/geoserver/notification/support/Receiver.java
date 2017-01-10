@@ -32,24 +32,22 @@ public class Receiver {
 
     private Channel channel;
 
-    public Receiver(ReceiverService service) {
-        this.service = service;
-    }
-
-    public void receive() throws Exception {
+    public void receive(ReceiverService service) throws Exception {
         // let's setup evrything and start listening
+        this.service = service;
         ConnectionFactory factory = createConnectionFactory();
 
         connection = factory.newConnection();
         channel = connection.createChannel();
         channel.exchangeDeclare("testExchange", "fanout");
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        channel.queueDeclare(QUEUE_NAME, false, true, false, null);
         channel.queueBind(QUEUE_NAME, "testExchange", "testRouting");
         channel.basicConsume(QUEUE_NAME, true, newConsumer(channel));
     }
 
     protected ConnectionFactory createConnectionFactory() throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
+        factory.setAutomaticRecoveryEnabled(false);
         factory.setUri(BROKER_URI);
         return factory;
     }

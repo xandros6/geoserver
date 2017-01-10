@@ -1,7 +1,6 @@
 package org.geoserver.notification.geonode.kombu;
 
 import org.geoserver.notification.common.Bounds;
-import org.geotools.geometry.jts.ReferencedEnvelope;
 
 public abstract class KombuResourceInfo extends KombuWorkspaceItemInfo {
     private String nativeName;

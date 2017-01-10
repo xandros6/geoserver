@@ -60,7 +60,6 @@ public class NotificationTransactionListener extends NotificationListener implem
 
     @Override
     public void beforeCommit(TransactionType request) throws WFSException {
-
     }
 
     @Override

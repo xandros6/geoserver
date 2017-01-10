@@ -54,7 +54,7 @@ public interface Notification {
      * 
      * @return
      */
-    public Map<String, Object> getActionProperties();
+    public Map<String, Object> getProperties();
 
     /**
      * The user triggering the change, if any

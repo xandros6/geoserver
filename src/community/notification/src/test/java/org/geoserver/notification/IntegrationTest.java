@@ -10,44 +10,60 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.custommonkey.xmlunit.SimpleNamespaceContext;
-import org.custommonkey.xmlunit.XMLUnit;
-import org.custommonkey.xmlunit.XpathEngine;
-import org.geoserver.catalog.Catalog;
+import net.sf.json.JSONObject;
+
+import org.geoserver.catalog.CatalogBuilder;
+import org.geoserver.catalog.CoverageInfo;
+import org.geoserver.catalog.CoverageStoreInfo;
+import org.geoserver.catalog.LayerGroupInfo;
+import org.geoserver.catalog.LayerInfo;
+import org.geoserver.catalog.NamespaceInfo;
+import org.geoserver.catalog.ProjectionPolicy;
+import org.geoserver.catalog.StyleInfo;
+import org.geoserver.catalog.WMSLayerInfo;
+import org.geoserver.catalog.WMSStoreInfo;
+import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.catalog.rest.CatalogRESTTestSupport;
 import org.geoserver.data.test.SystemTestData;
 import org.geoserver.notification.common.Bounds;
+import org.geoserver.notification.common.Notification;
+import org.geoserver.notification.geonode.kombu.KombuCoverageInfo;
+import org.geoserver.notification.geonode.kombu.KombuLayerGroupInfo;
+import org.geoserver.notification.geonode.kombu.KombuLayerInfo;
+import org.geoserver.notification.geonode.kombu.KombuLayerSimpleInfo;
 import org.geoserver.notification.geonode.kombu.KombuMessage;
 import org.geoserver.notification.geonode.kombu.KombuSource;
+import org.geoserver.notification.geonode.kombu.KombuSourceDeserializer;
+import org.geoserver.notification.geonode.kombu.KombuStoreInfo;
+import org.geoserver.notification.geonode.kombu.KombuWMSLayerInfo;
 import org.geoserver.notification.support.BrokerManager;
-import org.geoserver.notification.support.KombuSourceDeserializer;
 import org.geoserver.notification.support.Receiver;
 import org.geoserver.notification.support.ReceiverService;
-import org.geoserver.security.AccessMode;
-import org.geoserver.test.GeoServerSystemTestSupport;
+import org.geotools.feature.NameImpl;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.CRS;
+import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-public class IntegrationTest extends GeoServerSystemTestSupport {
-
-    protected static Catalog catalog;
-
-    protected static XpathEngine xp;
+public class IntegrationTest extends CatalogRESTTestSupport {
 
     private static BrokerManager brokerStarter;
+
+    private static Receiver rc;
 
     @BeforeClass
     public static void startup() throws Exception {
         brokerStarter = new BrokerManager();
         brokerStarter.startBroker();
+        rc = new Receiver();
     }
 
     @AfterClass
@@ -55,9 +71,41 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
         brokerStarter.stopBroker();
     }
 
+    @After
+    public void before() throws Exception {
+        if (rc != null) {
+            rc.close();
+        }
+    }
+
+    public void addStatesWmsLayer() throws Exception {
+        WMSLayerInfo wml = catalog.getResourceByName("sf", "states", WMSLayerInfo.class);
+        if (wml == null) {
+            wml = catalog.getFactory().createWMSLayer();
+            wml.setName("states");
+            wml.setNativeName("topp:states");
+            wml.setStore(catalog.getStoreByName("demo", WMSStoreInfo.class));
+            wml.setCatalog(catalog);
+            wml.setNamespace(catalog.getNamespaceByPrefix("sf"));
+            wml.setSRS("EPSG:4326");
+            CoordinateReferenceSystem wgs84 = CRS.decode("EPSG:4326");
+            wml.setNativeCRS(wgs84);
+            wml.setLatLonBoundingBox(new ReferencedEnvelope(-110, 0, -60, 50, wgs84));
+            wml.setProjectionPolicy(ProjectionPolicy.FORCE_DECLARED);
+
+            catalog.add(wml);
+        }
+    }
+
+    public void removeLayer() throws Exception {
+        LayerInfo l = catalog.getLayerByName(new NameImpl("sf", "states"));
+        if (l != null) {
+            catalog.remove(l);
+        }
+    }
+
     @Override
     protected void setUpTestData(SystemTestData testData) throws Exception {
-        // TODO Auto-generated method stub
         super.setUpTestData(testData);
         new File(testData.getDataDirectoryRoot(), "notifier").mkdir();
         testData.copyTo(
@@ -66,59 +114,164 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
                         + NotifierInitializer.PROPERTYFILENAME);
     }
 
-    @Override
-    protected void onSetUp(SystemTestData testData) throws Exception {
-        super.onSetUp(testData);
-
-        addLayerAccessRule("*", "*", AccessMode.READ, "*");
-        addLayerAccessRule("*", "*", AccessMode.WRITE, "*");
-
-        catalog = getCatalog();
-
-        Map<String, String> namespaces = new HashMap<String, String>();
-        namespaces.put("html", "http://www.w3.org/1999/xhtml");
-        namespaces.put("sld", "http://www.opengis.net/sld");
-        namespaces.put("ogc", "http://www.opengis.net/ogc");
-        namespaces.put("atom", "http://www.w3.org/2005/Atom");
-
-        XMLUnit.setXpathNamespaceContext(new SimpleNamespaceContext(namespaces));
-        xp = XMLUnit.newXpathEngine();
-    }
-
-    @Before
-    public void login() throws Exception {
-        login("admin", "geoserver", "ROLE_ADMINISTRATOR");
-    }
+    /*
+     * @Override protected void onSetUp(SystemTestData testData) throws Exception { super.onSetUp(testData);
+     * 
+     * }
+     */
 
     @Test
     public void catalogAddNamespaces() throws Exception {
         ReceiverService service = new ReceiverService(2);
-        Receiver rc = new Receiver(service);
-        rc.receive();
-
+        rc.receive(service);
         String json = "{'namespace':{ 'prefix':'foo', 'uri':'http://foo.com' }}";
         postAsServletResponse("/rest/namespaces", json, "text/json");
-
         List<byte[]> ret = service.getMessages();
 
         assertEquals(2, ret.size());
-
         KombuMessage nsMsg = toKombu(ret.get(0));
+        assertEquals(Notification.Action.Add.name(), nsMsg.getAction());
         assertEquals("Catalog", nsMsg.getType());
         assertEquals("NamespaceInfo", nsMsg.getSource().getType());
-
         KombuMessage wsMsg = toKombu(ret.get(1));
         assertEquals("Catalog", wsMsg.getType());
         assertEquals("WorkspaceInfo", wsMsg.getSource().getType());
+    }
 
-        rc.close();
+    @Test
+    public void catalogChangeLayerStyle() throws Exception {
+        ReceiverService service = new ReceiverService(1);
+        rc.receive(service);
+        LayerInfo l = catalog.getLayerByName("cite:Buildings");
+        assertEquals("Buildings", l.getDefaultStyle().getName());
+        JSONObject json = (JSONObject) getAsJSON("/rest/layers/cite:Buildings.json");
+        JSONObject layer = (JSONObject) json.get("layer");
+        JSONObject style = (JSONObject) layer.get("defaultStyle");
+        style.put("name", "polygon");
+        style.put("href", "http://localhost:8080/geoserver/rest/styles/polygon.json");
+        String updatedJson = json.toString();
+        putAsServletResponse("/rest/layers/cite:Buildings", updatedJson, "application/json");
+        List<byte[]> ret = service.getMessages();
+        assertEquals(1, ret.size());
+        KombuMessage nsMsg = toKombu(ret.get(0));
+        assertEquals(Notification.Action.Update.name(), nsMsg.getAction());
+        assertEquals("Catalog", nsMsg.getType());
+        KombuLayerInfo source = (KombuLayerInfo) nsMsg.getSource();
+        assertEquals("LayerInfo", source.getType());
+        assertEquals("polygon", source.getDefaultStyle());
+
+    }
+
+    @Test
+    public void catalogChangeLayerStyles() throws Exception {
+        ReceiverService service = new ReceiverService(1);
+        rc.receive(service);
+        String xml = "<style>" + "<name>foo</name>" + "<filename>foo.sld</filename>" + "</style>";
+        postAsServletResponse("/rest/workspaces/cite/styles", xml);
+        xml = "<layer>" + "<styles>" + "<style>" + "<name>foo</name>"
+                + "<workspace>cite</workspace>" + "</style>" + "</styles>"
+                + "<enabled>true</enabled>" + "</layer>";
+        putAsServletResponse("/rest/layers/cite:Buildings", xml, "application/xml");
+        List<byte[]> ret = service.getMessages();
+        assertEquals(1, ret.size());
+        KombuMessage updateMsg = toKombu(ret.get(0));
+        assertEquals("Catalog", updateMsg.getType());
+        assertEquals(Notification.Action.Update.name(), updateMsg.getAction());
+        KombuLayerInfo source = (KombuLayerInfo) updateMsg.getSource();
+        assertEquals("LayerInfo", source.getType());
+        assertEquals("foo", source.getStyles());
+    }
+
+    @Test
+    public void catalogAddAndDeleteWMSLayer() throws Exception {
+        ReceiverService service = new ReceiverService(3);
+        rc.receive(service);
+        CatalogBuilder cb = new CatalogBuilder(catalog);
+        cb.setWorkspace(catalog.getWorkspaceByName("sf"));
+        WMSStoreInfo wms = cb.buildWMSStore("demo");
+        wms.setCapabilitiesURL("http://demo.opengeo.org/geoserver/wms?");
+        catalog.add(wms);
+        addStatesWmsLayer();
+        assertNotNull(catalog.getResourceByName("sf", "states", WMSLayerInfo.class));
+        deleteAsServletResponse("/rest/workspaces/sf/wmsstores/demo/wmslayers/states");
+        List<byte[]> ret = service.getMessages();
+        assertEquals(3, ret.size());
+        KombuMessage addStrMsg = toKombu(ret.get(0));
+        assertEquals(Notification.Action.Add.name(), addStrMsg.getAction());
+        KombuStoreInfo source1 = (KombuStoreInfo) addStrMsg.getSource();
+        assertEquals("StoreInfo", source1.getType());
+        KombuMessage addLayerMsg = toKombu(ret.get(1));
+        assertEquals(Notification.Action.Add.name(), addLayerMsg.getAction());
+        KombuWMSLayerInfo source2 = (KombuWMSLayerInfo) addLayerMsg.getSource();
+        assertEquals("WMSLayerInfo", source2.getType());
+        KombuMessage deleteMsg = toKombu(ret.get(2));
+        assertEquals("Catalog", deleteMsg.getType());
+        assertEquals(Notification.Action.Remove.name(), deleteMsg.getAction());
+        KombuWMSLayerInfo source3 = (KombuWMSLayerInfo) deleteMsg.getSource();
+        assertEquals("WMSLayerInfo", source3.getType());
+        assertEquals("states", source3.getName());
+    }
+
+    @Test
+    public void catalogAddCoverage() throws Exception {
+        ReceiverService service = new ReceiverService(4);
+        rc.receive(service);
+
+        addCoverageStore();
+
+        NamespaceInfo ns = catalog.getFactory().createNamespace();
+        ns.setPrefix("bar");
+        ns.setURI("http://bar");
+        catalog.add(ns);
+
+        CoverageInfo ft = catalog.getFactory().createCoverage();
+        ft.setName("foo");
+        ft.setNamespace(ns);
+        ft.setStore(catalog.getCoverageStoreByName("acme", "foostore"));
+        catalog.add(ft);
+
+        List<byte[]> ret = service.getMessages();
+        assertEquals(4, ret.size());
+
+        KombuMessage coverageMsg = toKombu(ret.get(3));
+        assertEquals("Catalog", coverageMsg.getType());
+        assertEquals(Notification.Action.Add.name(), coverageMsg.getAction());
+        KombuCoverageInfo source = (KombuCoverageInfo) coverageMsg.getSource();
+        assertEquals("CoverageInfo", source.getType());
+        assertEquals(ft.getName(), source.getName());
+
+    }
+
+    @Test
+    public void catalogAddLayerGroup() throws Exception {
+        ReceiverService service = new ReceiverService(1);
+        rc.receive(service);
+
+        LayerGroupInfo lg = catalog.getFactory().createLayerGroup();
+        lg.setName("sfLayerGroup");
+        LayerInfo l = catalog.getLayerByName("cite:Buildings");
+        lg.getLayers().add(l);
+        lg.getStyles().add(catalog.getStyleByName(StyleInfo.DEFAULT_POLYGON));
+        lg.setBounds(new ReferencedEnvelope(-180, -90, 180, 90, CRS.decode("EPSG:4326")));
+        catalog.add(lg);
+
+        List<byte[]> ret = service.getMessages();
+        assertEquals(1, ret.size());
+        KombuMessage groupMsg = toKombu(ret.get(0));
+        assertEquals("Catalog", groupMsg.getType());
+        assertEquals(Notification.Action.Add.name(), groupMsg.getAction());
+        KombuLayerGroupInfo source = (KombuLayerGroupInfo) groupMsg.getSource();
+        assertEquals("LayerGroupInfo", source.getType());
+        assertEquals(1, source.getLayers().size());
+        KombuLayerSimpleInfo kl = source.getLayers().get(0);
+        assertEquals(l.getName(), kl.getName());
+        assertEquals(l.getDefaultStyle().getName(), kl.getStyle());
     }
 
     @Test
     public void transactionDoubleAdd() throws Exception {
         ReceiverService service = new ReceiverService(1);
-        Receiver rc = new Receiver(service);
-        rc.receive();
+        rc.receive(service);
 
         String xml = "<wfs:Transaction service=\"WFS\" version=\"1.0.0\" "
                 + "xmlns:cgf=\"http://www.opengis.net/cite/geometry\" "
@@ -138,7 +291,6 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
         postAsDOM("wfs", xml);
 
         List<byte[]> ret = service.getMessages();
-
         assertEquals(1, ret.size());
 
         KombuMessage tMsg = toKombu(ret.get(0));
@@ -154,28 +306,21 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
         assertEquals(5d, b.getMiny().doubleValue(), 0);
         assertEquals(8d, b.getMaxx().doubleValue(), 0);
         assertEquals(8d, b.getMaxy().doubleValue(), 0);
-        rc.close();
 
     }
 
-    @Test
-    public void transactionAddAndUpdate() throws Exception {
-        /*
-         * String xml = "<wfs:Transaction service=\"WFS\" version=\"1.0.0\" " + "xmlns:cgf=\"http://www.opengis.net/cite/geometry\" " +
-         * "xmlns:ogc=\"http://www.opengis.net/ogc\" " + "xmlns:wfs=\"http://www.opengis.net/wfs\" " + "xmlns:gml=\"http://www.opengis.net/gml\"> " +
-         * "<wfs:Insert handle='insert-1'>" + "<sf:WithGMLProperties>" + "<gml:location>" + "<gml:Point>" + "<gml:coordinates>2,2</gml:coordinates>" +
-         * "</gml:Point>" + "</gml:location>" + "<gml:name>one</gml:name>" + "<sf:foo>1</sf:foo>" + "</sf:WithGMLProperties>" + "</wfs:Insert>" +
-         * " <wfs:Update typeName=\"sf:WithGMLProperties\">" + "   <wfs:Property>" + "     <wfs:ValueReference>gml:name</wfs:ValueReference>" +
-         * "     <wfs:Value>two</wfs:Value>" + "   </wfs:Property>" + "   <wfs:Property>" +
-         * "     <wfs:ValueReference>gml:location</wfs:ValueReference>" + "     <wfs:Value>" + "        <gml:Point>" +
-         * "          <gml:coordinates>7,7</gml:coordinates>" + "        </gml:Point>" + "     </wfs:Value>" + "   </wfs:Property>" +
-         * "   <wfs:Property>" + "     <wfs:ValueReference>sf:foo</wfs:ValueReference>" + "     <wfs:Value>2</wfs:Value>" + "   </wfs:Property>" +
-         * "   <fes:Filter>" + "     <fes:PropertyIsEqualTo>" + "       <fes:ValueReference>foo</fes:ValueReference>" +
-         * "       <fes:Literal>1</fes:Literal>" + "     </fes:PropertyIsEqualTo>" + "   </fes:Filter>" + " </wfs:Update>" + "</wfs:Transaction>";
-         * 
-         * postAsDOM("wfs", xml);
-         */
+    public void addWorkspace() throws Exception {
+        WorkspaceInfo acme = catalog.getFactory().createWorkspace();
+        acme.setName("acme");
+        catalog.add(acme);
+    }
 
+    public void addCoverageStore() throws Exception {
+        addWorkspace();
+        CoverageStoreInfo cs = catalog.getFactory().createCoverageStore();
+        cs.setName("foostore");
+        cs.setWorkspace(catalog.getWorkspaceByName("acme"));
+        catalog.add(cs);
     }
 
     private KombuMessage toKombu(byte[] data) throws Exception {
@@ -186,4 +331,5 @@ public class IntegrationTest extends GeoServerSystemTestSupport {
         mapper.registerModule(module);
         return mapper.readValue(data, KombuMessage.class);
     }
+
 }

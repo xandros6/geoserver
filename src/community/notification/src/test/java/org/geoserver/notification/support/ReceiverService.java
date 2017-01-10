@@ -16,22 +16,28 @@ public class ReceiverService {
 
     private List<byte[]> messages;
 
+    private Boolean capture;
+
     private int messageNumber;
 
     public ReceiverService(int number) {
         this.messageNumber = number;
         messages = new ArrayList<byte[]>(number);
+        capture = true;
     }
 
     public void manage(byte[] message) {
-        this.messages.add(message);
-        if (this.messages.size() == this.messageNumber) {
-            latch.countDown();
+        if (capture) {
+            this.messages.add(message);
+            if (this.messages.size() == this.messageNumber) {
+                capture = false;
+                latch.countDown();
+            }
         }
     }
 
     public List<byte[]> getMessages() throws InterruptedException {
-        latch.await(2000, TimeUnit.MILLISECONDS);
+        latch.await(25000, TimeUnit.MILLISECONDS);
         return this.messages;
     }
 

@@ -20,10 +20,6 @@ public class Notificator implements Serializable {
 
     private NotificationProcessor genericProcessor;
 
-    public Notificator() {
-        // TODO Auto-generated constructor stub
-    }
-
     public Long getQueueSize() {
         return queueSize;
     }

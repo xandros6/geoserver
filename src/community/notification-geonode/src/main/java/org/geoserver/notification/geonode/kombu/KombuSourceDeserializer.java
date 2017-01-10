@@ -1,11 +1,6 @@
-package org.geoserver.notification.support;
+package org.geoserver.notification.geonode.kombu;
 
 import java.io.IOException;
-
-import org.geoserver.notification.geonode.kombu.KombuFeatureTypeInfo;
-import org.geoserver.notification.geonode.kombu.KombuNamespaceInfo;
-import org.geoserver.notification.geonode.kombu.KombuSource;
-import org.geoserver.notification.geonode.kombu.KombuWorkspaceInfo;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,6 +33,21 @@ public class KombuSourceDeserializer extends StdDeserializer<KombuSource> {
         }
         if (type.equals("NamespaceInfo")) {
             sourceClass = KombuNamespaceInfo.class;
+        }
+        if (type.equals("LayerInfo")) {
+            sourceClass = KombuLayerInfo.class;
+        }
+        if (type.equals("WMSLayerInfo")) {
+            sourceClass = KombuWMSLayerInfo.class;
+        }
+        if (type.equals("StoreInfo")) {
+            sourceClass = KombuStoreInfo.class;
+        }
+        if (type.equals("CoverageInfo")) {
+            sourceClass = KombuCoverageInfo.class;
+        }
+        if (type.equals("LayerGroupInfo")) {
+            sourceClass = KombuLayerGroupInfo.class;
         }
         if (sourceClass != null) {
             ret = mapper.readValue(node.toString(), sourceClass);

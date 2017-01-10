@@ -54,7 +54,7 @@ public class NotificationImpl implements Notification {
     }
 
     @Override
-    public Map<String, Object> getActionProperties() {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 

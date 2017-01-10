@@ -41,7 +41,7 @@ public class MessageMultiplexer implements Runnable {
         }
     }
 
-    void consume(Notification notification) {
+    private void consume(Notification notification) {
         if (notification != null) {
             for (MessageProcessor messageProcessor : messageProcessors) {
                 messageProcessor.process(notification);
