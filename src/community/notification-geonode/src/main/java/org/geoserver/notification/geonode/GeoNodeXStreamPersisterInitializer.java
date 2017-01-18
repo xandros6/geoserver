@@ -1,4 +1,4 @@
-/* (c) 2016 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2017 Open Source Geospatial Foundation - all rights reserved
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
@@ -6,10 +6,10 @@
 package org.geoserver.notification.geonode;
 
 import org.geoserver.notification.common.DefaultNotificationProcessor;
-import org.geoserver.notification.common.FanoutRabbitMQSender;
 import org.geoserver.notification.common.NotificationEncoder;
-import org.geoserver.notification.common.NotificationSender;
 import org.geoserver.notification.common.NotificationXStreamDefaultInitializer;
+import org.geoserver.notification.common.sender.FanoutRabbitMQSender;
+import org.geoserver.notification.common.sender.NotificationSender;
 
 import com.thoughtworks.xstream.XStream;
 

@@ -1,4 +1,4 @@
-/* (c) 2016 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2017 Open Source Geospatial Foundation - all rights reserved
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.geoserver.notification.common.CustomSaslConfig;
 import org.geotools.util.logging.Logging;
 
 import com.rabbitmq.client.AMQP;
@@ -22,7 +23,7 @@ public class Receiver {
 
     protected static Logger LOGGER = Logging.getLogger(Receiver.class);
 
-    private static final String BROKER_URI = "amqp://guest:guest@localhost:4432";
+    private static String BROKER_URI = "amqp://localhost:4432";
 
     private final static String QUEUE_NAME = "jms/queue";
 
@@ -32,11 +33,20 @@ public class Receiver {
 
     private Channel channel;
 
+    public Receiver() {
+    }
+
+    public Receiver(String username, String password) {
+        if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
+            BROKER_URI = "amqp://" + username + ":" + password + "@localhost:4432";
+        }
+    }
+
     public void receive(ReceiverService service) throws Exception {
         // let's setup evrything and start listening
         this.service = service;
         ConnectionFactory factory = createConnectionFactory();
-
+        factory.setSaslConfig(new CustomSaslConfig());
         connection = factory.newConnection();
         channel = connection.createChannel();
         channel.exchangeDeclare("testExchange", "fanout");

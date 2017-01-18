@@ -1,4 +1,4 @@
-/* (c) 2016 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2017 Open Source Geospatial Foundation - all rights reserved
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 import net.sf.json.JSONObject;
@@ -34,14 +33,12 @@ import org.geoserver.notification.geonode.kombu.KombuLayerGroupInfo;
 import org.geoserver.notification.geonode.kombu.KombuLayerInfo;
 import org.geoserver.notification.geonode.kombu.KombuLayerSimpleInfo;
 import org.geoserver.notification.geonode.kombu.KombuMessage;
-import org.geoserver.notification.geonode.kombu.KombuSource;
-import org.geoserver.notification.geonode.kombu.KombuSourceDeserializer;
 import org.geoserver.notification.geonode.kombu.KombuStoreInfo;
 import org.geoserver.notification.geonode.kombu.KombuWMSLayerInfo;
 import org.geoserver.notification.support.BrokerManager;
 import org.geoserver.notification.support.Receiver;
 import org.geoserver.notification.support.ReceiverService;
-import org.geotools.feature.NameImpl;
+import org.geoserver.notification.support.Utils;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.junit.After;
@@ -51,7 +48,6 @@ import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class IntegrationTest extends CatalogRESTTestSupport {
 
@@ -62,8 +58,8 @@ public class IntegrationTest extends CatalogRESTTestSupport {
     @BeforeClass
     public static void startup() throws Exception {
         brokerStarter = new BrokerManager();
-        brokerStarter.startBroker();
-        rc = new Receiver();
+        brokerStarter.startBroker(false);
+        rc = new Receiver("guest", "guest");
     }
 
     @AfterClass
@@ -97,13 +93,6 @@ public class IntegrationTest extends CatalogRESTTestSupport {
         }
     }
 
-    public void removeLayer() throws Exception {
-        LayerInfo l = catalog.getLayerByName(new NameImpl("sf", "states"));
-        if (l != null) {
-            catalog.remove(l);
-        }
-    }
-
     @Override
     protected void setUpTestData(SystemTestData testData) throws Exception {
         super.setUpTestData(testData);
@@ -129,11 +118,11 @@ public class IntegrationTest extends CatalogRESTTestSupport {
         List<byte[]> ret = service.getMessages();
 
         assertEquals(2, ret.size());
-        KombuMessage nsMsg = toKombu(ret.get(0));
+        KombuMessage nsMsg = Utils.toKombu(ret.get(0));
         assertEquals(Notification.Action.Add.name(), nsMsg.getAction());
         assertEquals("Catalog", nsMsg.getType());
         assertEquals("NamespaceInfo", nsMsg.getSource().getType());
-        KombuMessage wsMsg = toKombu(ret.get(1));
+        KombuMessage wsMsg = Utils.toKombu(ret.get(1));
         assertEquals("Catalog", wsMsg.getType());
         assertEquals("WorkspaceInfo", wsMsg.getSource().getType());
     }
@@ -153,7 +142,7 @@ public class IntegrationTest extends CatalogRESTTestSupport {
         putAsServletResponse("/rest/layers/cite:Buildings", updatedJson, "application/json");
         List<byte[]> ret = service.getMessages();
         assertEquals(1, ret.size());
-        KombuMessage nsMsg = toKombu(ret.get(0));
+        KombuMessage nsMsg = Utils.toKombu(ret.get(0));
         assertEquals(Notification.Action.Update.name(), nsMsg.getAction());
         assertEquals("Catalog", nsMsg.getType());
         KombuLayerInfo source = (KombuLayerInfo) nsMsg.getSource();
@@ -174,7 +163,7 @@ public class IntegrationTest extends CatalogRESTTestSupport {
         putAsServletResponse("/rest/layers/cite:Buildings", xml, "application/xml");
         List<byte[]> ret = service.getMessages();
         assertEquals(1, ret.size());
-        KombuMessage updateMsg = toKombu(ret.get(0));
+        KombuMessage updateMsg = Utils.toKombu(ret.get(0));
         assertEquals("Catalog", updateMsg.getType());
         assertEquals(Notification.Action.Update.name(), updateMsg.getAction());
         KombuLayerInfo source = (KombuLayerInfo) updateMsg.getSource();
@@ -196,15 +185,15 @@ public class IntegrationTest extends CatalogRESTTestSupport {
         deleteAsServletResponse("/rest/workspaces/sf/wmsstores/demo/wmslayers/states");
         List<byte[]> ret = service.getMessages();
         assertEquals(3, ret.size());
-        KombuMessage addStrMsg = toKombu(ret.get(0));
+        KombuMessage addStrMsg = Utils.toKombu(ret.get(0));
         assertEquals(Notification.Action.Add.name(), addStrMsg.getAction());
         KombuStoreInfo source1 = (KombuStoreInfo) addStrMsg.getSource();
         assertEquals("StoreInfo", source1.getType());
-        KombuMessage addLayerMsg = toKombu(ret.get(1));
+        KombuMessage addLayerMsg = Utils.toKombu(ret.get(1));
         assertEquals(Notification.Action.Add.name(), addLayerMsg.getAction());
         KombuWMSLayerInfo source2 = (KombuWMSLayerInfo) addLayerMsg.getSource();
         assertEquals("WMSLayerInfo", source2.getType());
-        KombuMessage deleteMsg = toKombu(ret.get(2));
+        KombuMessage deleteMsg = Utils.toKombu(ret.get(2));
         assertEquals("Catalog", deleteMsg.getType());
         assertEquals(Notification.Action.Remove.name(), deleteMsg.getAction());
         KombuWMSLayerInfo source3 = (KombuWMSLayerInfo) deleteMsg.getSource();
@@ -233,7 +222,7 @@ public class IntegrationTest extends CatalogRESTTestSupport {
         List<byte[]> ret = service.getMessages();
         assertEquals(4, ret.size());
 
-        KombuMessage coverageMsg = toKombu(ret.get(3));
+        KombuMessage coverageMsg = Utils.toKombu(ret.get(3));
         assertEquals("Catalog", coverageMsg.getType());
         assertEquals(Notification.Action.Add.name(), coverageMsg.getAction());
         KombuCoverageInfo source = (KombuCoverageInfo) coverageMsg.getSource();
@@ -257,7 +246,7 @@ public class IntegrationTest extends CatalogRESTTestSupport {
 
         List<byte[]> ret = service.getMessages();
         assertEquals(1, ret.size());
-        KombuMessage groupMsg = toKombu(ret.get(0));
+        KombuMessage groupMsg = Utils.toKombu(ret.get(0));
         assertEquals("Catalog", groupMsg.getType());
         assertEquals(Notification.Action.Add.name(), groupMsg.getAction());
         KombuLayerGroupInfo source = (KombuLayerGroupInfo) groupMsg.getSource();
@@ -293,7 +282,7 @@ public class IntegrationTest extends CatalogRESTTestSupport {
         List<byte[]> ret = service.getMessages();
         assertEquals(1, ret.size());
 
-        KombuMessage tMsg = toKombu(ret.get(0));
+        KombuMessage tMsg = Utils.toKombu(ret.get(0));
         assertEquals("Data", tMsg.getType());
         assertEquals(2, tMsg.getProperties().get(NotificationTransactionListener.INSERTED));
         assertNotNull(tMsg.getProperties().get(NotificationTransactionListener.BOUNDS));
@@ -321,15 +310,6 @@ public class IntegrationTest extends CatalogRESTTestSupport {
         cs.setName("foostore");
         cs.setWorkspace(catalog.getWorkspaceByName("acme"));
         catalog.add(cs);
-    }
-
-    private KombuMessage toKombu(byte[] data) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"));
-        SimpleModule module = new SimpleModule();
-        module.addDeserializer(KombuSource.class, new KombuSourceDeserializer());
-        mapper.registerModule(module);
-        return mapper.readValue(data, KombuMessage.class);
     }
 
 }

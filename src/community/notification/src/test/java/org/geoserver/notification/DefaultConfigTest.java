@@ -7,7 +7,6 @@ package org.geoserver.notification;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.geoserver.catalog.event.CatalogListener;
@@ -18,17 +17,11 @@ import org.geoserver.test.GeoServerSystemTestSupport;
 import org.geoserver.wfs.TransactionPlugin;
 import org.junit.Test;
 
-public class SystemTest extends GeoServerSystemTestSupport {
+public class DefaultConfigTest extends GeoServerSystemTestSupport {
 
     @Override
     protected void setUpTestData(SystemTestData testData) throws Exception {
-        // TODO Auto-generated method stub
         super.setUpTestData(testData);
-        new File(testData.getDataDirectoryRoot(), "notifier").mkdir();
-        testData.copyTo(
-                getClass().getClassLoader().getResourceAsStream(
-                        NotifierInitializer.PROPERTYFILENAME), "notifier/"
-                        + NotifierInitializer.PROPERTYFILENAME);
     }
 
     @Test

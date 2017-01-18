@@ -1,4 +1,4 @@
-/* (c) 2016 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2017 Open Source Geospatial Foundation - all rights reserved
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
@@ -18,6 +18,7 @@ import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.resource.Paths;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
+import org.geoserver.util.IOUtils;
 import org.geotools.util.logging.Logging;
 
 import com.thoughtworks.xstream.XStream;
@@ -65,9 +66,15 @@ public class NotifierInitializer implements GeoServerInitializer {
         NotificationConfiguration nc = null;
         try {
             Resource f = this.loader.get(Paths.path("notifier", PROPERTYFILENAME));
-            if (Resources.exists(f)) {
-                nc = (NotificationConfiguration) xs.fromXML(f.in());
+            if (!Resources.exists(f)) {
+                /*
+                 * Copy and use the sample notifier
+                 */
+                IOUtils.copy(
+                        getClass().getClassLoader().getResourceAsStream(
+                                NotifierInitializer.PROPERTYFILENAME), f.file());
             }
+            nc = (NotificationConfiguration) xs.fromXML(f.in());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }

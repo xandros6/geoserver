@@ -1,4 +1,4 @@
-/* (c) 2016 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2017 Open Source Geospatial Foundation - all rights reserved
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
@@ -11,6 +11,8 @@ import org.apache.qpid.server.BrokerOptions;
 import com.google.common.io.Files;
 
 public class BrokerManager {
+    private static final String INITIAL_ANONYMOUS_CONFIG_PATH = "src/test/resources/qpid-anonymous-config.json";
+    
     private static final String INITIAL_CONFIG_PATH = "src/test/resources/qpid-config.json";
 
     private static final String PWD_PATH = "src/test/resources/passwd.properties";
@@ -19,12 +21,16 @@ public class BrokerManager {
 
     private final Broker broker = new Broker();
 
-    public void startBroker() throws Exception {
+    public void startBroker(Boolean isAnonymous) throws Exception {
         final BrokerOptions brokerOptions = new BrokerOptions();
         brokerOptions.setConfigProperty("qpid.amqp_port", PORT);
-        brokerOptions.setConfigProperty("qpid.pass_file", PWD_PATH);
+        String cfg = INITIAL_ANONYMOUS_CONFIG_PATH;
+        if(!isAnonymous){
+            cfg = INITIAL_CONFIG_PATH;
+            brokerOptions.setConfigProperty("qpid.pass_file", PWD_PATH);
+        }
         brokerOptions.setConfigProperty("qpid.work_dir", Files.createTempDir().getAbsolutePath());
-        brokerOptions.setInitialConfigurationLocation(INITIAL_CONFIG_PATH);
+        brokerOptions.setInitialConfigurationLocation(cfg);
         broker.startup(brokerOptions);
     }
 

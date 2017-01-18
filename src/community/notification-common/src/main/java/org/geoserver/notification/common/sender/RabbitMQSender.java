@@ -1,15 +1,17 @@
-/* (c) 2016 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2017 Open Source Geospatial Foundation - all rights reserved
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
 
-package org.geoserver.notification.common;
+package org.geoserver.notification.common.sender;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.geoserver.notification.common.CustomSaslConfig;
+import org.geoserver.notification.common.Notification;
 import org.geotools.util.logging.Logging;
 
 import com.rabbitmq.client.Channel;
@@ -42,13 +44,19 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
     public void initialize() throws Exception {
 
         if (uri == null) {
-            this.uri = "amqp://" + this.username + ":" + this.password + "@" + this.host + ":"
-                    + this.port + "/" + this.virtualHost;
+            if (this.username != null && !this.username.isEmpty() && this.password != null
+                    && !this.password.isEmpty()) {
+                this.uri = "amqp://" + this.username + ":" + this.password + "@" + this.host + ":"
+                        + this.port + "/" + this.virtualHost;
+            } else {
+                this.uri = "amqp://" + this.host + ":" + this.port + "/" + this.virtualHost;
+            }
 
         }
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(this.uri);
+        factory.setSaslConfig(new CustomSaslConfig());
         conn = factory.newConnection();
         channel = conn.createChannel();
     }

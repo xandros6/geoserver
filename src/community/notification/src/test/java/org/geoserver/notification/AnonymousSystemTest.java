@@ -18,17 +18,15 @@ import org.geoserver.test.GeoServerSystemTestSupport;
 import org.geoserver.wfs.TransactionPlugin;
 import org.junit.Test;
 
-public class SystemTest extends GeoServerSystemTestSupport {
+public class AnonymousSystemTest extends GeoServerSystemTestSupport {
 
     @Override
     protected void setUpTestData(SystemTestData testData) throws Exception {
         // TODO Auto-generated method stub
         super.setUpTestData(testData);
         new File(testData.getDataDirectoryRoot(), "notifier").mkdir();
-        testData.copyTo(
-                getClass().getClassLoader().getResourceAsStream(
-                        NotifierInitializer.PROPERTYFILENAME), "notifier/"
-                        + NotifierInitializer.PROPERTYFILENAME);
+        testData.copyTo(getClass().getClassLoader().getResourceAsStream("notifierAnonymous.xml"),
+                "notifier/" + NotifierInitializer.PROPERTYFILENAME);
     }
 
     @Test
