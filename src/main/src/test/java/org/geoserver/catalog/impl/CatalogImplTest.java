@@ -2208,6 +2208,10 @@ public class CatalogImplTest {
         assertEquals(lg2.getLayers(), lg2.layers());
         assertEquals(lg2.getStyles(), lg2.styles());
         
+        lg2.setMode(LayerGroupInfo.Mode.OPAQUE_CONTAINER);
+        assertEquals(lg2.getLayers(), lg2.layers());
+        assertEquals(lg2.getStyles(), lg2.styles());
+        
         lg2.setMode(LayerGroupInfo.Mode.NAMED);
         assertEquals(lg2.getLayers(), lg2.layers());
         assertEquals(lg2.getStyles(), lg2.styles());
@@ -2887,8 +2891,8 @@ public class CatalogImplTest {
         catalog.save(ftproxy);
 
         Filter filter = Predicates.fullTextSearch("newKeyword");
-        assertEquals(newHashSet(ft), asSet(catalog.list(FeatureTypeInfo.class, filter)));
-        assertEquals(newHashSet(l), asSet(catalog.list(LayerInfo.class, filter)));
+        assertEquals(newHashSet(ftproxy), asSet(catalog.list(FeatureTypeInfo.class, filter)));
+        assertEquals(newHashSet(lproxy), asSet(catalog.list(LayerInfo.class, filter)));
     }
 
     private <T> Set<T> asSet(CloseableIterator<T> list) {
