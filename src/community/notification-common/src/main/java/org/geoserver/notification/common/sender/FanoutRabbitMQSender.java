@@ -22,10 +22,8 @@ public class FanoutRabbitMQSender extends RabbitMQSender {
 
     @Override
     public void sendMessage(Notification notification, byte[] payload) throws IOException {
-
         channel.exchangeDeclare(exchangeName, EXCHANGE_TYPE);
         channel.basicPublish(exchangeName, routingKey, null, payload);
-
     }
 
 }

@@ -179,8 +179,14 @@
 	<profile>
       <id>notification</id>
       <modules>
-        <module>notification</module>
 		<module>notification-common</module>
+        <module>notification</module>
+      </modules>
+    </profile>
+	<profile>
+      <id>notification-geonode</id>
+      <modules>
+		<module>notification-geonode</module>
       </modules>
     </profile>
     <profile>

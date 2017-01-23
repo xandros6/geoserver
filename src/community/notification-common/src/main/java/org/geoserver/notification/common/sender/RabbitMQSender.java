@@ -47,15 +47,18 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
             if (this.username != null && !this.username.isEmpty() && this.password != null
                     && !this.password.isEmpty()) {
                 this.uri = "amqp://" + this.username + ":" + this.password + "@" + this.host + ":"
-                        + this.port + "/" + this.virtualHost;
+                        + this.port;
             } else {
-                this.uri = "amqp://" + this.host + ":" + this.port + "/" + this.virtualHost;
+                this.uri = "amqp://" + this.host + ":" + this.port;
             }
 
         }
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(this.uri);
+        String vHost = 
+                (this.virtualHost != null && !this.virtualHost.isEmpty() ? this.virtualHost : "/");
+        factory.setVirtualHost(vHost);
         factory.setSaslConfig(new CustomSaslConfig());
         conn = factory.newConnection();
         channel = conn.createChannel();
@@ -80,6 +83,7 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
             this.sendMessage(notification, payload);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             this.close();
         }
