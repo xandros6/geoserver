@@ -9,6 +9,13 @@ import com.rabbitmq.client.LongString;
 import com.rabbitmq.client.SaslMechanism;
 import com.rabbitmq.client.impl.LongStringHelper;
 
+/**
+ * Handles anonymous authentication challenge
+ * 
+ * @author Xandros
+ * @see CustomSaslConfig
+ *
+ */
 public class AnonymousMechanism implements SaslMechanism {
 
     @Override

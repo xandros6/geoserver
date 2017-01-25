@@ -56,12 +56,6 @@ public class AnonymousIntegrationTest extends CatalogRESTTestSupport {
                 "notifier/" + NotifierInitializer.PROPERTYFILENAME);
     }
 
-    /*
-     * @Override protected void onSetUp(SystemTestData testData) throws Exception { super.onSetUp(testData);
-     * 
-     * }
-     */
-
     @Test
     public void catalogAddNamespaces() throws Exception {
         ReceiverService service = new ReceiverService(2);

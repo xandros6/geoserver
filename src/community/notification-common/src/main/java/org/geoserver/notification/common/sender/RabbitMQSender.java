@@ -11,18 +11,34 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.geoserver.notification.common.CustomSaslConfig;
-import org.geoserver.notification.common.Notification;
+import org.geoserver.notification.common.NotificationXStreamDefaultInitializer;
 import org.geotools.util.logging.Logging;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.thoughtworks.xstream.XStream;
 
+/**
+ * Initialize the AMQP broker client connection and delegate to specific RabbitMQ client implementation the dispatch of payload.
+ * <p>
+ * The broker connection parameters are populated by {@link XStream} deserialization, using the configuration provided by
+ * {@link NotificationXStreamDefaultInitializer}
+ * <p>
+ * Anonymous connection is possible using {@link CustomSaslConfig}
+ * 
+ * @param host the host to which the underlying TCP connection is made
+ * @param port the port number to which the underlying TCP connection is made
+ * @param virtualHost a path which acts as a namespace (optional)
+ * @param username if present is used for SASL exchange (optional)
+ * @param password if present is used for SASL exchange (optional)
+ * @author Xandros
+ * @see FanoutRabbitMQSender
+ */
 public abstract class RabbitMQSender implements NotificationSender, Serializable {
 
     private static Logger LOGGER = Logging.getLogger(RabbitMQSender.class);
 
-    /** serialVersionUID */
     private static final long serialVersionUID = 1370640635300148935L;
 
     protected String host;
@@ -56,8 +72,8 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(this.uri);
-        String vHost = 
-                (this.virtualHost != null && !this.virtualHost.isEmpty() ? this.virtualHost : "/");
+        String vHost = (this.virtualHost != null && !this.virtualHost.isEmpty() ? this.virtualHost
+                : "/");
         factory.setVirtualHost(vHost);
         factory.setSaslConfig(new CustomSaslConfig());
         conn = factory.newConnection();
@@ -77,10 +93,10 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
     }
 
     // Prepare Connection Channel
-    public void send(Notification notification, byte[] payload) throws Exception {
+    public void send(byte[] payload) throws Exception {
         try {
             this.initialize();
-            this.sendMessage(notification, payload);
+            this.sendMessage(payload);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             e.printStackTrace();
@@ -90,6 +106,6 @@ public abstract class RabbitMQSender implements NotificationSender, Serializable
     }
 
     // Send message to the Queue by using Channel
-    public abstract void sendMessage(Notification notification, byte[] payload) throws IOException;
+    public abstract void sendMessage(byte[] payload) throws IOException;
 
 }

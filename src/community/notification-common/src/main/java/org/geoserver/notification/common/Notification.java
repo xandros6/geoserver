@@ -7,6 +7,12 @@ package org.geoserver.notification.common;
 
 import java.util.Map;
 
+/**
+ * Stores notification event informations
+ * 
+ * @author Xandros
+ *
+ */
 public interface Notification {
 
     /**

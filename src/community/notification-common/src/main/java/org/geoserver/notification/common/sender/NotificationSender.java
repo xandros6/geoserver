@@ -5,13 +5,14 @@
 
 package org.geoserver.notification.common.sender;
 
-import org.geoserver.notification.common.Notification;
-
 /**
  * Sends an encoded payload to some destination
+ * 
+ * @author Xandros
+ * @see RabbitMQSender
  */
 public interface NotificationSender {
 
-    public void send(Notification notification, byte[] payload) throws Exception;
+    public void send(byte[] payload) throws Exception;
 
 }

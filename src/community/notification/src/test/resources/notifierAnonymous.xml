@@ -5,14 +5,14 @@
 		<processorThreads>1</processorThreads>
 		<messageFilter>type='Catalog'</messageFilter>
 		<genericProcessor>
-			<GeoNodeJsonEncoder />
-			<RabbitMQSender>
+			<geonodeEncoder />
+			<fanoutSender>
 				<host>localhost</host>
 				<port>4432</port>
 				<virtualHost></virtualHost>
 				<exchangeName>testExchange</exchangeName>
 				<routingKey>testRouting</routingKey>
-			</RabbitMQSender>
+			</fanoutSender>
 		</genericProcessor>
 	</notificator>
 	<notificator>
@@ -20,14 +20,14 @@
 		<processorThreads>10</processorThreads>
 		<messageFilter>type='Data'</messageFilter>
 		<genericProcessor>
-			<GeoNodeJsonEncoder />
-			<RabbitMQSender>
+			<geonodeEncoder />
+			<fanoutSender>
 				<host>localhost</host>
 				<port>4432</port>
 				<virtualHost></virtualHost>
 				<exchangeName>testExchange</exchangeName>
 				<routingKey>testRouting</routingKey>
-			</RabbitMQSender>
+			</fanoutSender>
 		</genericProcessor>
 	</notificator>
 </notificationConfiguration>

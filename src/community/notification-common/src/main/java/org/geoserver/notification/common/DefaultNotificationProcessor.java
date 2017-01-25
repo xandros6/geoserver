@@ -11,7 +11,6 @@ import org.geoserver.notification.common.sender.NotificationSender;
 
 public class DefaultNotificationProcessor implements NotificationProcessor, Serializable {
 
-    /** serialVersionUID */
     private static final long serialVersionUID = -981618390262055505L;
 
     private NotificationEncoder encoder;
@@ -22,6 +21,12 @@ public class DefaultNotificationProcessor implements NotificationProcessor, Seri
         super();
     }
 
+    /**
+     * Process {@link Notification} using an encoder to generate the payload and a sender to delivery it to destination
+     *
+     * @param the encoder to transform {@link Notification} to payload
+     * @param the sender to deliver the payload
+     */
     public DefaultNotificationProcessor(NotificationEncoder encoder, NotificationSender sender) {
         super();
         this.encoder = encoder;
@@ -31,7 +36,7 @@ public class DefaultNotificationProcessor implements NotificationProcessor, Seri
     @Override
     public void process(Notification notification) throws Exception {
         byte[] payload = encoder.encode(notification);
-        sender.send(notification, payload);
+        sender.send(payload);
     }
 
     public NotificationEncoder getEncoder() {

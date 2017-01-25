@@ -21,6 +21,11 @@ import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.util.logging.Logging;
 import org.opengis.filter.Filter;
 
+/**
+ * 
+ * @author Xandros
+ *
+ */
 public class MessageProcessor {
 
     private Logger LOGGER = Logging.getLogger(MessageProcessor.class);
