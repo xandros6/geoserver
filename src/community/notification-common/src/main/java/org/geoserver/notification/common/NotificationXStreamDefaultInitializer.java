@@ -5,7 +5,6 @@
 
 package org.geoserver.notification.common;
 
-import org.geoserver.notification.common.sender.FanoutRabbitMQSender;
 import org.geoserver.notification.common.sender.NotificationSender;
 
 import com.thoughtworks.xstream.XStream;
@@ -28,6 +27,7 @@ public abstract class NotificationXStreamDefaultInitializer implements
         xs.addImplicitCollection(NotificationConfiguration.class, "notificators");
         xs.allowTypes(new Class[] { NotificationConfiguration.class, Notificator.class,
                 NotificationProcessor.class, NotificationEncoder.class, NotificationSender.class });
+        configure(xs);
     }
 
     /**
@@ -49,19 +49,33 @@ public abstract class NotificationXStreamDefaultInitializer implements
      * </pre>
      * 
      * @param xs XStream object
-     * @param encoderName alias for encoder field of in xml configuration
-     * @param encoderClass class to use for encoder with filed name specified in encoderName param
-     * @param senderName alias for sender field of in xml configuration
-     * @param senderClass class to use for sender with filed name specified in senderName param
      * 
      */
-    protected void configure(XStream xs, String encoderName,
-            Class<? extends NotificationEncoder> encoderClass, String senderName,
-            Class<? extends NotificationSender> senderClass) {
-        xs.alias(encoderName, NotificationEncoder.class, encoderClass);
-        xs.alias(senderName, NotificationSender.class, senderClass);
-        xs.aliasField(encoderName, DefaultNotificationProcessor.class, "encoder");
-        xs.aliasField(senderName, DefaultNotificationProcessor.class, "sender");
+    protected void configure(XStream xs) {
+        xs.alias(getEncoderName(), NotificationEncoder.class, getEncoderClass());
+        xs.alias(getSenderName(), NotificationSender.class, getSenderClass());
+        xs.aliasField(getEncoderName(), DefaultNotificationProcessor.class, "encoder");
+        xs.aliasField(getSenderName(), DefaultNotificationProcessor.class, "sender");
     }
+
+    /**
+     * Alias for encoder tag of in xml configuration
+     */
+    public abstract String getEncoderName();
+
+    /**
+     * Class to use for encoder with filed name specified in encoderName
+     */
+    public abstract Class<? extends NotificationEncoder> getEncoderClass();
+
+    /**
+     * Alias for sender tag of in xml configuration
+     */
+    public abstract String getSenderName();
+
+    /**
+     * Class to use for sender with filed name specified in senderName
+     */
+    public abstract Class<? extends NotificationSender> getSenderClass();
 
 }

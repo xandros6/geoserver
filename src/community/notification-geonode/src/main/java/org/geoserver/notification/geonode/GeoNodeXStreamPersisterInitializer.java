@@ -5,18 +5,31 @@
 
 package org.geoserver.notification.geonode;
 
+import org.geoserver.notification.common.NotificationEncoder;
 import org.geoserver.notification.common.NotificationXStreamDefaultInitializer;
 import org.geoserver.notification.common.sender.FanoutRabbitMQSender;
-
-import com.thoughtworks.xstream.XStream;
+import org.geoserver.notification.common.sender.NotificationSender;
 
 public class GeoNodeXStreamPersisterInitializer extends NotificationXStreamDefaultInitializer {
 
     @Override
-    public void init(XStream xs) {
-        super.init(xs);
-        configure(xs, "geonodeEncoder", GeoNodeJsonEncoder.class, "fanoutSender",
-                FanoutRabbitMQSender.class);
+    public String getEncoderName() {
+        return "geonodeEncoder";
+    }
+
+    @Override
+    public Class<? extends NotificationEncoder> getEncoderClass() {
+        return GeoNodeJsonEncoder.class;
+    }
+
+    @Override
+    public String getSenderName() {
+        return "fanoutSender";
+    }
+
+    @Override
+    public Class<? extends NotificationSender> getSenderClass() {
+        return FanoutRabbitMQSender.class;
     }
 
 }
