@@ -242,6 +242,7 @@
         <module>ows-simulate</module>
         <module>jdbc-metrics</module>
         <module>oseo</module>
+        <module>nsg-profile</module>
       </modules>
     </profile>
     <profile>
@@ -529,6 +530,12 @@
       <id>jdbc-metrics</id>
       <modules>
         <module>jdbc-metrics</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>nsg-profile</id>
+      <modules>
+        <module>nsg-profile</module>
       </modules>
     </profile>
   </profiles>
