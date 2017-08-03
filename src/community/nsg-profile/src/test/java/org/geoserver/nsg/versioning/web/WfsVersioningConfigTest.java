@@ -2,13 +2,10 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.nsg.web;
+package org.geoserver.nsg.versioning.web;
 
-import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.util.tester.FormTester;
 import org.geoserver.web.GeoServerWicketTestSupport;
 import org.geoserver.web.publish.PublishedConfigurationPage;
-import org.geoserver.wfs.GMLInfo;
 import org.geoserver.wfs.WFSInfo;
 import org.junit.Test;
 

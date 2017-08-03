@@ -3,7 +3,7 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.nsg.web;
+package org.geoserver.nsg.versioning.web;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -16,7 +16,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
-import org.geoserver.nsg.TimeVersioning;
+import org.geoserver.nsg.versioning.TimeVersioning;
 import org.geoserver.web.publish.PublishedConfigurationPanel;
 
 import java.sql.Timestamp;

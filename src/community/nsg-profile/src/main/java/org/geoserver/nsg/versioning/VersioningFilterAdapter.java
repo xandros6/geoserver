@@ -2,20 +2,16 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.nsg;
+package org.geoserver.nsg.versioning;
 
 import org.geoserver.catalog.FeatureTypeInfo;
-import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.factory.GeoTools;
 import org.geotools.filter.visitor.DuplicatingFilterVisitor;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
-import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.Id;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.identity.Identifier;
 import org.opengis.filter.identity.ResourceId;
-import org.opengis.filter.sort.SortOrder;
 
 import java.util.Date;
 import java.util.HashSet;

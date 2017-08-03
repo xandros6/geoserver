@@ -10,15 +10,15 @@ import org.geoserver.util.IOUtils;
 
 import java.io.InputStream;
 
-import static org.geoserver.nsg.TimeVersioning.disable;
-import static org.geoserver.nsg.TimeVersioning.enable;
+import static org.geoserver.nsg.versioning.TimeVersioning.disable;
+import static org.geoserver.nsg.versioning.TimeVersioning.enable;
 
-final class TestsUtils {
+public final class TestsUtils {
 
     private TestsUtils() {
     }
 
-    static String readResource(String resourceName) {
+    public static String readResource(String resourceName) {
         try (InputStream input = TestsUtils.class.getResourceAsStream(resourceName)) {
             return IOUtils.toString(input);
         } catch (Exception exception) {
@@ -26,8 +26,8 @@ final class TestsUtils {
         }
     }
 
-    static void updateFeatureTypeTimeVersioning(Catalog catalog, String featureTypeName,
-                                                boolean enabled, String idProperty, String timeProperty) {
+    public static void updateFeatureTypeTimeVersioning(Catalog catalog, String featureTypeName,
+                                                       boolean enabled, String idProperty, String timeProperty) {
         FeatureTypeInfo featureType = catalog.getFeatureTypeByName(featureTypeName);
         if (enabled) {
             enable(featureType, idProperty, timeProperty);
