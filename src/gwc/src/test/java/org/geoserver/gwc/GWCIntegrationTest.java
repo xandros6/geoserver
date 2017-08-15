@@ -15,11 +15,16 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -30,6 +35,10 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.httpclient.util.DateUtil;
 import org.apache.commons.io.FileUtils;
@@ -39,11 +48,14 @@ import org.custommonkey.xmlunit.XMLUnit;
 import org.custommonkey.xmlunit.XpathEngine;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogBuilder;
+import org.geoserver.catalog.DimensionInfo;
+import org.geoserver.catalog.DimensionPresentation;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerGroupInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.catalog.impl.DimensionInfoImpl;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.data.test.MockData;
 import org.geoserver.data.test.SystemTestData;
@@ -53,8 +65,10 @@ import org.geoserver.gwc.layer.CatalogConfiguration;
 import org.geoserver.gwc.layer.GeoServerTileLayer;
 import org.geoserver.gwc.layer.GeoServerTileLayerInfo;
 import org.geoserver.gwc.wmts.WMTSInfo;
+import org.geoserver.ows.Dispatcher;
 import org.geoserver.ows.DispatcherCallback;
 import org.geoserver.ows.LocalWorkspace;
+import org.geoserver.ows.Request;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.GeoServerExtensionsHelper;
@@ -71,12 +85,14 @@ import org.geowebcache.diskquota.DiskQuotaConfig;
 import org.geowebcache.diskquota.QuotaStore;
 import org.geowebcache.diskquota.jdbc.JDBCConfiguration;
 import org.geowebcache.diskquota.jdbc.JDBCConfiguration.ConnectionPoolConfiguration;
+import org.geowebcache.filter.parameters.StringParameterFilter;
 import org.geowebcache.diskquota.jdbc.JDBCQuotaStore;
 import org.geowebcache.grid.BoundingBox;
 import org.geowebcache.grid.GridSetBroker;
 import org.geowebcache.grid.GridSubset;
 import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.TileLayerDispatcher;
+import org.geowebcache.service.wmts.WMTSService;
 import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -1082,6 +1098,162 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
         // check that the request was successful
         assertThat(response.getStatus(), is(200));
     }
+    
+    @Test
+    public void testGetCapabilitiesRequestRestEndpoints() throws Exception {
+
+        int totLayers = getCatalog().getLayers().size();
+
+        Map<String, String> namespaces = new HashMap<>();
+        namespaces.put("xlink", "http://www.w3.org/1999/xlink");
+        namespaces.put("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        namespaces.put("ows", "http://www.opengis.net/ows/1.1");
+        namespaces.put("wmts", "http://www.opengis.net/wmts/1.0");
+        XMLUnit.setXpathNamespaceContext(new SimpleNamespaceContext(namespaces));
+        XpathEngine xpath = XMLUnit.newXpathEngine();
+        // getting capabilities document for CITE workspace
+        Document doc = getAsDOM("/gwc/service/wmts?request=GetCapabilities");
+        // checking ResourceURL
+        assertEquals(String.valueOf(totLayers),
+                xpath.evaluate(
+                        "count(//wmts:Contents/wmts:Layer/wmts:ResourceURL[@resourceType='tile']"
+                                + "[@format='image/png']"
+                                + "[contains(@template,'http://localhost:8080/geoserver/gwc"
+                                + WMTSService.REST_PATH + "/')]"
+                                + "[contains(@template,'/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png')])",
+                        doc));
+
+        assertEquals(String.valueOf(totLayers),
+                xpath.evaluate(
+                        "count(//wmts:Contents/wmts:Layer/wmts:ResourceURL[@resourceType='FeatureInfo']"
+                                + "[@format='text/plain']"
+                                + "[contains(@template,'http://localhost:8080/geoserver/gwc"
+                                + WMTSService.REST_PATH + "/')]"
+                                + "[contains(@template,'/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}/{J}/{I}?format=text/plain')])",
+                        doc));
+
+        // checking the service metadata URL
+        assertEquals("1", xpath.evaluate(
+                "count(//wmts:ServiceMetadataURL[@xlink:href='http://localhost:8080/geoserver/gwc"
+                        + WMTSService.SERVICE_PATH + "?REQUEST=getcapabilities&VERSION=1.0.0'])",
+                doc));
+        assertEquals("1",
+                xpath.evaluate(
+                        "count(//wmts:ServiceMetadataURL[@xlink:href='http://localhost:8080/geoserver/gwc"
+                                + WMTSService.REST_PATH + "/WMTSCapabilities.xml'])",
+                        doc));
+    }
+    
+    @Test
+    public void testGetCapabilitiesWithRestEndpoints() throws Exception {
+
+        MockHttpServletRequest request = createRequest(
+                "/gwc" + WMTSService.REST_PATH + "/WMTSCapabilities.xml");
+        request.setMethod("GET");
+        request.setContent(new byte[] {});
+
+        Request mockRequest = mock(Request.class);
+        when(mockRequest.getHttpRequest()).thenReturn(request);
+        Dispatcher.REQUEST.set(mockRequest);
+
+        MockHttpServletResponse response = dispatch(request, null);
+        // check that the request was successful
+        assertThat(response.getStatus(), is(200));
+        assertContentType("application/vnd.ogc.wms_xml", response);
+    }
+
+    @Test
+    public void testGetTileWithRestEndpoints() throws Exception {
+
+        MockHttpServletRequest request = createRequest("/gwc" + WMTSService.REST_PATH + "/"
+                + MockData.BASIC_POLYGONS.getPrefix() + ":" + MockData.BASIC_POLYGONS.getLocalPart()
+                + "/EPSG:4326/EPSG:4326:0/0/0?format=image/png");
+        request.setMethod("GET");
+        request.setContent(new byte[] {});
+
+        Request mockRequest = mock(Request.class);
+        when(mockRequest.getHttpRequest()).thenReturn(request);
+        Dispatcher.REQUEST.set(mockRequest);
+
+        MockHttpServletResponse response = dispatch(request, null);
+        // check that the request was successful
+        assertThat(response.getStatus(), is(200));
+        assertContentType("image/png", response);
+    }
+    
+    @Test
+    public void testFeatureInfoWithRestEndpoints() throws Exception {
+        // getting feature info
+        MockHttpServletRequest request = createRequest("/gwc" + WMTSService.REST_PATH + "/"
+                + MockData.BASIC_POLYGONS.getPrefix() + ":" + MockData.BASIC_POLYGONS.getLocalPart()
+                + "/EPSG:4326/EPSG:4326:0/0/0/0/0?format=text/plain");
+        request.setMethod("GET");
+        request.setContent(new byte[] {});
+
+        Request mockRequest = mock(Request.class);
+        when(mockRequest.getHttpRequest()).thenReturn(request);
+        Dispatcher.REQUEST.set(mockRequest);
+
+        MockHttpServletResponse response = dispatch(request, null);
+        // check that the request was successful
+        assertThat(response.getStatus(), is(200));
+        assertContentType("text/plain", response);
+    }
+    
+    @Test
+    public void testGetCapabilitiesWithRestEndpointsAndDimensions() throws Exception {
+        GeoServerTileLayer tileLayer = (GeoServerTileLayer) GWC.get()
+                .getTileLayerByName(getLayerId(MockData.BASIC_POLYGONS));
+        GeoServerTileLayerInfo info = tileLayer.getInfo();
+
+        //Add dimensions to layer
+        StringParameterFilter time = new StringParameterFilter();
+        time.setKey("time");
+        time.setValues(Arrays.asList("2016-02-23T03:00:00.000Z"));
+        info.addParameterFilter(time);
+
+        StringParameterFilter elevation = new StringParameterFilter();
+        elevation.setKey("elevation");
+        elevation.setValues(Arrays.asList("500"));
+        info.addParameterFilter(elevation);
+
+        GWC.get().save(tileLayer);
+
+        MockHttpServletRequest request = createRequest(
+                "/gwc" + WMTSService.REST_PATH + "/WMTSCapabilities.xml");
+        request.setMethod("GET");
+        request.setContent(new byte[] {});
+
+        Request mockRequest = mock(Request.class);
+        when(mockRequest.getHttpRequest()).thenReturn(request);
+        Dispatcher.REQUEST.set(mockRequest);
+
+        MockHttpServletResponse response = dispatch(request, null);
+
+        ByteArrayInputStream bain = new ByteArrayInputStream(
+                response.getContentAsString().getBytes());
+        Document doc = dom(bain, true);
+
+        Map<String, String> namespaces = new HashMap<>();
+        namespaces.put("xlink", "http://www.w3.org/1999/xlink");
+        namespaces.put("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        namespaces.put("ows", "http://www.opengis.net/ows/1.1");
+        namespaces.put("wmts", "http://www.opengis.net/wmts/1.0");
+        XMLUnit.setXpathNamespaceContext(new SimpleNamespaceContext(namespaces));
+        XpathEngine xpath = XMLUnit.newXpathEngine();
+
+        assertEquals("1",
+                xpath.evaluate(
+                        "count(//wmts:Contents/wmts:Layer/wmts:ResourceURL[@resourceType='tile']"
+                                + "[@format='image/png']"
+                                + "[contains(@template,'http://localhost:8080/geoserver/gwc"
+                                + WMTSService.REST_PATH + "/" + MockData.BASIC_POLYGONS.getPrefix()
+                                + ":" + MockData.BASIC_POLYGONS.getLocalPart()
+                                + "/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png&time={time}&elevation={elevation}')])",
+                        doc));
+
+    }
+
 
     /**
      * Helper method that creates a layer group using the provided name and layers names.
