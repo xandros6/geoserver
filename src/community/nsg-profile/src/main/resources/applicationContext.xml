@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
                            http://www.springframework.org/schema/beans/spring-beans.xsd">
-  <bean id="versioning" class="org.geoserver.nsg.TimeVersioningCallback">
-    <constructor-arg ref="catalog"/>
-  </bean>
-  <bean id="versioningLayerConfig" class="org.geoserver.web.publish.LayerConfigurationPanelInfo">
-    <property name="id" value="wfsVersioningConfig"/>
-    <property name="titleKey" value="data.resource.config.wfs"/>
-    <property name="componentClass" value="org.geoserver.nsg.versioning.web.WfsVersioningConfig"/>
-    <property name="supportedTypes">
-      <list>
-        <value>org.geoserver.catalog.FeatureTypeInfo</value>
-      </list>
-    </property>
-  </bean>
+	<bean id="versioning" class="org.geoserver.nsg.versioning.TimeVersioningCallback">
+		<constructor-arg ref="catalog" />
+	</bean>
+	<bean id="versioningLayerConfig" class="org.geoserver.web.publish.LayerConfigurationPanelInfo">
+		<property name="id" value="wfsVersioningConfig" />
+		<property name="titleKey" value="data.resource.config.wfs" />
+		<property name="componentClass"
+			value="org.geoserver.nsg.versioning.web.WfsVersioningConfig" />
+		<property name="supportedTypes">
+			<list>
+				<value>org.geoserver.catalog.FeatureTypeInfo</value>
+			</list>
+		</property>
+	</bean>
+	<bean id="indexResultTypeDisapatcherCallback"
+		class="org.geoserver.nsg.pagination.random.IndexResultTypeDisapatcherCallback">
+		<description>
+			When a request using the index result type comes in a
+			dispatcher callback
+			this switch the "index" value by the "hits" value
+		</description>
+		<constructor-arg ref="geoServer" />
+	</bean>
 </beans>
