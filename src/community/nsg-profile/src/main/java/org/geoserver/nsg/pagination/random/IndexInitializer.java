@@ -205,8 +205,8 @@ public class IndexInitializer implements GeoServerInitializer {
                 if (exResource != null && !newResource.dir().getAbsolutePath()
                         .equals(exResource.dir().getAbsolutePath())) {
                     exResource.delete();
-                    IndexConfiguration.setStorageResource(newResource);
                 }
+                IndexConfiguration.setStorageResource(newResource);
             }
         } catch (Exception exception) {
             throw new RuntimeException("Error on change store", exception);
@@ -281,7 +281,7 @@ public class IndexInitializer implements GeoServerInitializer {
      * Helper method that move resource informations from current DB to the new one
      */
     private void moveData(DataStore exDataStore, DataStore newDataStore) throws Exception {
-        Transaction session = new DefaultTransaction("Adding");
+        Transaction session = new DefaultTransaction("Moving");
         try {
             SimpleFeatureSource exFs = exDataStore.getFeatureSource(STORE_SCHEMA_NAME);
             SimpleFeatureStore newFs = (SimpleFeatureStore) newDataStore
