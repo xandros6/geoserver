@@ -30,6 +30,11 @@
       <artifactId>gs-web-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- geotools dependencies -->
+    <dependency>
+      <groupId>org.geotools.jdbc</groupId>
+      <artifactId>gt-jdbc-h2</artifactId>
+    </dependency>
     <!-- geoserver tests dependencies -->
     <dependency>
       <groupId>org.geoserver</groupId>
