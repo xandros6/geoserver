@@ -5,11 +5,14 @@
 
 package org.geoserver.nsg.pagination.random;
 
+import java.util.logging.Logger;
+
 import org.geoserver.config.GeoServer;
 import org.geoserver.ows.AbstractDispatcherCallback;
 import org.geoserver.ows.Request;
 import org.geoserver.ows.Response;
 import org.geoserver.platform.Operation;
+import org.geotools.util.logging.Logging;
 
 import net.opengis.wfs20.ResultTypeType;
 
@@ -22,9 +25,14 @@ import net.opengis.wfs20.ResultTypeType;
  * A new entry named RESULT_TYPE_INDEX specifying that the original result type was "index" is added
  * to KVP maps
  * </p>
+ * <p>
+ * The object that manage response of type HitsOutputFormat is replaced with IndexOutputFormat before response has been dispatched
+ * </p>
  */
 
 public class IndexResultTypeDisapatcherCallback extends AbstractDispatcherCallback {
+    
+    static Logger LOGGER = Logging.getLogger(IndexOutputFormat.class);
 
     private GeoServer gs;
 
