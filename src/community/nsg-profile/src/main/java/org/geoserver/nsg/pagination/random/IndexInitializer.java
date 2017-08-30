@@ -36,6 +36,7 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.feature.NameImpl;
 import org.geotools.filter.text.cql2.CQL;
 import org.geotools.jdbc.JDBCDataStoreFactory;
 import org.geotools.util.logging.Logging;
@@ -89,7 +90,7 @@ public class IndexInitializer implements GeoServerInitializer {
 
     public static final String STORE_SCHEMA_NAME = "RESULT_SET";
 
-    public static final String STORE_SCHEMA = "ID:\"\",created:0,updated:0";
+    public static final String STORE_SCHEMA = "ID:java.lang.String,created:java.lang.Long,updated:java.lang.Long";
 
     /*
      * Lock to synchronize activity of clean task with listener that changes the DB and file
@@ -248,31 +249,31 @@ public class IndexInitializer implements GeoServerInitializer {
         return currentParams.get(JDBCDataStoreFactory.DBTYPE.key)
                 .equals(newParams.get(JDBCDataStoreFactory.DBTYPE.key))
                 && currentParams.get(JDBCDataStoreFactory.DATABASE.key)
-                        .equals(newParams.get(JDBCDataStoreFactory.DATABASE.key))
+                .equals(newParams.get(JDBCDataStoreFactory.DATABASE.key))
                 && currentParams.get(JDBCDataStoreFactory.HOST.key)
-                        .equals(newParams.get(JDBCDataStoreFactory.HOST.key))
+                .equals(newParams.get(JDBCDataStoreFactory.HOST.key))
                 && currentParams.get(JDBCDataStoreFactory.PORT.key)
-                        .equals(newParams.get(JDBCDataStoreFactory.PORT.key))
+                .equals(newParams.get(JDBCDataStoreFactory.PORT.key))
                 && currentParams.get(JDBCDataStoreFactory.SCHEMA.key)
-                        .equals(newParams.get(JDBCDataStoreFactory.SCHEMA.key));
+                .equals(newParams.get(JDBCDataStoreFactory.SCHEMA.key));
     }
 
     /**
      * Helper method that create a new table on DB to store resource informations
      */
     private void createTable(DataStore dataStore, Boolean forceDelete) throws Exception {
-        SimpleFeatureType schema = dataStore.getSchema(STORE_SCHEMA_NAME);
+        Boolean exists = dataStore.getNames().contains(new NameImpl(STORE_SCHEMA_NAME));
         // Schema exists
-        if (schema != null) {
+        if (exists) {
             // Delete of exist is required, and then create a new one
             if (forceDelete) {
                 dataStore.removeSchema(STORE_SCHEMA_NAME);
-                schema = DataUtilities.createType(STORE_SCHEMA_NAME, STORE_SCHEMA);
+                SimpleFeatureType schema = DataUtilities.createType(STORE_SCHEMA_NAME, STORE_SCHEMA);
                 dataStore.createSchema(schema);
             }
             // Schema not exists, create a new one
         } else {
-            schema = DataUtilities.createType(STORE_SCHEMA_NAME, STORE_SCHEMA);
+            SimpleFeatureType schema = DataUtilities.createType(STORE_SCHEMA_NAME, STORE_SCHEMA);
             dataStore.createSchema(schema);
         }
     }
@@ -310,28 +311,30 @@ public class IndexInitializer implements GeoServerInitializer {
                 // Remove record
                 Long timeToLive = IndexConfiguration.getTimeToLive();
                 DataStore currentDataStore = IndexConfiguration.getCurrentDataStore();
-                SimpleFeatureStore store = (SimpleFeatureStore) currentDataStore
-                        .getFeatureSource(STORE_SCHEMA_NAME);
                 Long now = new Date().getTime();
                 Long liveTreshold = now - timeToLive * 1000;
-                Filter filter = CQL.toFilter("updated < " + liveTreshold);
-                SimpleFeatureCollection toRemoved = store.getFeatures(filter);
-                // Remove file
-                Resource currentResource = IndexConfiguration.getStorageResource();
-                SimpleFeatureIterator iterator = toRemoved.features();
-                try {
-                    while (iterator.hasNext()) {
-                        SimpleFeature feature = iterator.next();
-                        currentResource.get(feature.getID()).delete();
+                if(currentDataStore != null){
+                    SimpleFeatureStore store = (SimpleFeatureStore) currentDataStore
+                            .getFeatureSource(STORE_SCHEMA_NAME);
+                    Filter filter = CQL.toFilter("updated < " + liveTreshold);
+                    SimpleFeatureCollection toRemoved = store.getFeatures(filter);
+                    // Remove file
+                    Resource currentResource = IndexConfiguration.getStorageResource();
+                    SimpleFeatureIterator iterator = toRemoved.features();
+                    try {
+                        while (iterator.hasNext()) {
+                            SimpleFeature feature = iterator.next();
+                            currentResource.get(feature.getID()).delete();
+                        }
+                    } finally {
+                        iterator.close();
                     }
-                } finally {
-                    iterator.close();
+                    store.removeFeatures(filter);
                 }
-                store.removeFeatures(filter);
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.finest("CLEAN executed, removed stored requests older than "
                             + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                                    .format(new Date(liveTreshold)));
+                            .format(new Date(liveTreshold)));
                 }
             } catch (Throwable t) {
                 session.rollback();
