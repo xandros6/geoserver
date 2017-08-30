@@ -52,7 +52,7 @@ import net.opengis.wfs20.GetFeatureType;
 
 /**
  * This output format handles requests if the original requested result type was "index" </br>
- * See {@link IndexResultTypeDisapatcherCallback}
+ * See {@link IndexResultTypeDispatcherCallback}
  * 
  * @author sandr
  *
@@ -83,7 +83,7 @@ public class IndexOutputFormat extends HitsOutputFormat {
         GetFeatureType request = (GetFeatureType) OwsUtils.parameter(operation.getParameters(),
                 GetFeatureType.class);
         // generate an UUID (resultSetID) for this request
-        resultSetId = UUID.randomUUID().toString();
+        resultSetId = UUID.randomUUID().toString().replaceAll("-", "");
         // store request and associate it to UUID
         storeGetFeature(resultSetId, request);
         super.write(value, output, operation);
@@ -138,7 +138,7 @@ public class IndexOutputFormat extends HitsOutputFormat {
 
             // Create and store file
             Resource storageResource = IndexConfiguration.getStorageResource();
-
+            
             org.eclipse.emf.ecore.resource.Resource emfRes = resSet
                     .createResource(URI.createFileURI(storageResource.dir().getAbsolutePath() + "\\"
                             + resultSetId + ".feature"));

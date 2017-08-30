@@ -13,6 +13,9 @@ import org.geotools.data.DataStore;
 /**
  * 
  * Class used to store the index result type configuration managed by {@link IndexInitializer}
+ * 
+ * @author sandr
+ * 
  */
 public class IndexConfiguration {
 

@@ -26,13 +26,17 @@ import net.opengis.wfs20.ResultTypeType;
  * to KVP maps
  * </p>
  * <p>
- * The object that manage response of type HitsOutputFormat is replaced with IndexOutputFormat before response has been dispatched
+ * The object that manage response of type HitsOutputFormat is replaced with IndexOutputFormat
+ * before response has been dispatched
  * </p>
+ * 
+ * @author sandr
+ *  
  */
 
-public class IndexResultTypeDisapatcherCallback extends AbstractDispatcherCallback {
-    
-    static Logger LOGGER = Logging.getLogger(IndexOutputFormat.class);
+public class IndexResultTypeDispatcherCallback extends AbstractDispatcherCallback {
+
+    static Logger LOGGER = Logging.getLogger(IndexResultTypeDispatcherCallback.class);
 
     private GeoServer gs;
 
@@ -42,7 +46,7 @@ public class IndexResultTypeDisapatcherCallback extends AbstractDispatcherCallba
 
     static final String RESULT_TYPE_INDEX_PARAMETER = "RESULT_TYPE_INDEX";
 
-    public IndexResultTypeDisapatcherCallback(GeoServer gs) {
+    public IndexResultTypeDispatcherCallback(GeoServer gs) {
         this.gs = gs;
     }
 
