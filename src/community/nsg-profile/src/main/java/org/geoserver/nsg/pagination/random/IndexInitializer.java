@@ -14,6 +14,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,8 +27,6 @@ import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.resource.FileSystemResourceStore;
 import org.geoserver.platform.resource.Resource;
-import org.geoserver.platform.resource.ResourceListener;
-import org.geoserver.platform.resource.ResourceNotification;
 import org.geoserver.platform.resource.ResourceNotification.Kind;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
@@ -78,7 +79,7 @@ import org.opengis.filter.Filter;
  *
  */
 
-public class IndexInitializer implements GeoServerInitializer {
+public final class IndexInitializer implements GeoServerInitializer {
 
     static Logger LOGGER = Logging.getLogger(IndexInitializer.class);
 
@@ -96,7 +97,7 @@ public class IndexInitializer implements GeoServerInitializer {
      * Lock to synchronize activity of clean task with listener that changes the DB and file
      * resources
      */
-    private final Object lock = new Object();
+    protected static final ReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock();
 
     @Override
     public void initialize(GeoServer geoServer) throws Exception {
@@ -115,22 +116,24 @@ public class IndexInitializer implements GeoServerInitializer {
                 // Replace GEOSERVER_DATA_DIR placeholder
                 properties.replaceAll((k, v) -> ((String) v).replace("${GEOSERVER_DATA_DIR}",
                         dd.root().getPath()));
+                stream.close();
                 // Create resource and save properties
-                OutputStream out = resource.out();
-                properties.store(out, null);
-                out.close();
+                try {
+                    OutputStream out = resource.out();
+                    properties.store(out, null);
+                    out.close();
+                } catch (Exception exception) {
+                    throw new RuntimeException("Error to initialize configurations.", exception);
+                }
             }
             loadConfigurations(resource);
             // Listen for changes in configuration file and reload properties
-            resource.addListener(new ResourceListener() {
-                @Override
-                public void changed(ResourceNotification notify) {
-                    if (notify.getKind() == Kind.ENTRY_MODIFY) {
-                        try {
-                            loadConfigurations(resource);
-                        } catch (Exception exception) {
-                            throw new RuntimeException("Error reload confiugrations.", exception);
-                        }
+            resource.addListener(notify -> {
+                if (notify.getKind() == Kind.ENTRY_MODIFY) {
+                    try {
+                        loadConfigurations(resource);
+                    } catch (Exception exception) {
+                        throw new RuntimeException("Error reload configurations.", exception);
                     }
                 }
             });
@@ -138,12 +141,15 @@ public class IndexInitializer implements GeoServerInitializer {
     }
 
     /**
-     * Helper method that
+     * Helper method that loads configuration file and changes environment setup
      */
     private void loadConfigurations(Resource resource) throws IOException {
-        synchronized (lock) {
+        try {
+            IndexInitializer.READ_WRITE_LOCK.writeLock().lock();
             Properties properties = new Properties();
-            properties.load(resource.in());
+            InputStream is = resource.in();
+            properties.load(is);
+            is.close();
             // Reload database
             Map<String, Object> params = new HashMap<>();
             params.put(JDBCDataStoreFactory.DBTYPE.key,
@@ -175,18 +181,19 @@ public class IndexInitializer implements GeoServerInitializer {
              * Change time to live
              */
             manageTimeToLiveChange(properties.get("resultSets.timeToLive"));
+        } finally {
+            IndexInitializer.READ_WRITE_LOCK.writeLock().unlock();
         }
-
     }
 
     /**
-     * Helper method that
+     * Helper method that store the time to live value
      */
     private void manageTimeToLiveChange(Object timneToLive) {
         try {
             if (timneToLive != null) {
                 String timneToLiveStr = (String) timneToLive;
-                IndexConfiguration.setTimeToLive(Long.parseLong(timneToLiveStr));
+                IndexConfiguration.setTimeToLive(Long.parseLong(timneToLiveStr), TimeUnit.SECONDS);
             }
         } catch (Exception exception) {
             throw new RuntimeException("Error on change time to live", exception);
@@ -222,13 +229,13 @@ public class IndexInitializer implements GeoServerInitializer {
             DataStore exDataStore = IndexConfiguration.getCurrentDataStore();
             DataStore newDataStore = DataStoreFinder.getDataStore(params);
             if (exDataStore != null) {
-                // New store is valid and is different from current one
-                if (newDataStore != null && !isStorageTheSame(params)) {
-                    // Create table in new store
+                // New database is valid and is different from current one
+                if (newDataStore != null && !isDBTheSame(params)) {
+                    // Create table in new database
                     createTable(newDataStore, true);
-                    // Move data to new store
+                    // Move data to new database
                     moveData(exDataStore, newDataStore);
-                    // Delete old store
+                    // Delete old database
                     exDataStore.dispose();
                 }
             } else {
@@ -237,38 +244,39 @@ public class IndexInitializer implements GeoServerInitializer {
             }
             IndexConfiguration.setCurrentDataStore(params, newDataStore);
         } catch (Exception exception) {
-            throw new RuntimeException("Error reload DB confiugrations.", exception);
+            throw new RuntimeException("Error reload DB configurations.", exception);
         }
     }
 
     /**
      * Helper method that check id the DB is the same, matching the JDBC configurations parameters.
      */
-    private Boolean isStorageTheSame(Map<String, Object> newParams) {
+    private Boolean isDBTheSame(Map<String, Object> newParams) {
         Map<String, Object> currentParams = IndexConfiguration.getCurrentDataStoreParams();
         return currentParams.get(JDBCDataStoreFactory.DBTYPE.key)
                 .equals(newParams.get(JDBCDataStoreFactory.DBTYPE.key))
                 && currentParams.get(JDBCDataStoreFactory.DATABASE.key)
-                .equals(newParams.get(JDBCDataStoreFactory.DATABASE.key))
+                        .equals(newParams.get(JDBCDataStoreFactory.DATABASE.key))
                 && currentParams.get(JDBCDataStoreFactory.HOST.key)
-                .equals(newParams.get(JDBCDataStoreFactory.HOST.key))
+                        .equals(newParams.get(JDBCDataStoreFactory.HOST.key))
                 && currentParams.get(JDBCDataStoreFactory.PORT.key)
-                .equals(newParams.get(JDBCDataStoreFactory.PORT.key))
+                        .equals(newParams.get(JDBCDataStoreFactory.PORT.key))
                 && currentParams.get(JDBCDataStoreFactory.SCHEMA.key)
-                .equals(newParams.get(JDBCDataStoreFactory.SCHEMA.key));
+                        .equals(newParams.get(JDBCDataStoreFactory.SCHEMA.key));
     }
 
     /**
      * Helper method that create a new table on DB to store resource informations
      */
-    private void createTable(DataStore dataStore, Boolean forceDelete) throws Exception {
-        Boolean exists = dataStore.getNames().contains(new NameImpl(STORE_SCHEMA_NAME));
+    private void createTable(DataStore dataStore, boolean forceDelete) throws Exception {
+        boolean exists = dataStore.getNames().contains(new NameImpl(STORE_SCHEMA_NAME));
         // Schema exists
         if (exists) {
             // Delete of exist is required, and then create a new one
             if (forceDelete) {
                 dataStore.removeSchema(STORE_SCHEMA_NAME);
-                SimpleFeatureType schema = DataUtilities.createType(STORE_SCHEMA_NAME, STORE_SCHEMA);
+                SimpleFeatureType schema = DataUtilities.createType(STORE_SCHEMA_NAME,
+                        STORE_SCHEMA);
                 dataStore.createSchema(schema);
             }
             // Schema not exists, create a new one
@@ -305,43 +313,47 @@ public class IndexInitializer implements GeoServerInitializer {
      * Executed by scheduler, for details see Spring XML configuration
      */
     public void clean() throws Exception {
-        synchronized (lock) {
-            Transaction session = new DefaultTransaction("RemoveOld");
-            try {
-                // Remove record
-                Long timeToLive = IndexConfiguration.getTimeToLive();
-                DataStore currentDataStore = IndexConfiguration.getCurrentDataStore();
-                Long now = new Date().getTime();
-                Long liveTreshold = now - timeToLive * 1000;
-                if(currentDataStore != null){
-                    SimpleFeatureStore store = (SimpleFeatureStore) currentDataStore
-                            .getFeatureSource(STORE_SCHEMA_NAME);
-                    Filter filter = CQL.toFilter("updated < " + liveTreshold);
-                    SimpleFeatureCollection toRemoved = store.getFeatures(filter);
-                    // Remove file
-                    Resource currentResource = IndexConfiguration.getStorageResource();
-                    SimpleFeatureIterator iterator = toRemoved.features();
-                    try {
-                        while (iterator.hasNext()) {
-                            SimpleFeature feature = iterator.next();
-                            currentResource.get(feature.getID()).delete();
-                        }
-                    } finally {
-                        iterator.close();
+        Transaction session = new DefaultTransaction("RemoveOld");
+        try {
+            IndexInitializer.READ_WRITE_LOCK.writeLock().lock();
+            // Remove record
+            Long timeToLive = IndexConfiguration.getTimeToLiveInSec();
+            DataStore currentDataStore = IndexConfiguration.getCurrentDataStore();
+            Long liveTreshold = System.currentTimeMillis() - timeToLive * 1000;
+            long featureRemoved = 0;
+            if (currentDataStore != null) {
+                SimpleFeatureStore store = (SimpleFeatureStore) currentDataStore
+                        .getFeatureSource(STORE_SCHEMA_NAME);
+                Filter filter = CQL.toFilter("updated < " + liveTreshold);
+                SimpleFeatureCollection toRemoved = store.getFeatures(filter);
+                // Remove file
+                Resource currentResource = IndexConfiguration.getStorageResource();
+                SimpleFeatureIterator iterator = toRemoved.features();
+                try {
+                    while (iterator.hasNext()) {
+                        SimpleFeature feature = iterator.next();
+                        currentResource.get(feature.getID()).delete();
+                        featureRemoved++;
                     }
-                    store.removeFeatures(filter);
+                } finally {
+                    iterator.close();
                 }
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("CLEAN executed, removed stored requests older than "
-                            + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                            .format(new Date(liveTreshold)));
-                }
-            } catch (Throwable t) {
-                session.rollback();
-                throw new RuntimeException("Error on move data", t);
-            } finally {
-                session.close();
+                store.removeFeatures(filter);
             }
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                if (featureRemoved > 0) {
+                    LOGGER.finest("CLEAN executed, removed " + featureRemoved
+                            + " stored requests older than "
+                            + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                                    .format(new Date(liveTreshold)));
+                }
+            }
+        } catch (Throwable t) {
+            session.rollback();
+            throw new RuntimeException("Error on move data", t);
+        } finally {
+            session.close();
+            IndexInitializer.READ_WRITE_LOCK.writeLock().unlock();
         }
     }
 }

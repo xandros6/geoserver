@@ -5,12 +5,13 @@
 
 package org.geoserver.nsg.pagination.random;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.logging.Logger;
 
 import org.geoserver.config.GeoServer;
 import org.geoserver.ows.AbstractDispatcherCallback;
 import org.geoserver.ows.Request;
+import org.geoserver.platform.Operation;
 import org.geoserver.platform.Service;
 import org.geoserver.platform.ServiceException;
 import org.geotools.util.logging.Logging;
@@ -29,7 +30,7 @@ import org.geotools.util.logging.Logging;
 
 public class PageResultsDispatcherCallback extends AbstractDispatcherCallback {
 
-    static Logger LOGGER = Logging.getLogger(PageResultsDispatcherCallback.class);
+    private final static Logger LOGGER = Logging.getLogger(PageResultsDispatcherCallback.class);
 
     private GeoServer gs;
 
@@ -43,10 +44,22 @@ public class PageResultsDispatcherCallback extends AbstractDispatcherCallback {
         if (service.getService() instanceof PageResultsWebFeatureService) {
             PageResultsWebFeatureService prService = (PageResultsWebFeatureService) service
                     .getService();
-            prService.setResultSetID((String) request.getKvp().get("resultSetID"));
-            request.getKvp().put("featureId", Arrays.asList("dummy"));
+            String resultSetId = (String) request.getKvp().get("resultSetID");
+            prService.setResultSetID(resultSetId);
+            request.getKvp().put("featureId", Collections.singletonList("dummy"));
+
         }
         return super.serviceDispatched(request, service);
+    }
+
+    @Override
+    public Operation operationDispatched(Request request, Operation operation) {
+        Operation newOperation = operation;
+        if (operation.getId().equals("PageResults")) {
+            newOperation = new Operation("GetFeature", operation.getService(),
+                    operation.getMethod(), operation.getParameters());
+        }
+        return super.operationDispatched(request, newOperation);
     }
 
 }

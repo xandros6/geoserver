@@ -5,19 +5,21 @@
 
 package org.geoserver.nsg.pagination.random;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.logging.Logger;
 
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.geoserver.config.GeoServer;
+import org.geoserver.ows.Dispatcher;
+import org.geoserver.ows.KvpRequestReader;
+import org.geoserver.ows.util.OwsUtils;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.wfs.DefaultWebFeatureService20;
-import org.geoserver.wfs.WFSException;
 import org.geoserver.wfs.request.FeatureCollectionResponse;
 import org.geotools.data.DataStore;
 import org.geotools.data.DefaultTransaction;
@@ -41,25 +43,20 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
 
     static Logger LOGGER = Logging.getLogger(PageResultsWebFeatureService.class);
 
-    private static ResourceSet resSet;
-
     private static final String GML32_FORMAT = "application/gml+xml; version=3.2";
 
     private static final BigInteger DEFAULT_START = new BigInteger("0");
 
     private static final BigInteger DEFAULT_COUNT = new BigInteger("10");
 
-    private String resultSetID;
+    private String resultSetId;
 
     public PageResultsWebFeatureService(GeoServer geoServer) {
         super(geoServer);
-        // Register XMI serializer
-        resSet = new ResourceSetImpl();
-        resSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("feature",
-                new XMIResourceFactoryImpl());
     }
 
     /**
+     * 
      * Recovers the stored request with associated {@link #resultSetID} and overrides the parameters
      * using the ones provided with current operation or the default values:
      * <ul>
@@ -73,14 +70,15 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
      *
      * @param request
      * @return
-     * @throws WFSException
-     * @throws IOException
+     * @throws Exception
      */
-    public FeatureCollectionResponse pageResults(GetFeatureType request)
-            throws WFSException, IOException {
+    public FeatureCollectionResponse pageResults(GetFeatureType request) throws Exception {
         // Retrieve stored request
-        GetFeatureType gft = getFeature(resultSetID);
+        GetFeatureType gft = getFeature(this.resultSetId);
+
         // Update with incoming parameters or defaults
+        Method setBaseUrl = OwsUtils.setter(gft.getClass(), "baseUrl", String.class);
+        setBaseUrl.invoke(gft, new Object[] { request.getBaseUrl() });
         BigInteger startIndex = request.getStartIndex() != null ? request.getStartIndex()
                 : DEFAULT_START;
         BigInteger count = request.getCount() != null ? request.getCount() : DEFAULT_COUNT;
@@ -101,8 +99,8 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
      * 
      * @param resultSetID
      */
-    public void setResultSetID(String resultSetID) {
-        this.resultSetID = resultSetID;
+    public void setResultSetID(String resultSetId) {
+        this.resultSetId = resultSetId;
     }
 
     /**
@@ -110,31 +108,68 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
      * 
      * @param resultSetID
      * @return
-     * @throws IOException
      * @throws Exception
      */
-    private GetFeatureType getFeature(String resultSetID) throws IOException {
+    private GetFeatureType getFeature(String resultSetId) throws IOException {
         GetFeatureType feature = null;
         Transaction transaction = new DefaultTransaction("Update");
         try {
+            IndexInitializer.READ_WRITE_LOCK.writeLock().lock();
             // Update GetFeature utilization
             DataStore currentDataStore = IndexConfiguration.getCurrentDataStore();
             SimpleFeatureStore store = (SimpleFeatureStore) currentDataStore
                     .getFeatureSource(IndexInitializer.STORE_SCHEMA_NAME);
             store.setTransaction(transaction);
-            Filter filter = CQL.toFilter("ID = '" + resultSetID + "'");
+            Filter filter = CQL.toFilter("ID = '" + resultSetId + "'");
             store.modifyFeatures("updated", new Date().getTime(), filter);
             // Retrieve GetFeature from file
             Resource storageResource = IndexConfiguration.getStorageResource();
-            org.eclipse.emf.ecore.resource.Resource emfRes = resSet.getResource(URI.createFileURI(
-                    storageResource.dir().getAbsolutePath() + "\\" + resultSetID + ".feature"),
-                    true);
-            feature = (GetFeatureType) emfRes.getContents().get(0);
+
+            // Deserialize KVP parameters and the POST content
+            // Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            // Reader reader = new FileReader(
+            // storageResource.dir().getAbsolutePath() + "\\" + resultSetId + ".feature");
+            // Map<String, Map> data = gson.fromJson(reader, Map.class);
+            // reader.close();
+            /*
+             * Kryo kryo = new Kryo(); kryo.setInstantiatorStrategy( new
+             * Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+             * kryo.getFieldSerializerConfig().setCopyTransient(false);
+             */
+
+            FileInputStream fis = new FileInputStream(
+                    storageResource.dir().getAbsolutePath() + "\\" + resultSetId + ".feature");
+            BufferedInputStream bis = new BufferedInputStream(fis);
+
+            ObjectInputStream objectinputstream = new ObjectInputStream(bis);
+            RequestData data = (RequestData) objectinputstream.readObject();
+
+            /*
+             * Input input = new Input(bis);
+             * 
+             * RequestData data = kryo.readObject(input, RequestData.class);
+             */
+
+            objectinputstream.close();
+
+            KvpRequestReader kvpReader = Dispatcher.findKvpRequestReader(GetFeatureType.class);
+            Object requestBean = kvpReader.createRequest();
+            feature = (GetFeatureType) kvpReader.read(requestBean, data.getKvp(), data.getRawKvp());
+
+            /*
+             * Map kvp = data.get("kvp"); Map rawKvp = data.get("rawKvp");
+             * 
+             * KvpRequestReader kvpReader = Dispatcher.findKvpRequestReader(GetFeatureType.class);
+             * Object requestBean = kvpReader.createRequest(); feature = (GetFeatureType)
+             * kvpReader.read(requestBean, kvp, rawKvp);
+             */
+
         } catch (Exception t) {
             transaction.rollback();
             throw new RuntimeException("Error on retrive feature", t);
         } finally {
             transaction.close();
+            IndexInitializer.READ_WRITE_LOCK.writeLock().unlock();
         }
         return feature;
 

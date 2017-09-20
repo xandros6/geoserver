@@ -31,12 +31,12 @@ import net.opengis.wfs20.ResultTypeType;
  * </p>
  * 
  * @author sandr
- *  
+ * 
  */
 
 public class IndexResultTypeDispatcherCallback extends AbstractDispatcherCallback {
 
-    static Logger LOGGER = Logging.getLogger(IndexResultTypeDispatcherCallback.class);
+    private final static Logger LOGGER = Logging.getLogger(IndexResultTypeDispatcherCallback.class);
 
     private GeoServer gs;
 
@@ -64,12 +64,13 @@ public class IndexResultTypeDispatcherCallback extends AbstractDispatcherCallbac
     @Override
     public Response responseDispatched(Request request, Operation operation, Object result,
             Response response) {
-        Response newResponse = response;
         if (request.getKvp().get(RESULT_TYPE_INDEX_PARAMETER) != null
                 && (Boolean) request.getKvp().get(RESULT_TYPE_INDEX_PARAMETER)) {
-            newResponse = new IndexOutputFormat(this.gs);
+            IndexOutputFormat newResponse = new IndexOutputFormat(this.gs);
+            newResponse.setRequest(request);
+            return super.responseDispatched(request, operation, result, newResponse);
         }
-        return super.responseDispatched(request, operation, result, newResponse);
+        return super.responseDispatched(request, operation, result, response);
     }
 
 }

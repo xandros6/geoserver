@@ -5,13 +5,15 @@
 
 package org.geoserver.nsg.pagination.random;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -20,11 +22,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.geoserver.config.GeoServer;
+import org.geoserver.ows.Request;
 import org.geoserver.ows.util.OwsUtils;
 import org.geoserver.ows.util.ResponseUtils;
 import org.geoserver.platform.Operation;
@@ -59,33 +58,31 @@ import net.opengis.wfs20.GetFeatureType;
  */
 public class IndexOutputFormat extends HitsOutputFormat {
 
-    static Logger LOGGER = Logging.getLogger(IndexOutputFormat.class);
+    private final static Logger LOGGER = Logging.getLogger(IndexOutputFormat.class);
 
-    String resultSetId;
+    private String resultSetId;
 
-    private static ResourceSet resSet;
-
-    static {
-        // Register XMI serializer
-        resSet = new ResourceSetImpl();
-        resSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put("feature",
-                new XMIResourceFactoryImpl());
-    }
+    private Request request;
 
     public IndexOutputFormat(GeoServer gs) {
         super(gs);
+    }
+
+    public void setRequest(Request request) {
+        this.request = request;
     }
 
     @Override
     public void write(Object value, OutputStream output, Operation operation)
             throws IOException, ServiceException {
         // extract GetFeature request
-        GetFeatureType request = (GetFeatureType) OwsUtils.parameter(operation.getParameters(),
+        GetFeatureType getFeatureType = OwsUtils.parameter(operation.getParameters(),
                 GetFeatureType.class);
-        // generate an UUID (resultSetID) for this request
+        // generate an UUID (resultSetID) for this request, GeoTools complained about the - in the
+        // ID
         resultSetId = UUID.randomUUID().toString().replaceAll("-", "");
         // store request and associate it to UUID
-        storeGetFeature(resultSetId, request);
+        storeGetFeature(resultSetId, this.request);
         super.write(value, output, operation);
     }
 
@@ -116,36 +113,66 @@ public class IndexOutputFormat extends HitsOutputFormat {
      * Helper method that serialize GetFeature request, store it in the file system and associate it
      * with resultSetId
      * 
-     * @param request
      * @param resultSetId
-     * @throws Exception
+     * @param getFeatureType
+     * @throws RuntimeException
      */
-    protected void storeGetFeature(String resultSetId, GetFeatureType ft) throws RuntimeException {
+    private void storeGetFeature(String resultSetId, Request request) throws RuntimeException {
         try {
+            IndexInitializer.READ_WRITE_LOCK.writeLock().lock();
             DataStore dataStore = IndexConfiguration.getCurrentDataStore();
             // Create and store new feature
             SimpleFeatureStore featureStore = (SimpleFeatureStore) dataStore
                     .getFeatureSource(IndexInitializer.STORE_SCHEMA_NAME);
             SimpleFeatureBuilder builder = new SimpleFeatureBuilder(featureStore.getSchema());
-            Long now = new Date().getTime();
+            Long now = System.currentTimeMillis();
+            // Add ID field value (see IndexInitializer.STORE_SCHEMA)
             builder.add(resultSetId);
+            // Add created field value (see IndexInitializer.STORE_SCHEMA)
             builder.add(now);
+            // Add updated field value (see IndexInitializer.STORE_SCHEMA)
             builder.add(now);
             SimpleFeature feature = builder.buildFeature(null);
             SimpleFeatureCollection collection = new ListFeatureCollection(featureStore.getSchema(),
                     Arrays.asList(feature));
             featureStore.addFeatures(collection);
-
             // Create and store file
             Resource storageResource = IndexConfiguration.getStorageResource();
-            
-            org.eclipse.emf.ecore.resource.Resource emfRes = resSet
-                    .createResource(URI.createFileURI(storageResource.dir().getAbsolutePath() + "\\"
-                            + resultSetId + ".feature"));
-            emfRes.getContents().add(ft);
-            emfRes.save(Collections.EMPTY_MAP);
+
+            // Serialize KVP parameters and the POST content
+            Map kvp = request.getKvp();
+            Map rawKvp = request.getRawKvp();
+            RequestData data = new RequestData();
+            data.setKvp(kvp);
+            data.setRawKvp(rawKvp);
+            // Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            // Writer writer = new FileWriter(
+            // storageResource.dir().getAbsolutePath() + "\\" + resultSetId + ".feature");
+
+            FileOutputStream fos = new FileOutputStream(
+                    storageResource.dir().getAbsolutePath() + "\\" + resultSetId + ".feature");
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
+            // ObjectOutputStream oos = new ObjectOutputStream(bos);
+            // oos.writeObject(getFeatureType);
+            // oos.close();
+
+            /*
+             * Kryo kryo = new Kryo(); kryo.setInstantiatorStrategy( new
+             * Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+             * kryo.getFieldSerializerConfig().setCopyTransient(false); Output output = new
+             * Output(bos); kryo.writeObject(output, data);
+             */
+
+            ObjectOutputStream oos = new ObjectOutputStream(bos);
+            oos.writeObject(data);
+            oos.close();
+
+            // gson.toJson(paramMap, writer);
+            // writer.close();
         } catch (Exception exception) {
             throw new RuntimeException("Error storing feature.", exception);
+        } finally {
+            IndexInitializer.READ_WRITE_LOCK.writeLock().unlock();
         }
     }
 
