@@ -20,13 +20,13 @@ import org.geotools.data.DataStore;
  */
 public class IndexConfiguration {
 
-    private static DataStore currentDataStore;
+    private DataStore currentDataStore;
 
-    private static Resource storageResource;
+    private Resource storageResource;
 
-    private static Long timeToLiveInSec = 600l;
+    private Long timeToLiveInSec = 600l;
 
-    private static Map<String, Object> currentDataStoreParams;
+    private Map<String, Object> currentDataStoreParams;
 
     /**
      * Store the DB parameters and the relative {@link DataStore}
@@ -34,10 +34,10 @@ public class IndexConfiguration {
      * @param currentDataStoreParams
      * @param currentDataStore
      */
-    public static void setCurrentDataStore(Map<String, Object> currentDataStoreParams,
+    public void setCurrentDataStore(Map<String, Object> currentDataStoreParams,
             DataStore currentDataStore) {
-        IndexConfiguration.currentDataStoreParams = currentDataStoreParams;
-        IndexConfiguration.currentDataStore = currentDataStore;
+        this.currentDataStoreParams = currentDataStoreParams;
+        this.currentDataStore = currentDataStore;
     }
 
     /**
@@ -45,8 +45,8 @@ public class IndexConfiguration {
      * 
      * @param storageResource
      */
-    public static void setStorageResource(Resource storageResource) {
-        IndexConfiguration.storageResource = storageResource;
+    public void setStorageResource(Resource storageResource) {
+        this.storageResource = storageResource;
     }
 
     /**
@@ -55,23 +55,23 @@ public class IndexConfiguration {
      * @param timeToLive
      * @param timeUnit
      */
-    public static void setTimeToLive(Long timeToLive, TimeUnit timeUnit) {
-        IndexConfiguration.timeToLiveInSec = timeUnit.toSeconds(timeToLive);
+    public void setTimeToLive(Long timeToLive, TimeUnit timeUnit) {
+        this.timeToLiveInSec = timeUnit.toSeconds(timeToLive);
     }
 
-    public static DataStore getCurrentDataStore() {
+    public DataStore getCurrentDataStore() {
         return currentDataStore;
     }
 
-    public static Map<String, Object> getCurrentDataStoreParams() {
+    public Map<String, Object> getCurrentDataStoreParams() {
         return currentDataStoreParams;
     }
 
-    public static Resource getStorageResource() {
+    public Resource getStorageResource() {
         return storageResource;
     }
 
-    public static Long getTimeToLiveInSec() {
+    public Long getTimeToLiveInSec() {
         return timeToLiveInSec;
     }
 

@@ -40,14 +40,17 @@ public class IndexResultTypeDispatcherCallback extends AbstractDispatcherCallbac
 
     private GeoServer gs;
 
+    private IndexConfiguration indexConfiguration;
+
     private static final String RESULT_TYPE_PARAMETER = "resultType";
 
     private static final String RESULT_TYPE_INDEX = "index";
 
     static final String RESULT_TYPE_INDEX_PARAMETER = "RESULT_TYPE_INDEX";
 
-    public IndexResultTypeDispatcherCallback(GeoServer gs) {
+    public IndexResultTypeDispatcherCallback(GeoServer gs, IndexConfiguration indexConfiguration) {
         this.gs = gs;
+        this.indexConfiguration = indexConfiguration;
     }
 
     @Override
@@ -64,13 +67,14 @@ public class IndexResultTypeDispatcherCallback extends AbstractDispatcherCallbac
     @Override
     public Response responseDispatched(Request request, Operation operation, Object result,
             Response response) {
+        Response newResponse = response;
         if (request.getKvp().get(RESULT_TYPE_INDEX_PARAMETER) != null
                 && (Boolean) request.getKvp().get(RESULT_TYPE_INDEX_PARAMETER)) {
-            IndexOutputFormat newResponse = new IndexOutputFormat(this.gs);
-            newResponse.setRequest(request);
-            return super.responseDispatched(request, operation, result, newResponse);
+            IndexOutputFormat r = new IndexOutputFormat(this.gs, this.indexConfiguration);
+            r.setRequest(request);
+            newResponse = r;
         }
-        return super.responseDispatched(request, operation, result, response);
+        return super.responseDispatched(request, operation, result, newResponse);
     }
 
 }

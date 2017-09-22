@@ -1,9 +1,20 @@
+/* (c) 2017 Open Source Geospatial Foundation - all rights reserved
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
+
 package org.geoserver.nsg.pagination.random;
 
 import java.io.Serializable;
 import java.util.Map;
 
-public class RequestData implements Serializable {
+/**
+ * This class is used to store the data to serialize to recreate previous get feature request
+ * 
+ * @author sandr
+ *
+ */
+class RequestData implements Serializable {
 
     private static final long serialVersionUID = 6687946816946977568L;
 

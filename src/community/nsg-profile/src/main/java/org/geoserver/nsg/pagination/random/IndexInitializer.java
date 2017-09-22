@@ -6,7 +6,6 @@
 package org.geoserver.nsg.pagination.random;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
@@ -93,6 +92,8 @@ public final class IndexInitializer implements GeoServerInitializer {
 
     public static final String STORE_SCHEMA = "ID:java.lang.String,created:java.lang.Long,updated:java.lang.Long";
 
+    private IndexConfiguration indexConfiguration;
+
     /*
      * Lock to synchronize activity of clean task with listener that changes the DB and file
      * resources
@@ -101,6 +102,7 @@ public final class IndexInitializer implements GeoServerInitializer {
 
     @Override
     public void initialize(GeoServer geoServer) throws Exception {
+        indexConfiguration = GeoServerExtensions.bean(IndexConfiguration.class);
         GeoServerResourceLoader loader = GeoServerExtensions.bean(GeoServerResourceLoader.class);
         GeoServerDataDirectory dd = new GeoServerDataDirectory(loader);
         Resource resource = dd.get(MODULE_DIR + "/" + PROPERTY_FILENAME);
@@ -143,7 +145,7 @@ public final class IndexInitializer implements GeoServerInitializer {
     /**
      * Helper method that loads configuration file and changes environment setup
      */
-    private void loadConfigurations(Resource resource) throws IOException {
+    private void loadConfigurations(Resource resource) throws Exception {
         try {
             IndexInitializer.READ_WRITE_LOCK.writeLock().lock();
             Properties properties = new Properties();
@@ -181,6 +183,8 @@ public final class IndexInitializer implements GeoServerInitializer {
              * Change time to live
              */
             manageTimeToLiveChange(properties.get("resultSets.timeToLive"));
+        } catch (Exception exception) {
+            throw new RuntimeException("Error reload configurations.", exception);
         } finally {
             IndexInitializer.READ_WRITE_LOCK.writeLock().unlock();
         }
@@ -193,7 +197,7 @@ public final class IndexInitializer implements GeoServerInitializer {
         try {
             if (timneToLive != null) {
                 String timneToLiveStr = (String) timneToLive;
-                IndexConfiguration.setTimeToLive(Long.parseLong(timneToLiveStr), TimeUnit.SECONDS);
+                indexConfiguration.setTimeToLive(Long.parseLong(timneToLiveStr), TimeUnit.SECONDS);
             }
         } catch (Exception exception) {
             throw new RuntimeException("Error on change time to live", exception);
@@ -209,12 +213,12 @@ public final class IndexInitializer implements GeoServerInitializer {
             if (newStorage != null) {
                 String newStorageStr = (String) newStorage;
                 Resource newResource = new FileSystemResourceStore(new File(newStorageStr)).get("");
-                Resource exResource = IndexConfiguration.getStorageResource();
+                Resource exResource = indexConfiguration.getStorageResource();
                 if (exResource != null && !newResource.dir().getAbsolutePath()
                         .equals(exResource.dir().getAbsolutePath())) {
                     exResource.delete();
                 }
-                IndexConfiguration.setStorageResource(newResource);
+                indexConfiguration.setStorageResource(newResource);
             }
         } catch (Exception exception) {
             throw new RuntimeException("Error on change store", exception);
@@ -226,7 +230,7 @@ public final class IndexInitializer implements GeoServerInitializer {
      */
     private void manageDBChange(Map<String, Object> params) {
         try {
-            DataStore exDataStore = IndexConfiguration.getCurrentDataStore();
+            DataStore exDataStore = indexConfiguration.getCurrentDataStore();
             DataStore newDataStore = DataStoreFinder.getDataStore(params);
             if (exDataStore != null) {
                 // New database is valid and is different from current one
@@ -235,14 +239,14 @@ public final class IndexInitializer implements GeoServerInitializer {
                     createTable(newDataStore, true);
                     // Move data to new database
                     moveData(exDataStore, newDataStore);
-                    // Delete old database
+                    // Dispose old database
                     exDataStore.dispose();
                 }
             } else {
                 // Create schema
                 createTable(newDataStore, false);
             }
-            IndexConfiguration.setCurrentDataStore(params, newDataStore);
+            indexConfiguration.setCurrentDataStore(params, newDataStore);
         } catch (Exception exception) {
             throw new RuntimeException("Error reload DB configurations.", exception);
         }
@@ -252,17 +256,42 @@ public final class IndexInitializer implements GeoServerInitializer {
      * Helper method that check id the DB is the same, matching the JDBC configurations parameters.
      */
     private Boolean isDBTheSame(Map<String, Object> newParams) {
-        Map<String, Object> currentParams = IndexConfiguration.getCurrentDataStoreParams();
-        return currentParams.get(JDBCDataStoreFactory.DBTYPE.key)
-                .equals(newParams.get(JDBCDataStoreFactory.DBTYPE.key))
-                && currentParams.get(JDBCDataStoreFactory.DATABASE.key)
-                        .equals(newParams.get(JDBCDataStoreFactory.DATABASE.key))
-                && currentParams.get(JDBCDataStoreFactory.HOST.key)
-                        .equals(newParams.get(JDBCDataStoreFactory.HOST.key))
-                && currentParams.get(JDBCDataStoreFactory.PORT.key)
-                        .equals(newParams.get(JDBCDataStoreFactory.PORT.key))
-                && currentParams.get(JDBCDataStoreFactory.SCHEMA.key)
-                        .equals(newParams.get(JDBCDataStoreFactory.SCHEMA.key));
+        Map<String, Object> currentParams = indexConfiguration.getCurrentDataStoreParams();
+        boolean isTheSame = (currentParams.get(JDBCDataStoreFactory.DBTYPE.key) == null
+                && newParams.get(JDBCDataStoreFactory.DBTYPE.key) == null)
+                || (currentParams.get(JDBCDataStoreFactory.DBTYPE.key) != null
+                        && newParams.get(JDBCDataStoreFactory.DBTYPE.key) != null
+                        && currentParams.get(JDBCDataStoreFactory.DBTYPE.key)
+                                .equals(newParams.get(JDBCDataStoreFactory.DBTYPE.key)));
+        isTheSame = isTheSame
+                && (currentParams.get(JDBCDataStoreFactory.DATABASE.key) == null
+                        && newParams.get(JDBCDataStoreFactory.DATABASE.key) == null)
+                || (currentParams.get(JDBCDataStoreFactory.DATABASE.key) != null
+                        && newParams.get(JDBCDataStoreFactory.DATABASE.key) != null
+                        && currentParams.get(JDBCDataStoreFactory.DATABASE.key)
+                                .equals(newParams.get(JDBCDataStoreFactory.DATABASE.key)));
+        isTheSame = isTheSame
+                && (currentParams.get(JDBCDataStoreFactory.HOST.key) == null
+                        && newParams.get(JDBCDataStoreFactory.HOST.key) == null)
+                || (currentParams.get(JDBCDataStoreFactory.HOST.key) != null
+                        && newParams.get(JDBCDataStoreFactory.HOST.key) != null
+                        && currentParams.get(JDBCDataStoreFactory.HOST.key)
+                                .equals(newParams.get(JDBCDataStoreFactory.HOST.key)));
+        isTheSame = isTheSame
+                && (currentParams.get(JDBCDataStoreFactory.PORT.key) == null
+                        && newParams.get(JDBCDataStoreFactory.PORT.key) == null)
+                || (currentParams.get(JDBCDataStoreFactory.PORT.key) != null
+                        && newParams.get(JDBCDataStoreFactory.PORT.key) != null
+                        && currentParams.get(JDBCDataStoreFactory.PORT.key)
+                                .equals(newParams.get(JDBCDataStoreFactory.PORT.key)));
+        isTheSame = isTheSame
+                && (currentParams.get(JDBCDataStoreFactory.SCHEMA.key) == null
+                        && newParams.get(JDBCDataStoreFactory.SCHEMA.key) == null)
+                || (currentParams.get(JDBCDataStoreFactory.SCHEMA.key) != null
+                        && newParams.get(JDBCDataStoreFactory.SCHEMA.key) != null
+                        && currentParams.get(JDBCDataStoreFactory.SCHEMA.key)
+                                .equals(newParams.get(JDBCDataStoreFactory.SCHEMA.key)));
+        return isTheSame;
     }
 
     /**
@@ -317,17 +346,18 @@ public final class IndexInitializer implements GeoServerInitializer {
         try {
             IndexInitializer.READ_WRITE_LOCK.writeLock().lock();
             // Remove record
-            Long timeToLive = IndexConfiguration.getTimeToLiveInSec();
-            DataStore currentDataStore = IndexConfiguration.getCurrentDataStore();
+            Long timeToLive = indexConfiguration.getTimeToLiveInSec();
+            DataStore currentDataStore = indexConfiguration.getCurrentDataStore();
             Long liveTreshold = System.currentTimeMillis() - timeToLive * 1000;
             long featureRemoved = 0;
             if (currentDataStore != null) {
                 SimpleFeatureStore store = (SimpleFeatureStore) currentDataStore
                         .getFeatureSource(STORE_SCHEMA_NAME);
                 Filter filter = CQL.toFilter("updated < " + liveTreshold);
+
                 SimpleFeatureCollection toRemoved = store.getFeatures(filter);
                 // Remove file
-                Resource currentResource = IndexConfiguration.getStorageResource();
+                Resource currentResource = indexConfiguration.getStorageResource();
                 SimpleFeatureIterator iterator = toRemoved.features();
                 try {
                     while (iterator.hasNext()) {
@@ -350,7 +380,7 @@ public final class IndexInitializer implements GeoServerInitializer {
             }
         } catch (Throwable t) {
             session.rollback();
-            throw new RuntimeException("Error on move data", t);
+            LOGGER.warning("Error on clean data");
         } finally {
             session.close();
             IndexInitializer.READ_WRITE_LOCK.writeLock().unlock();

@@ -64,8 +64,11 @@ public class IndexOutputFormat extends HitsOutputFormat {
 
     private Request request;
 
-    public IndexOutputFormat(GeoServer gs) {
+    private IndexConfiguration indexConfiguration;
+
+    public IndexOutputFormat(GeoServer gs, IndexConfiguration indexConfiguration) {
         super(gs);
+        this.indexConfiguration = indexConfiguration;
     }
 
     public void setRequest(Request request) {
@@ -120,7 +123,7 @@ public class IndexOutputFormat extends HitsOutputFormat {
     private void storeGetFeature(String resultSetId, Request request) throws RuntimeException {
         try {
             IndexInitializer.READ_WRITE_LOCK.writeLock().lock();
-            DataStore dataStore = IndexConfiguration.getCurrentDataStore();
+            DataStore dataStore = this.indexConfiguration.getCurrentDataStore();
             // Create and store new feature
             SimpleFeatureStore featureStore = (SimpleFeatureStore) dataStore
                     .getFeatureSource(IndexInitializer.STORE_SCHEMA_NAME);
@@ -137,7 +140,7 @@ public class IndexOutputFormat extends HitsOutputFormat {
                     Arrays.asList(feature));
             featureStore.addFeatures(collection);
             // Create and store file
-            Resource storageResource = IndexConfiguration.getStorageResource();
+            Resource storageResource = this.indexConfiguration.getStorageResource();
 
             // Serialize KVP parameters and the POST content
             Map kvp = request.getKvp();
@@ -145,30 +148,15 @@ public class IndexOutputFormat extends HitsOutputFormat {
             RequestData data = new RequestData();
             data.setKvp(kvp);
             data.setRawKvp(rawKvp);
-            // Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            // Writer writer = new FileWriter(
-            // storageResource.dir().getAbsolutePath() + "\\" + resultSetId + ".feature");
 
             FileOutputStream fos = new FileOutputStream(
                     storageResource.dir().getAbsolutePath() + "\\" + resultSetId + ".feature");
             BufferedOutputStream bos = new BufferedOutputStream(fos);
-            // ObjectOutputStream oos = new ObjectOutputStream(bos);
-            // oos.writeObject(getFeatureType);
-            // oos.close();
-
-            /*
-             * Kryo kryo = new Kryo(); kryo.setInstantiatorStrategy( new
-             * Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-             * kryo.getFieldSerializerConfig().setCopyTransient(false); Output output = new
-             * Output(bos); kryo.writeObject(output, data);
-             */
 
             ObjectOutputStream oos = new ObjectOutputStream(bos);
             oos.writeObject(data);
             oos.close();
 
-            // gson.toJson(paramMap, writer);
-            // writer.close();
         } catch (Exception exception) {
             throw new RuntimeException("Error storing feature.", exception);
         } finally {

@@ -17,6 +17,9 @@
 			</list>
 		</property>
 	</bean>
+	<bean id="indexConfiguration"
+		class="org.geoserver.nsg.pagination.random.IndexConfiguration">
+	</bean>
 	<!-- Index result dispatcher callback -->
 	<bean id="indexResultTypeDispatcherCallback"
 		class="org.geoserver.nsg.pagination.random.IndexResultTypeDispatcherCallback">
@@ -26,6 +29,7 @@
 			this switch the "index" value by the "hits" value
 		</description>
 		<constructor-arg ref="geoServer" />
+		<constructor-arg ref="indexConfiguration" />
 	</bean>
 	<!-- Page result dispatcher callback -->
 	<bean id="pageResultsDispatcherCallback"
@@ -41,6 +45,7 @@
 	<bean id="pageResultsTarget"
 		class="org.geoserver.nsg.pagination.random.PageResultsWebFeatureService">
 		<constructor-arg ref="geoServer" />
+		<constructor-arg ref="indexConfiguration" />
 	</bean>
 	<bean id="wfsServicePageResults" class="org.geoserver.platform.Service">
 		<constructor-arg index="0" value="wfs" />

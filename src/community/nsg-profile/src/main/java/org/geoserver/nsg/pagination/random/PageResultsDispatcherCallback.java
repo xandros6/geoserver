@@ -45,7 +45,7 @@ public class PageResultsDispatcherCallback extends AbstractDispatcherCallback {
             PageResultsWebFeatureService prService = (PageResultsWebFeatureService) service
                     .getService();
             String resultSetId = (String) request.getKvp().get("resultSetID");
-            prService.setResultSetID(resultSetId);
+            prService.setResultSetId(resultSetId);
             request.getKvp().put("featureId", Collections.singletonList("dummy"));
 
         }
@@ -55,6 +55,8 @@ public class PageResultsDispatcherCallback extends AbstractDispatcherCallback {
     @Override
     public Operation operationDispatched(Request request, Operation operation) {
         Operation newOperation = operation;
+        // Change operation from PageResults to GetFeature to allow management of request as
+        // standard get feature
         if (operation.getId().equals("PageResults")) {
             newOperation = new Operation("GetFeature", operation.getService(),
                     operation.getMethod(), operation.getParameters());

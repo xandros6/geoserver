@@ -51,8 +51,12 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
 
     private String resultSetId;
 
-    public PageResultsWebFeatureService(GeoServer geoServer) {
+    private IndexConfiguration indexConfiguration;
+
+    public PageResultsWebFeatureService(GeoServer geoServer,
+            IndexConfiguration indexConfiguration) {
         super(geoServer);
+        this.indexConfiguration = indexConfiguration;
     }
 
     /**
@@ -76,12 +80,13 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
         // Retrieve stored request
         GetFeatureType gft = getFeature(this.resultSetId);
 
-        // Update with incoming parameters or defaults
+        // Update with incoming parameters or index request or defaults
         Method setBaseUrl = OwsUtils.setter(gft.getClass(), "baseUrl", String.class);
         setBaseUrl.invoke(gft, new Object[] { request.getBaseUrl() });
         BigInteger startIndex = request.getStartIndex() != null ? request.getStartIndex()
-                : DEFAULT_START;
-        BigInteger count = request.getCount() != null ? request.getCount() : DEFAULT_COUNT;
+                : gft.getStartIndex() != null ? gft.getStartIndex() : DEFAULT_START;
+        BigInteger count = request.getCount() != null ? request.getCount()
+                : gft.getCount() != null ? gft.getCount() : DEFAULT_COUNT;
         String outputFormat = request.getOutputFormat() != null ? request.getOutputFormat()
                 : GML32_FORMAT;
         ResultTypeType resultType = request.getResultType() != null ? request.getResultType()
@@ -95,11 +100,11 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
     }
 
     /**
-     * Sets the resultSetID
+     * Sets the resultSetId
      * 
-     * @param resultSetID
+     * @param resultSetId
      */
-    public void setResultSetID(String resultSetId) {
+    public void setResultSetId(String resultSetId) {
         this.resultSetId = resultSetId;
     }
 
@@ -116,26 +121,14 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
         try {
             IndexInitializer.READ_WRITE_LOCK.writeLock().lock();
             // Update GetFeature utilization
-            DataStore currentDataStore = IndexConfiguration.getCurrentDataStore();
+            DataStore currentDataStore = this.indexConfiguration.getCurrentDataStore();
             SimpleFeatureStore store = (SimpleFeatureStore) currentDataStore
                     .getFeatureSource(IndexInitializer.STORE_SCHEMA_NAME);
             store.setTransaction(transaction);
             Filter filter = CQL.toFilter("ID = '" + resultSetId + "'");
             store.modifyFeatures("updated", new Date().getTime(), filter);
             // Retrieve GetFeature from file
-            Resource storageResource = IndexConfiguration.getStorageResource();
-
-            // Deserialize KVP parameters and the POST content
-            // Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            // Reader reader = new FileReader(
-            // storageResource.dir().getAbsolutePath() + "\\" + resultSetId + ".feature");
-            // Map<String, Map> data = gson.fromJson(reader, Map.class);
-            // reader.close();
-            /*
-             * Kryo kryo = new Kryo(); kryo.setInstantiatorStrategy( new
-             * Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-             * kryo.getFieldSerializerConfig().setCopyTransient(false);
-             */
+            Resource storageResource = this.indexConfiguration.getStorageResource();
 
             FileInputStream fis = new FileInputStream(
                     storageResource.dir().getAbsolutePath() + "\\" + resultSetId + ".feature");
@@ -144,25 +137,11 @@ public class PageResultsWebFeatureService extends DefaultWebFeatureService20 {
             ObjectInputStream objectinputstream = new ObjectInputStream(bis);
             RequestData data = (RequestData) objectinputstream.readObject();
 
-            /*
-             * Input input = new Input(bis);
-             * 
-             * RequestData data = kryo.readObject(input, RequestData.class);
-             */
-
             objectinputstream.close();
 
             KvpRequestReader kvpReader = Dispatcher.findKvpRequestReader(GetFeatureType.class);
             Object requestBean = kvpReader.createRequest();
             feature = (GetFeatureType) kvpReader.read(requestBean, data.getKvp(), data.getRawKvp());
-
-            /*
-             * Map kvp = data.get("kvp"); Map rawKvp = data.get("rawKvp");
-             * 
-             * KvpRequestReader kvpReader = Dispatcher.findKvpRequestReader(GetFeatureType.class);
-             * Object requestBean = kvpReader.createRequest(); feature = (GetFeatureType)
-             * kvpReader.read(requestBean, kvp, rawKvp);
-             */
 
         } catch (Exception t) {
             transaction.rollback();
